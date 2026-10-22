@@ -259,4 +259,4 @@ Os prompts estão transcritos, com pequenos ajustes de formatação.
 
 | Data | Tarefa (T-nn) | Ferramenta e modelo | Finalidade | Prompt principal | Revisado por |
 |---|---|---|---|---|---|
-| _a preencher_ | | | | | |
+| 22/10/2026 | T-01 | Claude Code, Claude Opus 5.5 (`claude-opus-5-5`) | Criar a branch `t-01-repositorio` e o `.gitignore` (Java 21, Maven, Spring Boot, IDE, `application-local.yml`, logs, pastas de arquivos privados e de backup) | "Vamos fazer só a T-01. Crie a branch t-01-repositorio e um .gitignore para um projeto Java 21 + Maven + Spring Boot, incluindo application-local.yml, target/, pastas de IDE, *.log e a pasta de backup (FURIN_BACKUP_DIR)." | _pendente (revisão no PR)_ |

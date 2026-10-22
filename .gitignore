@@ -1,0 +1,80 @@
+# .gitignore — Furin Access (Java 21 + Maven + Spring Boot)
+# T-01 / RNF08. Nenhum segredo, dado pessoal ou backup entra no Git.
+
+# --- Maven -------------------------------------------------------------------
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# --- Java ----------------------------------------------------------------------
+*.class
+hs_err_pid*
+replay_pid*
+
+# --- Spring Boot ---------------------------------------------------------------
+# Configuração local com credenciais (CLAUDE.md §4; arquitetura §6)
+application-local.yml
+application-local.yaml
+application-local.properties
+# Variáveis de ambiente locais
+.env
+.env.*
+!.env.example
+
+# --- Logs ----------------------------------------------------------------------
+*.log
+*.log.*
+logs/
+
+# --- Arquivos privados (fotos e termos, DEC-08) ---------------------------------
+# O caminho real vem de furin.arquivos.diretorio e fica fora do projeto.
+# Estas pastas só protegem contra um diretório criado por engano dentro dele. [PROP]
+arquivos-privados/
+uploads/
+
+# --- Backups (DEC-30, T-47) ----------------------------------------------------
+# A pasta real é a de FURIN_BACKUP_DIR, fora do projeto. Estas entradas cobrem
+# um FURIN_BACKUP_DIR apontado por engano para dentro do repositório. [PROP]
+backup/
+backups/
+furin-backup*/
+# Não usar *.sql aqui: as migrações Flyway (db/migration/*.sql) são versionadas.
+
+# --- IntelliJ IDEA -------------------------------------------------------------
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# --- Eclipse / Spring Tools ----------------------------------------------------
+.apt_generated/
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+bin/
+
+# --- NetBeans ------------------------------------------------------------------
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# --- VS Code -------------------------------------------------------------------
+.vscode/*
+!.vscode/extensions.json
+
+# --- Sistema operacional -------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
