@@ -99,7 +99,9 @@ os arquivos detalhados.
    conferir a proteção da `main` e o `.gitignore` (T-01).
 3. ~~**Validação do DDL (T-03)**~~ — **DDL validado em 27/10/2026** no MySQL 8.4.13,
    sem alteração (evidência em [`docs/evidencias/t-03/`](docs/evidencias/t-03/README.md)).
-   **Falta:** criar o usuário do banco exclusivo do projeto, sem `root`.
+   Usuário do banco exclusivo do projeto (`furin`, sem `root`) criado por
+   [`scripts/criar-usuario-banco.sql`](scripts/criar-usuario-banco.sql). Cada integrante
+   roda esse script uma vez no próprio computador.
 4. **Desenvolvimento com o Claude Code:** ele começa pelo [`CLAUDE.md`](CLAUDE.md) e
    segue o plano a partir da T-01.
 5. **Atualizar o estado:** quando uma função for simulada, implementada ou verificada,

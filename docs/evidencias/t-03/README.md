@@ -48,5 +48,17 @@ registro pai), 1048 (NOT NULL) e 1406 (valor longo demais).
   são testadas aqui.
 - Os scripts usam uma cópia do DDL. Se a §5.5 mudar, copie de novo e rode outra vez. A
   migração Flyway da T-06 parte deste DDL validado.
-- O usuário do banco exclusivo do projeto (sem `root`), previsto na T-03, ainda não foi
-  criado.
+
+## Usuário do banco do projeto
+
+O usuário exclusivo do projeto, sem `root`, foi criado em 27/10/2026 por
+[`scripts/criar-usuario-banco.sql`](../../../scripts/criar-usuario-banco.sql): `furin`@`localhost`,
+com senha gerada pelo MySQL (fora do repositório) e permissão só nos bancos `furin` e
+`furin_test`. Conferência feita com o próprio usuário:
+
+```
+CURRENT_USER(): furin@localhost
+GRANT USAGE ON *.* TO `furin`@`localhost`
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, REFERENCES, INDEX, ALTER ON `furin`.* TO `furin`@`localhost`
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, REFERENCES, INDEX, ALTER ON `furin_test`.* TO `furin`@`localhost`
+```
