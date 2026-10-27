@@ -1,7 +1,7 @@
 # Plano de implementação
 
 **Documentação:** Revisada em 21/10/2026 (DEC-37 a DEC-39) · **Implementação:**
-T-00 concluída; T-01 iniciada (repositório criado); demais não iniciadas · **Atualizado em:** 21/10/2026
+T-00 concluída; T-01 iniciada (repositório criado); T-03 concluída (27/10/2026); demais não iniciadas · **Atualizado em:** 27/10/2026
 
 As tarefas são pequenas, cabem em um cartão do Trello e estão em ordem de
 dependência. Segurança e acessibilidade fazem parte de cada tarefa desde o começo,
@@ -55,7 +55,7 @@ Vale para todo cartão:
 
 | ID | Tarefa | RF/RNF | Depende de | Pronto quando | Segurança e acessibilidade |
 |---|---|---|---|---|---|
-| T-03 | Instalar o MySQL 8.4 local e **validar o DDL** de `arquitetura-e-dados.md` §5.5 | RNF08 | T-01 | Todas as tabelas criadas sem erro. CHECKs e UNIQUEs testados com INSERTs inválidos | Usuário do banco exclusivo do projeto, sem `root` |
+| T-03 | Instalar o MySQL 8.4 local e **validar o DDL** de `arquitetura-e-dados.md` §5.5 | RNF08 | T-01 | Todas as tabelas criadas sem erro. CHECKs e UNIQUEs testados com INSERTs inválidos. **Concluída em 27/10/2026** no MySQL 8.4.13: 9 tabelas sem erro e 86 de 86 casos aprovados ([evidência](evidencias/t-03/README.md)). Usuário `furin` criado por [`scripts/criar-usuario-banco.sql`](../scripts/criar-usuario-banco.sql), com acesso só a `furin` e `furin_test` | Usuário do banco exclusivo do projeto, sem `root` |
 | T-04 | Gerar o projeto no Spring Initializr (Java 21, Boot 4.1.x, Web, Thymeleaf, Security, Data JPA, Validation, Flyway, driver MySQL; o Mail só entra se houver envio real, DEC-32) e definir os perfis `prototipo` e `test` (o `smtp` saiu do MVP, DEC-32) | RNF08 | T-01 | `mvn verify` passa e a aplicação sobe no perfil `prototipo` | Credenciais só em variável de ambiente ou em `application-local.yml` |
 | T-05 | Configurar o GitHub Actions: build e testes com o serviço MySQL 8.4 | RNF08 | T-04 | Pipeline verde em um PR de teste | Credenciais da CI descartáveis. Nenhum dado real |
 | T-06 | Criar a migração Flyway `V1__esquema_inicial.sql` a partir do DDL validado | RNF08, RNF05 | T-03, T-04 | A aplicação cria o esquema em um banco vazio | — |

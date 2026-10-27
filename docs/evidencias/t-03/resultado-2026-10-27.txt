@@ -1,0 +1,164 @@
+T-03 - Saída do cliente MySQL (testar-restricoes.sql), executado em 27/10/2026
+Servidor: MySQL 8.4.13 (local, Windows 11). Banco descartável: furin_ddl_teste.
+Comando: mysql -u root -p --table -e "source docs/evidencias/t-03/testar-restricoes.sql"
+(A primeira execução usou os mesmos scripts a partir de uma pasta temporária.)
+
++--------------+
+| versao_mysql |
++--------------+
+| 8.4.13       |
++--------------+
++---------------------+--------+--------------------+
+| tabela              | motor  | collation          |
++---------------------+--------+--------------------+
+| aluno               | InnoDB | utf8mb4_0900_ai_ci |
+| carteirinha         | InnoDB | utf8mb4_0900_ai_ci |
+| consentimento       | InnoDB | utf8mb4_0900_ai_ci |
+| contato_responsavel | InnoDB | utf8mb4_0900_ai_ci |
+| notificacao         | InnoDB | utf8mb4_0900_ai_ci |
+| registro_acesso     | InnoDB | utf8mb4_0900_ai_ci |
+| turma               | InnoDB | utf8mb4_0900_ai_ci |
+| usuario             | InnoDB | utf8mb4_0900_ai_ci |
+| vinculo_turma       | InnoDB | utf8mb4_0900_ai_ci |
++---------------------+--------+--------------------+
++---------------------+-------------+-----+
+| tabela              | tipo        | qtd |
++---------------------+-------------+-----+
+| aluno               | CHECK       |   4 |
+| aluno               | PRIMARY KEY |   1 |
+| aluno               | UNIQUE      |   1 |
+| carteirinha         | CHECK       |   2 |
+| carteirinha         | FOREIGN KEY |   1 |
+| carteirinha         | PRIMARY KEY |   1 |
+| carteirinha         | UNIQUE      |   1 |
+| consentimento       | CHECK       |   3 |
+| consentimento       | FOREIGN KEY |   2 |
+| consentimento       | PRIMARY KEY |   1 |
+| contato_responsavel | CHECK       |   4 |
+| contato_responsavel | FOREIGN KEY |   1 |
+| contato_responsavel | PRIMARY KEY |   1 |
+| contato_responsavel | UNIQUE      |   1 |
+| notificacao         | CHECK       |   2 |
+| notificacao         | FOREIGN KEY |   2 |
+| notificacao         | PRIMARY KEY |   1 |
+| notificacao         | UNIQUE      |   1 |
+| registro_acesso     | CHECK       |   9 |
+| registro_acesso     | FOREIGN KEY |   3 |
+| registro_acesso     | PRIMARY KEY |   1 |
+| registro_acesso     | UNIQUE      |   2 |
+| turma               | CHECK       |   4 |
+| turma               | PRIMARY KEY |   1 |
+| turma               | UNIQUE      |   1 |
+| usuario             | CHECK       |   5 |
+| usuario             | PRIMARY KEY |   1 |
+| usuario             | UNIQUE      |   1 |
+| vinculo_turma       | CHECK       |   1 |
+| vinculo_turma       | FOREIGN KEY |   2 |
+| vinculo_turma       | PRIMARY KEY |   1 |
+| vinculo_turma       | UNIQUE      |   1 |
++---------------------+-------------+-----+
++----------------------------+
+| resultado                  |
++----------------------------+
+| OK: DDL executado sem erro |
++----------------------------+
++----+---------------------------------------------------+----------+--------+----------+
+| n  | teste                                             | esperado | obtido | situacao |
++----+---------------------------------------------------+----------+--------+----------+
+|  1 | usuario: ate.demo valido                          |        0 |      0 | PASSOU   |
+|  2 | usuario: gestao.demo com senha temporaria valida  |        0 |      0 | PASSOU   |
+|  3 | usuario: login duplicado                          |     1062 |   1062 | PASSOU   |
+|  4 | usuario: login duplicado em maiusculas            |     1062 |   1062 | PASSOU   |
+|  5 | usuario: nome em branco                           |     3819 |   3819 | PASSOU   |
+|  6 | usuario: login em branco                          |     3819 |   3819 | PASSOU   |
+|  7 | usuario: perfil ATE (DEC-37)                      |     3819 |   3819 | PASSOU   |
+|  8 | usuario: perfil GESTAO (DEC-37)                   |     3819 |   3819 | PASSOU   |
+|  9 | usuario: ativo = 2                                |     3819 |   3819 | PASSOU   |
+| 10 | usuario: senha temporaria sem troca obrigatoria   |     3819 |   3819 | PASSOU   |
+| 11 | turma: 6A valida                                  |        0 |      0 | PASSOU   |
+| 12 | turma: 3B valida                                  |        0 |      0 | PASSOU   |
+| 13 | turma: duplicada                                  |     1062 |   1062 | PASSOU   |
+| 14 | turma: turno invalido                             |     3819 |   3819 | PASSOU   |
+| 15 | turma: ano 1999                                   |     3819 |   3819 | PASSOU   |
+| 16 | turma: nome em branco                             |     3819 |   3819 | PASSOU   |
+| 17 | aluno: Ana Teste valida                           |        0 |      0 | PASSOU   |
+| 18 | aluno: Davi Teste valido                          |        0 |      0 | PASSOU   |
+| 19 | aluno: matricula duplicada                        |     1062 |   1062 | PASSOU   |
+| 20 | aluno: matricula em branco                        |     3819 |   3819 | PASSOU   |
+| 21 | aluno: foto vazia                                 |     3819 |   3819 | PASSOU   |
+| 22 | aluno: foto NULL (DEC-05)                         |     1048 |   1048 | PASSOU   |
+| 23 | vinculo: Ana no 6A valido                         |        0 |      0 | PASSOU   |
+| 24 | vinculo: Davi no 3B valido                        |        0 |      0 | PASSOU   |
+| 25 | vinculo: mesmo aluno e mesmo inicio               |     1062 |   1062 | PASSOU   |
+| 26 | vinculo: fim igual ao inicio                      |     3819 |   3819 | PASSOU   |
+| 27 | vinculo: aluno inexistente                        |     1452 |   1452 | PASSOU   |
+| 28 | vinculo: turma inexistente                        |     1452 |   1452 | PASSOU   |
+| 29 | carteirinha: Ana valida                           |        0 |      0 | PASSOU   |
+| 30 | carteirinha: Davi valida                          |        0 |      0 | PASSOU   |
+| 31 | carteirinha: codigo duplicado                     |     1062 |   1062 | PASSOU   |
+| 32 | carteirinha: codigo com 33 caracteres             |     1406 |   1406 | PASSOU   |
+| 33 | carteirinha: expira igual a emissao               |     3819 |   3819 | PASSOU   |
+| 34 | carteirinha: revogada antes da emissao            |     3819 |   3819 | PASSOU   |
+| 35 | contato: Carla principal da Ana valida            |        0 |      0 | PASSOU   |
+| 36 | contato: Carla principal do Davi (irmao) valida   |        0 |      0 | PASSOU   |
+| 37 | contato: segundo principal ativo do mesmo aluno   |     1062 |   1062 | PASSOU   |
+| 38 | contato: principal inativo convive com o ativo    |        0 |      0 | PASSOU   |
+| 39 | contato: reativar o principal antigo              |     1062 |   1062 | PASSOU   |
+| 40 | contato: nao principal so com telefone            |        0 |      0 | PASSOU   |
+| 41 | contato: sem telefone e sem e-mail                |     3819 |   3819 | PASSOU   |
+| 42 | contato: telefone so com espacos                  |     3819 |   3819 | PASSOU   |
+| 43 | contato: principal sem e-mail                     |     3819 |   3819 | PASSOU   |
+| 44 | contato: principal sem telefone                   |     3819 |   3819 | PASSOU   |
+| 45 | contato: nome em branco                           |     3819 |   3819 | PASSOU   |
+| 46 | contato: recebe_notificacao = 2                   |     3819 |   3819 | PASSOU   |
+| 47 | contato: aluno inexistente                        |     1452 |   1452 | PASSOU   |
+| 48 | consentimento: valido                             |        0 |      0 | PASSOU   |
+| 49 | consentimento: versao em branco                   |     3819 |   3819 | PASSOU   |
+| 50 | consentimento: referencia em branco               |     3819 |   3819 | PASSOU   |
+| 51 | consentimento: revogado antes da conferencia      |     3819 |   3819 | PASSOU   |
+| 52 | consentimento: conferente inexistente             |     1452 |   1452 | PASSOU   |
+| 53 | registro: leitura confirmada valida               |        0 |      0 | PASSOU   |
+| 54 | registro: manual confirmada valida (DEC-03)       |        0 |      0 | PASSOU   |
+| 55 | registro: tipo invalido                           |     3819 |   3819 | PASSOU   |
+| 56 | registro: forma invalida                          |     3819 |   3819 | PASSOU   |
+| 57 | registro: situacao invalida                       |     3819 |   3819 | PASSOU   |
+| 58 | registro: leitura sem carteirinha                 |     3819 |   3819 | PASSOU   |
+| 59 | registro: leitura com motivo manual               |     3819 |   3819 | PASSOU   |
+| 60 | registro: manual com carteirinha                  |     3819 |   3819 | PASSOU   |
+| 61 | registro: manual sem motivo                       |     3819 |   3819 | PASSOU   |
+| 62 | registro: manual com motivo so de espacos         |     3819 |   3819 | PASSOU   |
+| 63 | registro: manual aguardando giro                  |     3819 |   3819 | PASSOU   |
+| 64 | registro: confirmada sem ocorrido_em              |     3819 |   3819 | PASSOU   |
+| 65 | registro: aguardando com ocorrido_em              |     3819 |   3819 | PASSOU   |
+| 66 | registro: confirmada com cancelado_em             |     3819 |   3819 | PASSOU   |
+| 67 | registro: cancelada sem motivo                    |     3819 |   3819 | PASSOU   |
+| 68 | registro: cancelada sem cancelado_em              |     3819 |   3819 | PASSOU   |
+| 69 | registro: motivo de cancelamento invalido         |     3819 |   3819 | PASSOU   |
+| 70 | registro: leitura com giro antes do lancamento    |     3819 |   3819 | PASSOU   |
+| 71 | registro: manual com horario depois do lancamento |     3819 |   3819 | PASSOU   |
+| 72 | registro: vinculo inexistente                     |     1452 |   1452 | PASSOU   |
+| 73 | registro: usuario inexistente                     |     1452 |   1452 | PASSOU   |
+| 74 | registro: chave_requisicao duplicada (RN08)       |     1062 |   1062 | PASSOU   |
+| 75 | registro: Ana aguardando giro valida              |        0 |      0 | PASSOU   |
+| 76 | registro: segunda pendente da Ana                 |     1062 |   1062 | PASSOU   |
+| 77 | registro: pendente da Ana cancelada SEM_GIRO      |        0 |      0 | PASSOU   |
+| 78 | registro: nova pendente da Ana apos cancelar      |        0 |      0 | PASSOU   |
+| 79 | registro: pendente confirmada pelo giro           |        0 |      0 | PASSOU   |
+| 80 | registro: cancelada pelo FUNCIONARIO valida       |        0 |      0 | PASSOU   |
+| 81 | notificacao: SIMULADA valida                      |        0 |      0 | PASSOU   |
+| 82 | notificacao: valores padrao (EMAIL, PENDENTE)     |        0 |      0 | PASSOU   |
+| 83 | notificacao: mesmo registro e contato             |     1062 |   1062 | PASSOU   |
+| 84 | notificacao: canal WHATSAPP (DEC-37)              |     3819 |   3819 | PASSOU   |
+| 85 | notificacao: status invalido                      |     3819 |   3819 | PASSOU   |
+| 86 | notificacao: registro inexistente                 |     1452 |   1452 | PASSOU   |
++----+---------------------------------------------------+----------+--------+----------+
++----------+-----+
+| situacao | qtd |
++----------+-----+
+| PASSOU   |  86 |
++----------+-----+
++-------------------+-----------------+-------------+
+| casos_registrados | casos_no_script | conferencia |
++-------------------+-----------------+-------------+
+|                86 |              86 | OK          |
++-------------------+-----------------+-------------+

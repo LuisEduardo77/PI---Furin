@@ -79,7 +79,7 @@ os arquivos detalhados.
 | [`CLAUDE.md`](CLAUDE.md) | Instruções para o Claude Code: fontes da verdade, como trabalhar, regras invioláveis e o que fica fora do MVP | Atualizada (21/10/2026) |
 | [`docs/escopo-e-perfis.md`](docs/escopo-e-perfis.md) | Contexto, solução escolhida, escopo do MVP, perfil único, permissões e glossário | Atualizada (21/10/2026) |
 | [`docs/regras-de-negocio.md`](docs/regras-de-negocio.md) | Regras RN01–RN17 (RN13 obsoleta), medidas definidas e o que fica para a implantação | Atualizada (21/10/2026) |
-| [`docs/arquitetura-e-dados.md`](docs/arquitetura-e-dados.md) | Componentes, versões, fluxos, parâmetros, modelo relacional, dicionário, DDL de referência (não executado) e CI | Atualizada (21/10/2026) |
+| [`docs/arquitetura-e-dados.md`](docs/arquitetura-e-dados.md) | Componentes, versões, fluxos, parâmetros, modelo relacional, dicionário, DDL de referência (validado na T-03) e CI | Atualizada (27/10/2026) |
 | [`docs/rastreabilidade.md`](docs/rastreabilidade.md) | Fontes, decisões (ATU, DEC), pendências (PEND), propostas, matriz requisito → fonte → arquivo → verificação, alterações aprovadas | Atualizada (21/10/2026) |
 | [`docs/plano-de-implementacao.md`](docs/plano-de-implementacao.md) | Tarefas T-00 a T-47, ordenadas por dependência, prontas para cartões do Trello (T-37, T-40 a T-42 canceladas) | Atualizada (21/10/2026) |
 | [`docs/registro-de-ia.md`](docs/registro-de-ia.md) | Ferramentas, modelos, datas, finalidades e prompts de IA usados | Atualizada (21/10/2026) |
@@ -97,8 +97,11 @@ os arquivos detalhados.
    Uma decisão nova recebe o próximo ID DEC e vai para `docs/rastreabilidade.md`.
 2. **Repositório:** já criado (DEC-24). Falta copiar esta documentação para a raiz e
    conferir a proteção da `main` e o `.gitignore` (T-01).
-3. **Validação do DDL (T-03):** executar o DDL de referência no MySQL 8.4 antes de
-   escrever as migrações.
+3. ~~**Validação do DDL (T-03)**~~ — **DDL validado em 27/10/2026** no MySQL 8.4.13,
+   sem alteração (evidência em [`docs/evidencias/t-03/`](docs/evidencias/t-03/README.md)).
+   Usuário do banco exclusivo do projeto (`furin`, sem `root`) criado por
+   [`scripts/criar-usuario-banco.sql`](scripts/criar-usuario-banco.sql). Cada integrante
+   roda esse script uma vez no próprio computador.
 4. **Desenvolvimento com o Claude Code:** ele começa pelo [`CLAUDE.md`](CLAUDE.md) e
    segue o plano a partir da T-01.
 5. **Atualizar o estado:** quando uma função for simulada, implementada ou verificada,
