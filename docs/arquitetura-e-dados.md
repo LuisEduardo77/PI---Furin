@@ -1,7 +1,7 @@
 # Arquitetura e dados
 
 **Documentação:** Revisada em 21/10/2026 (DEC-37 a DEC-39) · **Implementação:**
-Planejada (nenhum código foi escrito) · **Atualizado em:** 21/10/2026
+Planejada (nenhum código foi escrito; DDL validado na T-03) · **Atualizado em:** 27/10/2026
 
 A base é a arquitetura da Atividade 13 (A13 p.2–6) e o modelo relacional da
 Atividade 14 (A14 p.2–8). Sobre essa base entram as decisões ATU-05 a ATU-07,
@@ -371,8 +371,10 @@ minimização (A10 §5.34).
 
 ### 5.5 DDL de referência (DEC-28, G2)
 
-> **Estado:** rascunho **não executado** em um servidor MySQL. A tarefa T-03 do plano
-> de implementação valida o DDL no MySQL 8.4 antes de qualquer outra coisa.
+> **Estado:** **validado na T-03, em 27/10/2026**, no MySQL 8.4.13: as 9 tabelas foram
+> criadas sem erro, e os CHECKs, UNIQUEs e FKs passaram em 86 de 86 casos de teste, sem
+> nenhuma alteração neste DDL. Scripts e saída em
+> [`evidencias/t-03/`](evidencias/t-03/README.md). Se o DDL mudar, rode os scripts de novo.
 
 ```sql
 CREATE TABLE usuario (
@@ -689,3 +691,4 @@ jobs:
 | 19/10/2026 | Decisões complementares: backup simples (DEC-30, seção 6.1), aplicação local e GitHub Pages só para a documentação (DEC-31), e-mail e WhatsApp sempre simulados (DEC-32), guarda pela LGPD (DEC-33) e revogação do termo (DEC-34) |
 | 19/10/2026 | Parâmetro `furin.retencao.anos` = 5 (DEC-36) |
 | 21/10/2026 | Perfil único `FUNCIONARIO` (DEC-37 a DEC-39): DDL de `usuario` e `contato_responsavel` sem conta de responsável, `motivo_cancelamento` com `FUNCIONARIO` (VARCHAR(15)), rotas `/responsavel/**` e `/contas/responsaveis/**` removidas, `/contas/gestao/**` → `/contas/equipe/**`, carga sem contas de responsáveis, §3.4 fora do escopo |
+| 27/10/2026 | T-03: DDL da §5.5 validado no MySQL 8.4.13 sem alteração (9 tabelas, 86 de 86 casos de teste). Aviso de "não executado" substituído pelo estado validado |
