@@ -24,7 +24,7 @@ começou (A13 p.2).
 | Geração de QR Code | ZXing | Versão estável mais recente no Maven Central | DEC-28 (G1); DEC-07 | Planejada |
 | Build e testes | Maven, JUnit, Spring Boot Test | Gerenciada pelo Spring Boot | ATU-07; A13 p.6 | Planejada |
 | Versionamento | GitHub e GitHub Desktop | — | ATU-07; A13 p.6 | Repositório criado: `https://github.com/LuisEduardo77/PI---Furin.git` (DEC-24) |
-| Integração contínua | GitHub Actions | — | ATU-07; A13 p.5–6 | **Não configurada** (A13 p.6) |
+| Integração contínua | GitHub Actions | — | ATU-07; A13 p.5–6 | **Configurada** na T-05 (`.github/workflows/ci.yml`, §7). Falta a execução verde no PR |
 | Análise estática | SonarCloud (SonarQube Cloud) | — | ATU-07; A13 p.6 | **Não configurada** |
 | Gestão de tarefas | Trello | — | A13 p.6 | Cartões em [`plano-de-implementacao.md`](plano-de-implementacao.md) |
 | Apoio à geração de código | Claude, com revisão do grupo | — | A13 p.6; A10 §8.28 | Previsto |
@@ -626,7 +626,8 @@ simples de atender a essa exigência.
 
 ## 7. Qualidade e integração contínua
 
-**Estado: planejada, não configurada.** Fica proporcional ao PI (ATU-07; A13 p.5–6).
+**Estado: GitHub Actions configurado na T-05; SonarCloud planejado (T-44).** Fica
+proporcional ao PI (ATU-07; A13 p.5–6).
 
 - **Fluxo:**
   - um cartão do Trello vira uma branch;
@@ -681,6 +682,19 @@ jobs:
           -Dsonar.host.url=https://sonarcloud.io
 ```
 
+**Como ficou na T-05** ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)), com
+estas diferenças em relação ao ponto de partida acima, registradas no PR:
+
+- usa `./mvnw -B verify` (Maven Wrapper, mesma versão do Maven do ambiente local) em vez
+  de `mvn`, e não passa `-Dspring.profiles.active=test`, porque os testes já ativam o
+  perfil com `@ActiveProfiles("test")`;
+- o passo do SonarCloud e a variável `SONAR_TOKEN` ficam para a T-44;
+- acrescenta `permissions: contents: read`, `concurrency` (cancela a execução anterior do
+  mesmo PR), `timeout-minutes: 20` e o envio dos relatórios do Surefire como artefato
+  (7 dias);
+- o teste `BancoDeDadosTests` confere que o banco dos testes é o MySQL 8.4 e o
+  `furin_test` (CA-RNF08-03).
+
 ## 8. Histórico deste arquivo
 
 | Data | Alteração |
@@ -693,3 +707,4 @@ jobs:
 | 21/10/2026 | Perfil único `FUNCIONARIO` (DEC-37 a DEC-39): DDL de `usuario` e `contato_responsavel` sem conta de responsável, `motivo_cancelamento` com `FUNCIONARIO` (VARCHAR(15)), rotas `/responsavel/**` e `/contas/responsaveis/**` removidas, `/contas/gestao/**` → `/contas/equipe/**`, carga sem contas de responsáveis, §3.4 fora do escopo |
 | 27/10/2026 | T-03: DDL da §5.5 validado no MySQL 8.4.13 sem alteração (9 tabelas, 86 de 86 casos de teste). Aviso de "não executado" substituído pelo estado validado |
 | 29/10/2026 | T-04: projeto gerado pelo Spring Initializr com o Boot 4.1.2 (§1). Sem Spring Mail (DEC-32) |
+| 29/10/2026 | T-05: GitHub Actions configurado (§1 e §7), com as diferenças em relação ao ponto de partida descritas na §7 |

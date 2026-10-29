@@ -1,0 +1,61 @@
+# CI do Furin Access (T-05, RNF08, DEC-28 G2).
+# Compila e roda os testes com um MySQL 8.4 de teste. Não publica a aplicação (DEC-31).
+# A análise do SonarCloud entra na T-44.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Só leitura do repositório: o job não precisa escrever nada no GitHub.
+permissions:
+  contents: read
+
+# Um push novo no mesmo PR cancela a execução anterior.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build e testes
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: furin_test
+          MYSQL_USER: furin
+          MYSQL_PASSWORD: furin_test_only   # credencial descartável, exclusiva da CI
+          MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # histórico completo, usado pelo SonarCloud (T-44)
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Build e testes
+        # O Maven Wrapper garante a mesma versão do Maven usada localmente.
+        # O perfil test é ativado pelos próprios testes (@ActiveProfiles("test")).
+        run: ./mvnw -B verify
+        env:
+          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/furin_test
+          SPRING_DATASOURCE_USERNAME: furin
+          SPRING_DATASOURCE_PASSWORD: furin_test_only
+      - name: Guardar os relatórios dos testes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorios-de-teste
+          path: target/surefire-reports/
+          if-no-files-found: ignore
+          retention-days: 7
