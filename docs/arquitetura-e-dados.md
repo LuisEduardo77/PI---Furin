@@ -24,7 +24,7 @@ começou (A13 p.2).
 | Geração de QR Code | ZXing | Versão estável mais recente no Maven Central | DEC-28 (G1); DEC-07 | Planejada |
 | Build e testes | Maven, JUnit, Spring Boot Test | Gerenciada pelo Spring Boot | ATU-07; A13 p.6 | Planejada |
 | Versionamento | GitHub e GitHub Desktop | — | ATU-07; A13 p.6 | Repositório criado: `https://github.com/LuisEduardo77/PI---Furin.git` (DEC-24) |
-| Integração contínua | GitHub Actions | — | ATU-07; A13 p.5–6 | **Configurada** na T-05 (`.github/workflows/ci.yml`, §7). Falta a execução verde no PR |
+| Integração contínua | GitHub Actions | — | ATU-07; A13 p.5–6 | **Configurada** na T-05 (`.github/workflows/ci.yml`, §7), com execução verde no PR #4 |
 | Análise estática | SonarCloud (SonarQube Cloud) | — | ATU-07; A13 p.6 | **Não configurada** |
 | Gestão de tarefas | Trello | — | A13 p.6 | Cartões em [`plano-de-implementacao.md`](plano-de-implementacao.md) |
 | Apoio à geração de código | Claude, com revisão do grupo | — | A13 p.6; A10 §8.28 | Previsto |
@@ -707,4 +707,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 21/10/2026 | Perfil único `FUNCIONARIO` (DEC-37 a DEC-39): DDL de `usuario` e `contato_responsavel` sem conta de responsável, `motivo_cancelamento` com `FUNCIONARIO` (VARCHAR(15)), rotas `/responsavel/**` e `/contas/responsaveis/**` removidas, `/contas/gestao/**` → `/contas/equipe/**`, carga sem contas de responsáveis, §3.4 fora do escopo |
 | 27/10/2026 | T-03: DDL da §5.5 validado no MySQL 8.4.13 sem alteração (9 tabelas, 86 de 86 casos de teste). Aviso de "não executado" substituído pelo estado validado |
 | 29/10/2026 | T-04: projeto gerado pelo Spring Initializr com o Boot 4.1.2 (§1). Sem Spring Mail (DEC-32) |
-| 29/10/2026 | T-05: GitHub Actions configurado (§1 e §7), com as diferenças em relação ao ponto de partida descritas na §7 |
+| 29/10/2026 | T-05: GitHub Actions configurado (§1 e §7), com as diferenças em relação ao ponto de partida descritas na §7. Execução verde no PR #4 |

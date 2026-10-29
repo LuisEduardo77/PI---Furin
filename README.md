@@ -37,7 +37,7 @@ Atualizado em 21/10/2026.
 | Documentação Markdown | **Revisada em 19/10/2026** (T-00) e **atualizada em 21/10/2026** (DEC-37 a DEC-39) | Os 46 arquivos foram escritos com apoio de IA (ver [`docs/registro-de-ia.md`](docs/registro-de-ia.md)). Os 41 de requisitos e documentação e o `CLAUDE.md` foram revisados pelo grupo. Os 4 resumos (20/10/2026) estão em `Rascunho`, aguardando a leitura do grupo. **Conferência de consistência** em 10 itens feita em 19/10/2026, com as correções aplicadas. Em 21/10/2026, o perfil único foi aplicado a todos os arquivos. RF17, RF24 e RF25 ficaram **fora do escopo**, com os arquivos mantidos para não perder os IDs |
 | Repositório no GitHub | **Criado** (DEC-24) | `https://github.com/LuisEduardo77/PI---Furin.git` |
 | Código-fonte | **Projeto gerado** (T-04, 29/10/2026) | Spring Boot 4.1.2 e Java 21, com os perfis `prototipo` e `test`. Nenhuma funcionalidade implementada ainda. Para rodar localmente, copie `application-local.yml.example` para `application-local.yml` e coloque a senha do usuário `furin` |
-| Pipeline de CI (GitHub Actions + SonarCloud) | GitHub Actions **configurado** (T-05, falta a execução verde no PR). SonarCloud **planejado** (T-44) | A13 p.6 |
+| Pipeline de CI (GitHub Actions + SonarCloud) | GitHub Actions **configurado e verde** (T-05, PR #4). SonarCloud **planejado** (T-44) | A13 p.6 |
 | Notificação por e-mail | **Sempre simulada** (DEC-32) | Nenhuma mensagem real é enviada. Não há WhatsApp (DEC-37) |
 | Leitura do QR Code | **Planejada como função simulada** no protótipo | Sem leitor físico (DEC-25): campo de leitura (digitar ou colar) e painel "Simular leitura" |
 | Giro da catraca | **Planejado como função simulada** no protótipo | A integração física fica fora do MVP |
