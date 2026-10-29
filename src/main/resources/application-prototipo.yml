@@ -1,0 +1,3 @@
+# Perfil prototipo (padrão): demonstração local, com HTTP e simulações visíveis.
+# As simulações (leitura, giro e e-mail SIMULADA) e a carga fictícia entram nas
+# tarefas seguintes do plano. Usa o banco furin definido em application.yml.
