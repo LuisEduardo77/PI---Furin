@@ -98,4 +98,4 @@ A organização está em [arquitetura-e-dados §4 e §7](../../docs/arquitetura-
 |---|---|
 | Patch exato do Spring Boot 4.1.x e do MySQL 8.4 | **a definir** na criação do projeto (T-04), usando a versão estável mais recente de cada linha |
 | Uso de Flyway, Spring Data JPA, Bean Validation e ZXing | **Aprovado** (DEC-28, G1; [arquitetura-e-dados §1](../../docs/arquitetura-e-dados.md)) |
-| Configuração do GitHub Actions e do SonarCloud | **Não configurados** (A13 p.6). Planejados nas tarefas T-05 e T-44 |
+| Configuração do GitHub Actions e do SonarCloud | GitHub Actions **configurado** na T-05 (`.github/workflows/ci.yml`, 29/10/2026); CA-RNF08-03 e 06 dependem da execução verde no PR. SonarCloud planejado na T-44 |
