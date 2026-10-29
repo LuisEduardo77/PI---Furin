@@ -14,7 +14,7 @@ começou (A13 p.2).
 | Camada | Tecnologia | Versão | Origem | Estado |
 |---|---|---|---|---|
 | Linguagem | Java | **21 (LTS)** | DEC-17 | Planejada |
-| Framework | Spring Boot | **4.1.x** (o patch é fixado no `pom.xml` na criação do projeto) | DEC-17 | Planejada |
+| Framework | Spring Boot | **4.1.x**, fixado em **4.1.2** no `pom.xml` na criação do projeto (T-04, 29/10/2026) | DEC-17 | Projeto gerado (T-04) |
 | Banco de dados | MySQL | **8.4 (LTS)** | DEC-17; A14 p.9 | Planejada |
 | Interface | Thymeleaf, HTML, CSS, JavaScript | Gerenciada pelo Spring Boot | ATU-06; A13 p.3 | Planejada |
 | Autenticação e autorização | Spring Security | Gerenciada pelo Spring Boot | ATU-06; A13 p.3 | Planejada |
@@ -692,3 +692,4 @@ jobs:
 | 19/10/2026 | Parâmetro `furin.retencao.anos` = 5 (DEC-36) |
 | 21/10/2026 | Perfil único `FUNCIONARIO` (DEC-37 a DEC-39): DDL de `usuario` e `contato_responsavel` sem conta de responsável, `motivo_cancelamento` com `FUNCIONARIO` (VARCHAR(15)), rotas `/responsavel/**` e `/contas/responsaveis/**` removidas, `/contas/gestao/**` → `/contas/equipe/**`, carga sem contas de responsáveis, §3.4 fora do escopo |
 | 27/10/2026 | T-03: DDL da §5.5 validado no MySQL 8.4.13 sem alteração (9 tabelas, 86 de 86 casos de teste). Aviso de "não executado" substituído pelo estado validado |
+| 29/10/2026 | T-04: projeto gerado pelo Spring Initializr com o Boot 4.1.2 (§1). Sem Spring Mail (DEC-32) |

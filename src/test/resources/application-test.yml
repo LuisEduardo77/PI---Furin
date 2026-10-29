@@ -1,0 +1,6 @@
+# Perfil test: testes automatizados, no banco furin_test.
+# Na CI, SPRING_DATASOURCE_URL, SPRING_DATASOURCE_USERNAME e SPRING_DATASOURCE_PASSWORD
+# vêm das variáveis do workflow e têm prioridade sobre este arquivo.
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/furin_test

@@ -1,0 +1,6 @@
+# Modelo da configuração local. Copie para application-local.yml (que está no .gitignore)
+# e preencha. Nunca versione o application-local.yml.
+spring:
+  datasource:
+    # Senha do usuário furin, gerada por scripts/criar-usuario-banco.sql
+    password: TROQUE_PELA_SENHA_DO_USUARIO_FURIN

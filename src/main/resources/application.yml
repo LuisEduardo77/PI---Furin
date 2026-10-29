@@ -1,0 +1,24 @@
+# Configuração comum a todos os perfis.
+# Nenhum segredo entra aqui (CLAUDE.md §4). A senha do banco vem da variável
+# SPRING_DATASOURCE_PASSWORD ou do arquivo ./application-local.yml, que está no .gitignore
+# (modelo em application-local.yml.example).
+spring:
+  application:
+    name: furin-access
+  profiles:
+    default: prototipo
+  config:
+    import: optional:file:./application-local.yml
+  datasource:
+    url: jdbc:mysql://localhost:3306/furin
+    username: furin
+  jpa:
+    open-in-view: false
+    hibernate:
+      # O esquema é criado só pelas migrações Flyway (T-06)
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          # Horários gravados em UTC (RN10)
+          time_zone: UTC
