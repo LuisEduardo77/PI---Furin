@@ -35,7 +35,7 @@ mas o código ainda não começou.
 |---|---|---|---|
 | **JUnit e Spring Boot Test** | Testes de unidade e de integração com o MySQL | ATU-07 | Planejada |
 | **Spring Security Test (MockMvc)** | Testar login, bloqueio e o acesso de cada rota (sem login, funcionário ativo, conta desativada) | — | Planejada |
-| **GitHub Actions** | Integração contínua: compila e testa a cada pull request, com um MySQL 8.4 de teste | ATU-07 | **Configurada** (T-05). Falta a execução verde no PR |
+| **GitHub Actions** | Integração contínua: compila e testa a cada pull request, com um MySQL 8.4 de teste | ATU-07 | **Configurada** (T-05), com execução verde no PR #4 |
 | **SonarCloud** | Análise estática do código (falhas e trechos inseguros) no pull request | ATU-07 | **Não configurada** (T-44) |
 | **NVDA** | Leitor de tela gratuito, para testar a acessibilidade | DEC-28 (G6) | Planejada |
 | **axe DevTools ou Lighthouse** | Verificador automático de acessibilidade no navegador | DEC-28 (G6) | Planejada |

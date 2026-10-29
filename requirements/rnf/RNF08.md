@@ -4,8 +4,8 @@
 |---|---|
 | **Categoria** | Implementação |
 | **Documentação** | Revisada em 19/10/2026 (T-00: DEC-24 a DEC-36) |
-| **Implementação** | Planejada. **Projeto ainda não criado** |
-| **Atualizado em** | 19/10/2026 |
+| **Implementação** | Planejada, em andamento. Projeto criado na T-04 (Boot 4.1.2) e CI verde na T-05 ([PR #4](https://github.com/LuisEduardo77/PI---Furin/pull/4)): CA-RNF08-03 e 06 com evidência na CI. Faltam CA-RNF08-04 (migrações, T-06), 05 (telas, segurança e e-mail simulado) e 07 (SonarCloud, T-44) |
+| **Atualizado em** | 29/10/2026 |
 
 ## Descrição
 
@@ -98,4 +98,4 @@ A organização está em [arquitetura-e-dados §4 e §7](../../docs/arquitetura-
 |---|---|
 | Patch exato do Spring Boot 4.1.x e do MySQL 8.4 | **a definir** na criação do projeto (T-04), usando a versão estável mais recente de cada linha |
 | Uso de Flyway, Spring Data JPA, Bean Validation e ZXing | **Aprovado** (DEC-28, G1; [arquitetura-e-dados §1](../../docs/arquitetura-e-dados.md)) |
-| Configuração do GitHub Actions e do SonarCloud | GitHub Actions **configurado** na T-05 (`.github/workflows/ci.yml`, 29/10/2026); CA-RNF08-03 e 06 dependem da execução verde no PR. SonarCloud planejado na T-44 |
+| Configuração do GitHub Actions e do SonarCloud | GitHub Actions **configurado** na T-05 (`.github/workflows/ci.yml`), com execução verde no PR #4 e no push da `main` (29/10/2026). SonarCloud planejado na T-44 |
