@@ -20,7 +20,7 @@ começou (A13 p.2).
 | Autenticação e autorização | Spring Security | Gerenciada pelo Spring Boot | ATU-06; A13 p.3 | Planejada |
 | E-mail | Spring Mail (SMTP) | Gerenciada pelo Spring Boot | ATU-03, ATU-06; A13 p.3 | Envio **sempre simulado** (DEC-32). O Spring Mail fica só como ponto de extensão |
 | Persistência | Spring Data JPA e Bean Validation | Gerenciada pelo Spring Boot | DEC-28 (G1) | Planejada |
-| Migrações do banco | Flyway | Gerenciada pelo Spring Boot | DEC-28 (G1) | Planejada |
+| Migrações do banco | Flyway | Gerenciada pelo Spring Boot (12.4.0 no Boot 4.1.2, com o módulo `flyway-mysql`) | DEC-28 (G1) | **Em uso** desde a T-06 (`V1__esquema_inicial.sql`) |
 | Geração de QR Code | ZXing | Versão estável mais recente no Maven Central | DEC-28 (G1); DEC-07 | Planejada |
 | Build e testes | Maven, JUnit, Spring Boot Test | Gerenciada pelo Spring Boot | ATU-07; A13 p.6 | Planejada |
 | Versionamento | GitHub e GitHub Desktop | — | ATU-07; A13 p.6 | Repositório criado: `https://github.com/LuisEduardo77/PI---Furin.git` (DEC-24) |
@@ -375,6 +375,11 @@ minimização (A10 §5.34).
 > criadas sem erro, e os CHECKs, UNIQUEs e FKs passaram em 86 de 86 casos de teste, sem
 > nenhuma alteração neste DDL. Scripts e saída em
 > [`evidencias/t-03/`](evidencias/t-03/README.md). Se o DDL mudar, rode os scripts de novo.
+>
+> **Migração:** desde a T-06 (29/10/2026), este DDL é a migração
+> `src/main/resources/db/migration/V1__esquema_inicial.sql`, copiada sem alteração. A V1
+> não é editada depois de aplicada: uma mudança no esquema entra em uma migração nova
+> (V2, V3…) e precisa ser refletida aqui.
 
 ```sql
 CREATE TABLE usuario (
@@ -708,3 +713,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 27/10/2026 | T-03: DDL da §5.5 validado no MySQL 8.4.13 sem alteração (9 tabelas, 86 de 86 casos de teste). Aviso de "não executado" substituído pelo estado validado |
 | 29/10/2026 | T-04: projeto gerado pelo Spring Initializr com o Boot 4.1.2 (§1). Sem Spring Mail (DEC-32) |
 | 29/10/2026 | T-05: GitHub Actions configurado (§1 e §7), com as diferenças em relação ao ponto de partida descritas na §7. Execução verde no PR #4 |
+| 29/10/2026 | T-06: DDL da §5.5 vira a migração `V1__esquema_inicial.sql`, sem alteração (§1 e §5.5) |

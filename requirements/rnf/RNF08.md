@@ -4,7 +4,7 @@
 |---|---|
 | **Categoria** | Implementação |
 | **Documentação** | Revisada em 19/10/2026 (T-00: DEC-24 a DEC-36) |
-| **Implementação** | Planejada, em andamento. Projeto criado na T-04 (Boot 4.1.2) e CI verde na T-05 ([PR #4](https://github.com/LuisEduardo77/PI---Furin/pull/4)): CA-RNF08-03 e 06 com evidência na CI. Faltam CA-RNF08-04 (migrações, T-06), 05 (telas, segurança e e-mail simulado) e 07 (SonarCloud, T-44) |
+| **Implementação** | Planejada, em andamento. Projeto criado na T-04 (Boot 4.1.2) e CI verde na T-05 ([PR #4](https://github.com/LuisEduardo77/PI---Furin/pull/4)): CA-RNF08-03 e 06 com evidência na CI. CA-RNF08-04 atendido na T-06 (`EsquemaInicialTests`: a V1 cria as 9 tabelas em um banco vazio). Faltam CA-RNF08-05 (telas, segurança e e-mail simulado) e 07 (SonarCloud, T-44) |
 | **Atualizado em** | 29/10/2026 |
 
 ## Descrição

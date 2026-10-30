@@ -18,8 +18,8 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
 - **Repositório:** `https://github.com/LuisEduardo77/PI---Furin.git`.
 - **Estado:** a documentação está revisada. A mudança para o perfil único (DEC-37 a
   DEC-39, 21/10/2026) já está aplicada em todos os arquivos. T-03 (DDL validado), T-04
-  (projeto gerado, Boot 4.1.2) e T-05 (CI no GitHub Actions com MySQL 8.4) estão
-  concluídas; **nenhuma funcionalidade foi escrita
+  (projeto gerado, Boot 4.1.2), T-05 (CI no GitHub Actions com MySQL 8.4) e T-06
+  (migração `V1__esquema_inicial.sql`) estão concluídas; **nenhuma funcionalidade foi escrita
   ainda.** Todos os RF e RNF estão com `Implementação: Planejada`, menos **RF17, RF24 e
   RF25**, que estão **fora do escopo** e não devem ser implementados (DEC-37).
 
