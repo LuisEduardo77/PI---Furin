@@ -218,6 +218,23 @@ atualizada.
 Ficam **fora** da tabela os segredos, que vêm de variáveis de ambiente: senhas iniciais
 da carga, credenciais do banco, token do SonarCloud (seção 6).
 
+**Implementação (T-07, 29/10/2026):** `br.com.furin.access.config.FurinProperties`, com
+os valores só no `application.yml`. A aplicação não sobe se faltar um valor ou se ele for
+inválido (Bean Validation). Qualquer valor pode ser trocado pelo ambiente, por exemplo
+`FURIN_ESCOLA_NOME` ou `FURIN_ARQUIVOS_DIRETORIO`. Detalhes escolhidos na implementação
+[PROP]:
+
+- os tempos usam o formato de duração do Spring (`2s`, `15m`, `72h`) e os tamanhos, o de
+  tamanho (`2MB`, `5MB`);
+- os tipos de arquivo ficam como tipos MIME: `image/jpeg`, `image/png` e
+  `application/pdf`;
+- `furin.arquivos.diretorio` tem o padrão `${user.home}/furin-access/arquivos` e precisa
+  ser um caminho absoluto fora do projeto (DEC-08);
+- além de "maior que zero", as validações seguem só o que já está documentado:
+  `furin.sessao.aviso-antes` de pelo menos 20 s (A11 §5.16.2) e menor que
+  `furin.sessao.inatividade`, e `furin.termo.versao-atual` com até 30 caracteres
+  (`consentimento.versao_termo`).
+
 ### Rotas principais
 
 | Rota | Perfil | RF |
@@ -714,3 +731,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 29/10/2026 | T-04: projeto gerado pelo Spring Initializr com o Boot 4.1.2 (§1). Sem Spring Mail (DEC-32) |
 | 29/10/2026 | T-05: GitHub Actions configurado (§1 e §7), com as diferenças em relação ao ponto de partida descritas na §7. Execução verde no PR #4 |
 | 29/10/2026 | T-06: DDL da §5.5 vira a migração `V1__esquema_inicial.sql`, sem alteração (§1 e §5.5) |
+| 29/10/2026 | T-07: parâmetros implementados em `FurinProperties` (§4), com os detalhes [PROP] de formato, tipos MIME e diretório padrão |

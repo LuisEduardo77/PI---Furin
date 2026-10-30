@@ -22,3 +22,55 @@ spring:
         jdbc:
           # Horários gravados em UTC (RN10)
           time_zone: UTC
+
+# Parâmetros de regra (T-07): tabela "Parâmetros" de docs/arquitetura-e-dados.md §4.
+# Classe: br.com.furin.access.config.FurinProperties. A aplicação não sobe se faltar
+# algum valor ou se ele for inválido. Qualquer valor pode ser trocado pelo ambiente,
+# por exemplo FURIN_ESCOLA_NOME ou FURIN_ARQUIVOS_DIRETORIO.
+furin:
+  escola:
+    # Só valor fictício no repositório (A10 §8.33). O nome real vem do ambiente.
+    nome: Escola Exemplo
+  portaria:
+    janela-repeticao: 2s       # DEC-02
+    tempo-resposta-max: 2s     # A08 RNF02 (meta de desempenho)
+    prazo-giro: 15s            # DEC-28 (A1)
+    monitor-exibicao: 4s       # DEC-28 (A6)
+    painel-limpeza: 60s        # RF10; DEC-28 (A7)
+  carteirinha:
+    tentativas-colisao: 3      # RF06; DEC-28 (D7)
+  presentes:
+    intervalo-atualizacao: 30s # RF16; DEC-28 (C2)
+  busca:
+    max-resultados: 20         # RF11; DEC-28 (C4)
+    tamanho-minimo-nome: 2
+  historico:
+    tamanho-pagina: 50         # RF18; DEC-28 (C5)
+    periodo-max-dias: 31
+  relatorio:
+    max-registros: 1000        # RF20; DEC-28 (C6)
+  senha:
+    validade-temporaria: 72h   # DEC-21
+    tamanho-temporaria: 12     # DEC-28 (E4)
+    tamanho-minimo: 8
+  login:
+    max-tentativas: 5          # DEC-28 (E2)
+    bloqueio: 15m
+  sessao:
+    inatividade: 30m           # DEC-28 (E2)
+    aviso-antes: 60s           # A11 §5.16.2 (mínimo 20 s)
+  notificacao:
+    max-tentativas: 3          # DEC-28 (F1); só com envio real (DEC-32)
+  termo:
+    versao-atual: v1-2026      # RF05; DEC-26
+  arquivos:
+    # Área privada de fotos e termos, fora do projeto e de static/ (DEC-08)
+    diretorio: ${user.home}/furin-access/arquivos
+    foto:                      # DEC-28 (D1)
+      tipos: [image/jpeg, image/png]
+      tamanho-max: 2MB
+    termo:                     # DEC-28 (D2)
+      tipos: [application/pdf, image/jpeg, image/png]
+      tamanho-max: 5MB
+  retencao:
+    anos: 5                    # DEC-36 (descarte automático fora do MVP)
