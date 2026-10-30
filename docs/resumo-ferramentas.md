@@ -23,7 +23,7 @@ mas o código ainda não começou.
 | **Thymeleaf** | Motor de páginas HTML do lado do servidor | Montar as telas | ATU-06 | Planejada |
 | **HTML, CSS e JavaScript** | Linguagens das páginas web | Telas, estilo acessível e a interação da portaria | ATU-06 | Planejada |
 | **MySQL 8.4** | Banco de dados relacional (versão LTS) | Guardar alunos, contatos, carteirinhas, movimentações e contas | DEC-17 | Planejada |
-| **Flyway** | Controle de versões do banco | Criar e atualizar as tabelas a partir de scripts numerados | DEC-28 (G1) | Planejada |
+| **Flyway** | Controle de versões do banco | Criar e atualizar as tabelas a partir de scripts numerados | DEC-28 (G1) | **Em uso** (T-06: `V1__esquema_inicial.sql`) |
 | **ZXing** | Biblioteca de códigos de barras | Gerar o QR Code da carteirinha e conferi-lo nos testes | DEC-28 (G1) | Planejada |
 | **Maven** | Gerenciador de build do Java | Baixar dependências, compilar e rodar os testes (`mvn -B verify`) | ATU-07 | Planejada |
 | **Spring Initializr** | Gerador de projetos Spring | Criar o projeto inicial com as dependências certas (T-04) | — | Planejada |
