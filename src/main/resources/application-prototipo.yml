@@ -1,3 +1,11 @@
 # Perfil prototipo (padrão): demonstração local, com HTTP e simulações visíveis.
 # As simulações (leitura, giro e e-mail SIMULADA) e a carga fictícia entram nas
 # tarefas seguintes do plano. Usa o banco furin definido em application.yml.
+
+# TEMPORÁRIO (T-09 até a T-12): o usuário "user" gerado pelo Spring Security, com a
+# senha aleatória impressa no console, recebe o perfil FUNCIONARIO para que as telas
+# possam ser abertas. A T-12 troca isso pelas contas ate.demo e gestao.demo.
+spring:
+  security:
+    user:
+      roles: FUNCIONARIO

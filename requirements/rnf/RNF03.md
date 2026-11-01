@@ -4,8 +4,8 @@
 |---|---|
 | **Categoria** | Segurança |
 | **Documentação** | Revisada em 21/10/2026 (DEC-37 a DEC-39) |
-| **Implementação** | Planejada |
-| **Atualizado em** | 21/10/2026 |
+| **Implementação** | Planejada, em andamento. `PasswordEncoder` delegante (bcrypt) configurado na T-09, com teste do hash `{bcrypt}` sem a senha e do salt (CA-RNF03-02). A gravação das senhas vem com a carga (T-11), o login (T-12) e as contas (T-43) |
+| **Atualizado em** | 01/11/2026 |
 
 ## Descrição
 

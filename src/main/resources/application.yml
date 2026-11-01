@@ -23,6 +23,15 @@ spring:
           # Horários gravados em UTC (RN10)
           time_zone: UTC
 
+# Cookie de sessão (T-09; arquitetura §6; RNF04). O atributo Secure só entra quando
+# houver HTTPS (RNF04 planejado: o protótipo roda em http://localhost, DEC-31).
+server:
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
+
 # Parâmetros de regra (T-07): tabela "Parâmetros" de docs/arquitetura-e-dados.md §4.
 # Classe: br.com.furin.access.config.FurinProperties. A aplicação não sobe se faltar
 # algum valor ou se ele for inválido. Qualquer valor pode ser trocado pelo ambiente,
