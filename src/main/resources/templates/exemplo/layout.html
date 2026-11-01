@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/base :: pagina('Exemplo de layout', '', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Exemplo de layout | Furin Access</title>
+</head>
 <body>
 <th:block th:fragment="conteudo">
   <h1>Exemplo de layout</h1>

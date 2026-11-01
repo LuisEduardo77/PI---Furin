@@ -1,12 +1,10 @@
 <!DOCTYPE html>
 <!--/*
   Layout-base das telas dos funcionários (T-08; RNF01, RNF06, RF03).
-  Uso em cada página:
-    <html th:replace="~{layout/base :: pagina('Título da página', 'item-do-menu', ~{::conteudo})}">
-    ...
-    <th:block th:fragment="conteudo"> <h1>...</h1> ... </th:block>
-  'item-do-menu' marca o item atual do menu (aria-current); use '' quando a página
-  não estiver no menu.
+  Como usar: a página substitui o próprio elemento html pelo fragmento "pagina" deste
+  arquivo, passando o título, o item do menu e o fragmento "conteudo" da página (veja
+  templates/exemplo/layout.html). O item do menu marca a página atual com
+  aria-current; use vazio quando a página não estiver no menu.
 */-->
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
       th:fragment="pagina(titulo, menuAtivo, conteudo)">
@@ -24,7 +22,7 @@
 
   <header class="cabecalho">
     <p class="cabecalho__marca">Furin Access</p>
-    <nav th:replace="~{layout/base :: menu(${menuAtivo})}"></nav>
+    <nav aria-label="Menu principal" th:replace="~{layout/base :: menu(${menuAtivo})}"></nav>
   </header>
 
   <main id="conteudo-principal" tabindex="-1" th:insert="${conteudo}">

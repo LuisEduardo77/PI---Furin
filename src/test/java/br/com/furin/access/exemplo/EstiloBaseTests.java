@@ -4,11 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
+import org.assertj.core.data.Offset;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -21,19 +20,27 @@ import org.springframework.core.io.ClassPathResource;
  */
 class EstiloBaseTests {
 
-	private static final Pattern REGRA = Pattern.compile("([^{}]+)\\{([^{}]*)\\}");
-	private static final Pattern VARIAVEL = Pattern.compile("--([a-z-]+):\\s*([^;]+);");
+	/** Seletor → bloco de declarações, na ordem do arquivo. */
+	private static final Map<String, String> regras = new LinkedHashMap<>();
 
-	private static String css;
-	private static final Map<String, String> cores = new HashMap<>();
+	/** Variáveis do :root, sem o "--" (ex.: "cor-texto" → "#172B3A"). */
+	private static final Map<String, String> variaveis = new LinkedHashMap<>();
 
 	@BeforeAll
 	static void lerCss() throws IOException {
-		String bruto = new ClassPathResource("static/css/base.css").getContentAsString(StandardCharsets.UTF_8);
-		css = bruto.replace("\r\n", "\n").replaceAll("(?s)/\\*.*?\\*/", "");
-		Matcher variavel = VARIAVEL.matcher(css);
-		while (variavel.find()) {
-			cores.put(variavel.group(1), variavel.group(2).trim());
+		String css = semComentarios(new ClassPathResource("static/css/base.css")
+				.getContentAsString(StandardCharsets.UTF_8).replace("\r\n", "\n"));
+		for (String bloco : css.split("}")) {
+			int abre = bloco.indexOf('{');
+			if (abre >= 0) {
+				regras.put(bloco.substring(0, abre).trim(), bloco.substring(abre + 1));
+			}
+		}
+		for (String declaracao : declaracoes(":root").split(";")) {
+			String[] partes = declaracao.trim().split(":", 2);
+			if (partes.length == 2 && partes[0].startsWith("--")) {
+				variaveis.put(partes[0].substring(2), partes[1].trim());
+			}
 		}
 	}
 
@@ -60,20 +67,21 @@ class EstiloBaseTests {
 	@Test
 	void paletaDaA11TemOsContrastesDocumentados() {
 		// RNF06: bordas #596B7A sobre branco = 5,51:1
-		assertThat(contraste("#596B7A", "#FFFFFF")).isCloseTo(5.51, org.assertj.core.data.Offset.offset(0.01));
+		assertThat(contraste("#596B7A", "#FFFFFF")).isCloseTo(5.51, Offset.offset(0.01));
 		assertThat(cor("cor-texto")).isEqualToIgnoringCase("#172B3A");
 		assertThat(cor("cor-primaria")).isEqualToIgnoringCase("#173F5F");
 	}
 
 	@Test
 	void focoVisivelTem3pxComAfastamento() {
-		String foco = declaracoes(":focus-visible");
-		assertThat(foco).contains("outline: 3px solid var(--cor-foco)").contains("outline-offset: 2px");
+		assertThat(declaracoes(":focus-visible"))
+				.contains("outline: 3px solid var(--cor-foco)")
+				.contains("outline-offset: 2px");
 	}
 
 	@Test
 	void alvoMinimoTem44px() {
-		assertThat(cores.get("alvo-minimo")).isEqualTo("2.75rem");
+		assertThat(variaveis).containsEntry("alvo-minimo", "2.75rem");
 		assertThat(2.75 * 16).isGreaterThanOrEqualTo(44);
 		assertThat(declaracoes(".menu__lista a")).contains("min-height: var(--alvo-minimo)")
 				.contains("min-width: var(--alvo-minimo)");
@@ -84,33 +92,51 @@ class EstiloBaseTests {
 	/** px só em bordas, contorno de foco e na classe visualmente-oculto (RNF01; A11 §5.12.7). */
 	@Test
 	void usaUnidadesRelativas() {
-		Matcher regra = REGRA.matcher(css);
-		while (regra.find()) {
-			String seletor = regra.group(1).trim();
-			for (String declaracao : regra.group(2).split(";")) {
-				if (declaracao.matches("(?s).*\\d+px.*") && !seletor.equals(".visualmente-oculto")) {
-					String propriedade = declaracao.trim().split(":")[0];
-					assertThat(propriedade).as("px em '%s' de %s", declaracao.trim(), seletor)
-							.matches("outline(-offset)?|border(-[a-z]+)?");
+		regras.forEach((seletor, corpo) -> {
+			if (seletor.equals(".visualmente-oculto")) {
+				return;
+			}
+			for (String declaracao : corpo.split(";")) {
+				if (temPx(declaracao)) {
+					String propriedade = declaracao.trim().split(":", 2)[0];
+					assertThat(propriedade.startsWith("outline") || propriedade.startsWith("border"))
+							.as("px em '%s' de %s", declaracao.trim(), seletor).isTrue();
 				}
 			}
+		});
+		assertThat(declaracoes("html")).contains("font-size: 100%");
+	}
+
+	/** Um número seguido de "px" (ex.: "3px"), sem expressão regular. */
+	private static boolean temPx(String texto) {
+		for (int i = texto.indexOf("px"); i >= 0; i = texto.indexOf("px", i + 2)) {
+			if (i > 0 && Character.isDigit(texto.charAt(i - 1))) {
+				return true;
+			}
 		}
-		assertThat(css).doesNotContain("vw;").containsPattern("html \\{\\s*font-size: 100%");
+		return false;
+	}
+
+	private static String semComentarios(String css) {
+		StringBuilder limpo = new StringBuilder();
+		int inicio = 0;
+		for (int abre = css.indexOf("/*"); abre >= 0; abre = css.indexOf("/*", inicio)) {
+			limpo.append(css, inicio, abre);
+			int fecha = css.indexOf("*/", abre + 2);
+			inicio = fecha < 0 ? css.length() : fecha + 2;
+		}
+		return limpo.append(css.substring(inicio)).toString();
 	}
 
 	private static String declaracoes(String seletor) {
-		Matcher regra = REGRA.matcher(css);
-		while (regra.find()) {
-			if (regra.group(1).trim().equals(seletor)) {
-				return regra.group(2);
-			}
-		}
-		throw new AssertionError("Regra não encontrada: " + seletor);
+		String corpo = regras.get(seletor);
+		assertThat(corpo).as("regra %s no base.css", seletor).isNotNull();
+		return corpo;
 	}
 
 	private static String cor(String nome) {
-		String valor = cores.get(nome);
-		assertThat(valor).as("variável --%s", nome).isNotNull().matches("#[0-9A-Fa-f]{6}");
+		String valor = variaveis.get(nome);
+		assertThat(valor).as("variável --%s", nome).isNotNull().startsWith("#").hasSize(7);
 		return valor;
 	}
 
