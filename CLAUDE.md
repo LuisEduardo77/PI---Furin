@@ -25,9 +25,11 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
   rota nova entra em `ROTAS_DO_FUNCIONARIO`) e T-10 (log de auditoria: use
   `auditoria.Auditoria` e `DetalhesAuditoria`, nunca um logger comum para eventos) e T-11
   (carga fictícia: migração Java `carga/V2__CargaFicticia`, só no perfil `prototipo`; a
-  próxima migração de esquema é a V3) estão concluídas; **nenhuma funcionalidade foi escrita
-  ainda.** Todos os RF e RNF estão com `Implementação: Planejada`, menos **RF17, RF24 e
-  RF25**, que estão **fora do escopo** e não devem ser implementados (DEC-37).
+  próxima migração de esquema é a V3) e T-12 (login pelas contas do banco no pacote
+  `autenticacao`; tela inicial em `SegurancaConfig.TELA_INICIAL`; `/portaria` ainda é
+  provisória) estão concluídas. RF01, RF03 e RNF03 estão `Planejada, em andamento`; os
+  demais RF e RNF estão com `Implementação: Planejada`, menos **RF17, RF24 e RF25**, que
+  estão **fora do escopo** e não devem ser implementados (DEC-37).
 
 ## 2. Onde está a verdade
 

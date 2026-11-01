@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: pagina('Login', '', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Login | Furin Access</title>
+</head>
+<body>
+<th:block th:fragment="conteudo">
+  <h1>Entrar no Furin Access</h1>
+
+  <!-- A11 §5.13.8: role="status" sem mover o foco. Texto [PROP] -->
+  <div role="status" class="aviso aviso--sucesso" th:if="${param.logout}">
+    <p><strong>Sucesso:</strong> você saiu do sistema.</p>
+  </div>
+
+  <!--
+    RF01; A11 §5.9.18; CA-RF01-09: autocomplete para o gerenciador de senhas e colar
+    permitido (nenhum bloqueio de paste). th:action inclui o token CSRF.
+    A mensagem de credencial inválida e o log da tentativa vêm na T-13 (RF02).
+  -->
+  <form th:action="@{/login}" method="post" novalidate>
+    <div class="campo">
+      <label for="usuario">Usuário (obrigatório)</label>
+      <input id="usuario" name="username" type="text" required
+             autocomplete="username" autocapitalize="none" spellcheck="false">
+    </div>
+
+    <div class="campo">
+      <label for="senha">Senha (obrigatório)</label>
+      <input id="senha" name="password" type="password" required
+             autocomplete="current-password">
+    </div>
+
+    <button type="submit" class="botao">Entrar</button>
+  </form>
+</th:block>
+</body>
+</html>

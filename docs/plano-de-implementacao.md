@@ -1,7 +1,7 @@
 # Plano de implementação
 
 **Documentação:** Revisada em 21/10/2026 (DEC-37 a DEC-39) · **Implementação:**
-T-00 concluída; T-01 iniciada (repositório criado); T-03 concluída (27/10/2026); T-04 concluída (29/10/2026); T-05 concluída (29/10/2026); T-06 concluída (29/10/2026); T-07 concluída (29/10/2026); T-08 concluída (01/11/2026); T-09 concluída (01/11/2026); T-10 concluída (01/11/2026); T-11 concluída (01/11/2026; login das contas na T-12); demais não iniciadas · **Atualizado em:** 29/10/2026
+T-00 concluída; T-01 iniciada (repositório criado); T-03 concluída (27/10/2026); T-04 concluída (29/10/2026); T-05 concluída (29/10/2026); T-06 concluída (29/10/2026); T-07 concluída (29/10/2026); T-08 concluída (01/11/2026); T-09 concluída (01/11/2026); T-10 concluída (01/11/2026); T-11 concluída (01/11/2026); T-12 concluída (01/11/2026); demais não iniciadas · **Atualizado em:** 29/10/2026
 
 As tarefas são pequenas, cabem em um cartão do Trello e estão em ordem de
 dependência. Segurança e acessibilidade fazem parte de cada tarefa desde o começo,
@@ -69,7 +69,7 @@ Vale para todo cartão:
 
 | ID | Tarefa | RF/RNF | Depende de | Pronto quando | Segurança e acessibilidade |
 |---|---|---|---|---|---|
-| T-12 | Fazer a tela de login e a autenticação do perfil `FUNCIONARIO`, com redirecionamento para `/portaria` | RF01, RF03 | T-08, T-09, T-11 | `ate.demo` e `gestao.demo` entram e caem na portaria, com o mesmo menu (DEC-37) | `autocomplete`, colar senha, título "Login \| Furin Access" (A11 §5.9.18) |
+| T-12 | Fazer a tela de login e a autenticação do perfil `FUNCIONARIO`, com redirecionamento para `/portaria` | RF01, RF03 | T-08, T-09, T-11 | `ate.demo` e `gestao.demo` entram e caem na portaria, com o mesmo menu (DEC-37). **Concluída em 01/11/2026:** pacote `autenticacao` (`Usuario`, `UsuarioRepository`, `ContasDosFuncionarios` com o login normalizado e o perfil vindo do banco, `LoginController`, `LoginComSucessoAuditado` com `LOGIN_SUCESSO`), tela `autenticacao/login.html`, portaria provisória (`portaria/PortariaController`), menu só para quem entrou. O usuário temporário `user` do perfil `prototipo` saiu. `LoginTests` (`./mvnw -B verify`: 132 testes). A mensagem de erro do login e o log da falha ficam para a T-13 | `autocomplete`, colar senha, título "Login \| Furin Access" (A11 §5.9.18) |
 | T-13 | Mostrar a mensagem genérica para credencial inválida e conta inativa, com log da tentativa | RF02 | T-12, T-10 | Critérios de aceitação do RF02 atendidos | Mensagem igual nos dois casos (A10 §8.5) |
 | T-14 | Limitar tentativas seguidas de login (5 tentativas, bloqueio de 15 min; DEC-28) | RF02 | T-13, T-07 | Teste do bloqueio e do desbloqueio | A10 §8.5 |
 | T-15 | Fazer a troca obrigatória de senha, a validade da senha temporária (72 h) e a tela "Alterar senha" (RF01, fluxo A3) | RF01, RNF03 | T-12 | O filtro redireciona para `/senha/definir`. Senha vencida é recusada. `/senha/alterar` exige a senha atual | RN14. Senha temporária com 12 caracteres, nova com pelo menos 8 (DEC-28) |

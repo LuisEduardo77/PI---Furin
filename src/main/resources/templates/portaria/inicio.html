@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/base :: pagina('Portaria', 'portaria', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Portaria | Furin Access</title>
+</head>
+<body>
+<th:block th:fragment="conteudo">
+  <h1>Portaria</h1>
+  <p>Você entrou como <strong sec:authentication="name">ate.demo</strong>.</p>
+  <p>
+    A leitura da carteirinha e os painéis da portaria entram nas próximas tarefas
+    do plano.
+  </p>
+</th:block>
+</body>
+</html>
