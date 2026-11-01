@@ -35,9 +35,10 @@ class CookieDeSessaoTests {
 		List<String> cookies = resposta.headers().allValues("Set-Cookie");
 		String sessao = cookies.stream().filter(c -> c.startsWith("JSESSIONID=")).findFirst()
 				.orElseThrow(() -> new AssertionError("Sem cookie de sessão: " + cookies));
-		assertThat(sessao).containsIgnoringCase("HttpOnly").containsIgnoringCase("SameSite=Lax");
 		// Secure só quando houver HTTPS (RNF04 planejado; DEC-31)
-		assertThat(sessao).doesNotContainIgnoringCase("Secure");
+		assertThat(sessao).containsIgnoringCase("HttpOnly")
+				.containsIgnoringCase("SameSite=Lax")
+				.doesNotContainIgnoringCase("Secure");
 	}
 
 }
