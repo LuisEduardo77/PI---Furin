@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<!--/*
+  Layout-base das telas dos funcionários (T-08; RNF01, RNF06, RF03).
+  Como usar: a página substitui o próprio elemento html pelo fragmento "pagina" deste
+  arquivo, passando o título, o item do menu e o fragmento "conteudo" da página (veja
+  templates/exemplo/layout.html). O item do menu marca a página atual com
+  aria-current; use vazio quando a página não estiver no menu.
+*/-->
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:fragment="pagina(titulo, menuAtivo, conteudo)">
+<head>
+  <meta charset="UTF-8">
+  <!-- Zoom liberado: sem user-scalable=no nem maximum-scale (A11 §5.12.7, §5.13.5) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- A11 §5.13.1: "Página | Furin Access" -->
+  <title th:text="${titulo} + ' | Furin Access'">Página | Furin Access</title>
+  <link rel="stylesheet" th:href="@{/css/base.css}" href="../../static/css/base.css">
+</head>
+<body>
+  <!-- A11 §5.7.12: primeiro elemento focável da página (CA-RF03-07) -->
+  <a class="pular-para-conteudo" href="#conteudo-principal">Ir para o conteúdo principal</a>
+
+  <header class="cabecalho">
+    <p class="cabecalho__marca">Furin Access</p>
+    <nav aria-label="Menu principal" th:replace="~{layout/base :: menu(${menuAtivo})}"></nav>
+  </header>
+
+  <main id="conteudo-principal" tabindex="-1" th:insert="${conteudo}">
+  </main>
+</body>
+</html>
+
+<!--/*
+  Menu único dos funcionários (DEC-37), sempre nesta ordem (RF03; A11 §5.7.15):
+  Portaria · Alunos · Presentes · Histórico · Contas da equipe · Alterar senha · Sair.
+  "Sair" é um formulário POST com o token CSRF, nunca um link (A10 §8.28).
+*/-->
+<nav th:fragment="menu(ativo)" class="menu" aria-label="Menu principal">
+  <ul class="menu__lista">
+    <li><a th:href="@{/portaria}" th:attr="aria-current=${ativo == 'portaria'} ? 'page'">Portaria</a></li>
+    <li><a th:href="@{/alunos}" th:attr="aria-current=${ativo == 'alunos'} ? 'page'">Alunos</a></li>
+    <li><a th:href="@{/presentes}" th:attr="aria-current=${ativo == 'presentes'} ? 'page'">Presentes</a></li>
+    <li><a th:href="@{/historico}" th:attr="aria-current=${ativo == 'historico'} ? 'page'">Histórico</a></li>
+    <li><a th:href="@{/contas/equipe}" th:attr="aria-current=${ativo == 'contas'} ? 'page'">Contas da equipe</a></li>
+    <li><a th:href="@{/senha/alterar}" th:attr="aria-current=${ativo == 'senha'} ? 'page'">Alterar senha</a></li>
+    <li>
+      <form th:action="@{/logout}" method="post" class="menu__sair">
+        <button type="submit" class="botao botao--secundario">Sair</button>
+      </form>
+    </li>
+  </ul>
+</nav>
