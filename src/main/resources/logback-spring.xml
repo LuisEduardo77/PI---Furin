@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Logs do Furin Access (T-10; A10 §8.15; RNF05).
+  - Logs técnicos: console, como o padrão do Spring Boot.
+  - Log de auditoria (logger AUDITORIA): também num arquivo próprio,
+    ${FURIN_LOG_DIR}/auditoria.log (padrão: ./logs, que está no .gitignore), com um
+    arquivo por mês. Nenhum arquivo é apagado: a guarda de 5 anos fica só configurada e
+    o descarte automático está fora do MVP (DEC-36).
+-->
+<configuration>
+  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+  <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+  <property name="DIRETORIO_LOG" value="${FURIN_LOG_DIR:-logs}"/>
+
+  <appender name="ARQUIVO_AUDITORIA" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${DIRETORIO_LOG}/auditoria.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${DIRETORIO_LOG}/auditoria.%d{yyyy-MM}.log</fileNamePattern>
+      <!-- Sem maxHistory: nada é apagado automaticamente (DEC-36) -->
+    </rollingPolicy>
+    <encoder>
+      <!-- A linha já traz evento, quando (UTC), usuário e detalhes (classe Auditoria) -->
+      <pattern>%msg%n</pattern>
+      <charset>UTF-8</charset>
+    </encoder>
+  </appender>
+
+  <logger name="AUDITORIA" level="INFO" additivity="true">
+    <appender-ref ref="ARQUIVO_AUDITORIA"/>
+  </logger>
+
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+  </root>
+</configuration>
