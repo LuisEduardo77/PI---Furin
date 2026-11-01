@@ -4,3 +4,10 @@ spring:
   datasource:
     # Senha do usuário furin, gerada por scripts/criar-usuario-banco.sql
     password: TROQUE_PELA_SENHA_DO_USUARIO_FURIN
+
+# Senhas das contas de demonstração ate.demo e gestao.demo (T-11), com pelo menos
+# 8 caracteres. Também podem vir das variáveis de ambiente de mesmo nome.
+# Só valem na primeira partida do perfil prototipo, quando a carga fictícia roda.
+# Tire o "#" e escreva a senha escolhida por você. Sem valor, a aplicação não sobe.
+#FURIN_SENHA_ATE_DEMO:
+#FURIN_SENHA_GESTAO_DEMO:

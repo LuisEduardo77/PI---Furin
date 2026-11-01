@@ -166,10 +166,11 @@ furin-access/
     │   ├── notificacao/   # RF21, RN11
     │   ├── conta/         # RF26 (contas da equipe)
     │   ├── arquivo/       # área privada (DEC-08)
-    │   └── auditoria/     # log de eventos (A10 §8.15)
+    │   ├── auditoria/     # log de eventos (A10 §8.15)
+    │   └── carga/         # carga fictícia V2, só no perfil prototipo (T-11)
     ├── main/resources/
     │   ├── application.yml, application-prototipo.yml
-    │   ├── db/migration/  # V1__esquema_inicial.sql, V2__carga_ficticia.sql
+    │   ├── db/migration/  # V1__esquema_inicial.sql (a V2 é a migração Java carga/V2__CargaFicticia)
     │   ├── templates/     # Thymeleaf (layout/base.html: layout-base, T-08)
     │   └── static/        # css (css/base.css, T-08), js
     └── test/java/...
@@ -627,6 +628,26 @@ fictício 0001" e assim por diante.
 **Fotos e termos fictícios:** a carga usa imagens geradas (silhueta ou iniciais) e um
 termo de exemplo em PDF, nunca fotos ou documentos de pessoas reais (A10 §8.33).
 
+**Implementação (T-11, 01/11/2026):** migração Java do Flyway
+`br.com.furin.access.carga.V2__CargaFicticia`, registrada como bean só no perfil
+`prototipo`. Ela substitui o `V2__carga_ficticia.sql` previsto, porque o SQL não gera o
+hash bcrypt a partir da variável de ambiente nem cria os arquivos fictícios (decisão do
+integrante na T-11). Roda uma vez, numa transação, e fica no histórico do Flyway como V2.
+
+- **Senhas:** variáveis `FURIN_SENHA_ATE_DEMO` e `FURIN_SENHA_GESTAO_DEMO` (ou as mesmas
+  chaves no `application-local.yml`). Sem elas, ou com menos de
+  `furin.senha.tamanho-minimo` caracteres, a aplicação não sobe. Mudar a variável depois
+  da primeira partida não muda a senha gravada.
+- **Contas:** ativas e **sem troca obrigatória de senha** [PROP], para a demonstração.
+- **Contatos:** telefones fictícios `(11) 90000-0001` (Carla) e `(11) 90000-0002`
+  (Bruno) [PROP], porque o contato principal exige telefone.
+- **Arquivos:** silhuetas PNG geradas no código e um termo de exemplo em PDF (consentimento
+  de Ana), gravados em `furin.arquivos.diretorio` com nome UUID. Os consentimentos de Davi
+  e Bia usam "Protocolo fictício 0002" e "0003" [PROP].
+- **Carteirinhas:** uma por aluno, com código aleatório de 32 caracteres hexadecimais.
+- **Uma próxima migração de esquema** recebe a versão 3 em diante: a V2 existe só nos
+  bancos do perfil `prototipo`.
+
 **Medição de desempenho:** a carga de 800 alunos e 30 dias de movimentações usada no
 RNF02 é gerada por script separado, só para o teste, e não entra na carga padrão
 (DEC-28, G4).
@@ -795,3 +816,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 01/11/2026 | T-08: layout-base Thymeleaf e CSS base (§4, "Layout-base"), com as cores [PROP] de erro e sucesso |
 | 01/11/2026 | T-09: Spring Security base (§6, "Implementação da base"), com a CSP e o `Referrer-Policy` [PROP] |
 | 01/11/2026 | T-10: log de auditoria (§6, "Log de auditoria"), com a máscara de login [PROP] e o evento `LOGIN_SUCESSO` [PROP] |
+| 01/11/2026 | T-11: carga fictícia como migração Java V2 só no perfil `prototipo` (§4 e §5.6), com telefones, protocolos e contas sem troca obrigatória [PROP] |

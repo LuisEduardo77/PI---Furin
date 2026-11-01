@@ -9,3 +9,8 @@ spring:
   security:
     user:
       roles: FUNCIONARIO
+
+# Carga fictícia (T-11): a migração Java V2 (carga/V2__CargaFicticia) roda só neste
+# perfil e lê as senhas das contas ate.demo e gestao.demo das variáveis de ambiente
+# FURIN_SENHA_ATE_DEMO e FURIN_SENHA_GESTAO_DEMO (ou do application-local.yml).
+# Sem elas, a aplicação não sobe. As senhas nunca ficam no repositório.
