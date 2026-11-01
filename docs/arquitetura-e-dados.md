@@ -686,10 +686,18 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   `Content-Security-Policy: default-src 'self'; object-src 'none'; base-uri 'self';
   form-action 'self'; frame-ancestors 'none'` e `Referrer-Policy: same-origin`. Por causa
   da CSP, as telas não usam `<script>` nem `style` embutidos: só arquivos em `static/`.
-- **Temporário até a T-12:** a tela de login é a gerada pelo Spring Security e, só no
-  perfil `prototipo`, o usuário `user` (senha aleatória no console) recebe o perfil
-  `FUNCIONARIO` (`application-prototipo.yml`). A conta ativa (RF03) também é conferida
-  a partir da T-12, com as contas do banco.
+- **Login (T-12, 01/11/2026):** pacote `br.com.furin.access.autenticacao`. `GET /login`
+  mostra a tela própria (`templates/autenticacao/login.html`); o `POST /login` é do
+  Spring Security, que busca a conta em `ContasDosFuncionarios` (um `UserDetailsService`
+  sobre a entidade `Usuario`). O login digitado é normalizado (`strip` e minúsculas) antes
+  da busca; a senha não. O perfil vem do banco, e uma conta com `ativo = 0` fica
+  desabilitada e não entra. Depois do login, `LoginComSucessoAuditado` registra
+  `LOGIN_SUCESSO` e leva sempre a `/portaria` (`SegurancaConfig.TELA_INICIAL`), mesmo que
+  o pedido original tenha sido outra rota. Quem já entrou e abre `/login` volta à
+  portaria. O menu do layout-base só aparece para quem entrou. O usuário temporário
+  `user` saiu do perfil `prototipo`. Textos [PROP]: título "Entrar no Furin Access" e
+  "Sucesso: você saiu do sistema." A conta desativada **durante** a sessão é conferida na
+  T-17.
 
 **Log de auditoria (T-10, 01/11/2026):** pacote `br.com.furin.access.auditoria`.
 
@@ -817,3 +825,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 01/11/2026 | T-09: Spring Security base (§6, "Implementação da base"), com a CSP e o `Referrer-Policy` [PROP] |
 | 01/11/2026 | T-10: log de auditoria (§6, "Log de auditoria"), com a máscara de login [PROP] e o evento `LOGIN_SUCESSO` [PROP] |
 | 01/11/2026 | T-11: carga fictícia como migração Java V2 só no perfil `prototipo` (§4 e §5.6), com telefones, protocolos e contas sem troca obrigatória [PROP] |
+| 01/11/2026 | T-12: login com as contas do banco e portaria provisória (§6, "Login"), com os textos [PROP] da tela |

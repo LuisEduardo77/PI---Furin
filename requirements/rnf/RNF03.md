@@ -4,7 +4,7 @@
 |---|---|
 | **Categoria** | Segurança |
 | **Documentação** | Revisada em 21/10/2026 (DEC-37 a DEC-39) |
-| **Implementação** | Planejada, em andamento. `PasswordEncoder` delegante (bcrypt) configurado na T-09, com teste do hash `{bcrypt}` sem a senha e do salt (CA-RNF03-02). A carga fictícia (T-11) grava as senhas de `ate.demo` e `gestao.demo`, vindas do ambiente, só como hash `{bcrypt}` (teste em `CargaFicticiaTests`, parte do CA-RNF03-01). Faltam o login (T-12), a troca de senha (T-15) e as contas (T-43) |
+| **Implementação** | Planejada, em andamento. `PasswordEncoder` delegante (bcrypt) configurado na T-09, com teste do hash `{bcrypt}` sem a senha e do salt (CA-RNF03-02). A carga fictícia (T-11) grava as senhas de `ate.demo` e `gestao.demo`, vindas do ambiente, só como hash `{bcrypt}` (teste em `CargaFicticiaTests`, parte do CA-RNF03-01). O login (T-12) confere a senha pelo mesmo `PasswordEncoder`, contra o hash do banco (`LoginTests`). Faltam a troca de senha (T-15) e as contas (T-43) |
 | **Atualizado em** | 01/11/2026 |
 
 ## Descrição

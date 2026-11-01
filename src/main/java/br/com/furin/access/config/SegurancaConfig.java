@@ -10,6 +10,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
 
 import br.com.furin.access.auditoria.AcessoNegadoAuditado;
+import br.com.furin.access.auditoria.Auditoria;
+import br.com.furin.access.autenticacao.LoginComSucessoAuditado;
 import jakarta.servlet.DispatcherType;
 
 /**
@@ -39,11 +41,15 @@ public class SegurancaConfig {
 			"/exemplo/layout"
 	};
 
-	/** Públicos: a tela de login (a página própria vem na T-12) e os arquivos estáticos. */
+	/** Públicos: a tela de login (T-12) e os arquivos estáticos. */
 	static final String[] ROTAS_PUBLICAS = { "/login", "/css/**", "/js/**", "/img/**", "/favicon.ico" };
 
+	/** Tela inicial de todos os funcionários (RF03; DEC-37). */
+	public static final String TELA_INICIAL = "/portaria";
+
 	@Bean
-	SecurityFilterChain filtroDeSeguranca(HttpSecurity http, AcessoNegadoAuditado acessoNegado) {
+	SecurityFilterChain filtroDeSeguranca(HttpSecurity http, AcessoNegadoAuditado acessoNegado,
+			Auditoria auditoria) {
 		http
 				.authorizeHttpRequests(rotas -> rotas
 						// O despacho de erro (404, 500) vem de um pedido que já passou pela autorização
@@ -52,8 +58,11 @@ public class SegurancaConfig {
 						.requestMatchers(ROTAS_DO_FUNCIONARIO).hasRole(PERFIL_FUNCIONARIO)
 						// Negar por padrão (A10 §5.15; RF03, CA-RF03-04)
 						.anyRequest().denyAll())
-				// Até a T-12, a tela de login é a gerada pelo Spring Security, em /login
-				.formLogin(Customizer.withDefaults())
+				// Tela própria em GET /login (autenticacao/LoginController); o POST /login é do
+				// Spring Security, com as contas do banco (autenticacao/ContasDosFuncionarios)
+				.formLogin(login -> login
+						.loginPage("/login")
+						.successHandler(new LoginComSucessoAuditado(auditoria, TELA_INICIAL)))
 				// POST /logout com o token CSRF; depois, volta ao login
 				.logout(Customizer.withDefaults())
 				// Toda resposta 403 vai para o log de auditoria como ACESSO_NEGADO (T-10)
