@@ -647,6 +647,29 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
 | Retenção e descarte | 5 anos após o fim do tratamento (DEC-33, DEC-36, [RNF05](../requirements/rnf/RNF05.md)). Nada é apagado fisicamente no MVP (seção 5.1) | RNF05; LGPD art. 15, 16 |
 | Acessibilidade | Layout-base com `lang="pt-BR"`, link "Ir para o conteúdo principal", foco visível de 3 px, paleta de A11, regiões `role="status"`/`role="alert"` na portaria | A11; RNF06 |
 
+**Implementação da base (T-09, 01/11/2026):** `br.com.furin.access.config.SegurancaConfig`.
+
+- **Rotas:** as rotas da tabela "Rotas principais" (§4) exigem o perfil `FUNCIONARIO`.
+  Ficam públicos só `/login` e os arquivos estáticos (`/css/**`, `/js/**`, `/img/**`,
+  `/favicon.ico`). Qualquer outra rota é negada (`denyAll`): sem login, o pedido vai ao
+  login; com login, recebe 403. Uma rota nova precisa entrar na lista
+  `ROTAS_DO_FUNCIONARIO`. O despacho interno de erro (`/error`) é liberado, para que uma
+  página inexistente dentro da área do funcionário dê 404 (RF03).
+- **CSRF:** ligado (padrão). O "Sair" é `POST /logout` com o token.
+- **Senhas:** `PasswordEncoderFactories.createDelegatingPasswordEncoder()` (bcrypt).
+- **Sessão:** cookie `HttpOnly` e `SameSite=Lax` (`server.servlet.session.cookie.*`). O
+  atributo `Secure` e o HSTS só entram com HTTPS (RNF04, planejado). Nova sessão a cada
+  login: padrão do Spring Security (troca do ID da sessão).
+- **Cabeçalhos:** os padrões do Spring Security (`X-Content-Type-Options: nosniff`,
+  `X-Frame-Options: DENY`, `Cache-Control: no-store`) e mais [PROP]
+  `Content-Security-Policy: default-src 'self'; object-src 'none'; base-uri 'self';
+  form-action 'self'; frame-ancestors 'none'` e `Referrer-Policy: same-origin`. Por causa
+  da CSP, as telas não usam `<script>` nem `style` embutidos: só arquivos em `static/`.
+- **Temporário até a T-12:** a tela de login é a gerada pelo Spring Security e, só no
+  perfil `prototipo`, o usuário `user` (senha aleatória no console) recebe o perfil
+  `FUNCIONARIO` (`application-prototipo.yml`). A conta ativa (RF03) também é conferida
+  a partir da T-12, com as contas do banco.
+
 ### 6.1 Backup do protótipo (DEC-30)
 
 **Por que existe:** a LGPD exige medidas contra a perda e a destruição acidental dos
@@ -751,3 +774,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 29/10/2026 | T-06: DDL da §5.5 vira a migração `V1__esquema_inicial.sql`, sem alteração (§1 e §5.5) |
 | 29/10/2026 | T-07: parâmetros implementados em `FurinProperties` (§4), com os detalhes [PROP] de formato, tipos MIME e diretório padrão |
 | 01/11/2026 | T-08: layout-base Thymeleaf e CSS base (§4, "Layout-base"), com as cores [PROP] de erro e sucesso |
+| 01/11/2026 | T-09: Spring Security base (§6, "Implementação da base"), com a CSP e o `Referrer-Policy` [PROP] |
