@@ -23,8 +23,9 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
   `config/FurinProperties`), T-08 (layout-base `templates/layout/base.html` e
   `static/css/base.css`), T-09 (Spring Security base em `config/SegurancaConfig`;
   rota nova entra em `ROTAS_DO_FUNCIONARIO`) e T-10 (log de auditoria: use
-  `auditoria.Auditoria` e `DetalhesAuditoria`, nunca um logger comum para eventos) estão
-  concluídas; **nenhuma funcionalidade foi escrita
+  `auditoria.Auditoria` e `DetalhesAuditoria`, nunca um logger comum para eventos) e T-11
+  (carga fictícia: migração Java `carga/V2__CargaFicticia`, só no perfil `prototipo`; a
+  próxima migração de esquema é a V3) estão concluídas; **nenhuma funcionalidade foi escrita
   ainda.** Todos os RF e RNF estão com `Implementação: Planejada`, menos **RF17, RF24 e
   RF25**, que estão **fora do escopo** e não devem ser implementados (DEC-37).
 
@@ -162,4 +163,5 @@ scripts/backup.ps1     # Windows
 
 Variáveis esperadas (nomes sugeridos, sem valores no repositório):
 `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`,
-as senhas iniciais da carga fictícia e `FURIN_BACKUP_DIR`.
+as senhas iniciais da carga fictícia (`FURIN_SENHA_ATE_DEMO` e
+`FURIN_SENHA_GESTAO_DEMO`, T-11) e `FURIN_BACKUP_DIR`.
