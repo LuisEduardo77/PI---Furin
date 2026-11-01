@@ -670,6 +670,25 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   `FUNCIONARIO` (`application-prototipo.yml`). A conta ativa (RF03) também é conferida
   a partir da T-12, com as contas do banco.
 
+**Log de auditoria (T-10, 01/11/2026):** pacote `br.com.furin.access.auditoria`.
+
+- **Uso:** `auditoria.registrar(EventoAuditoria.X, detalhes().id(...).texto(...))`, em
+  nome do funcionário autenticado, ou `registrarComo(evento, login, detalhes)` quando
+  ainda não há ninguém autenticado (por exemplo, `LOGIN_FALHA`).
+- **Linha:** `evento=ACESSO_NEGADO quando=<UTC> usuario=a*** rota=/alunos ...`. O horário
+  vem do bean `Clock` (UTC, RN10).
+- **Proteções:** `DetalhesAuditoria` só aceita IDs, textos técnicos, nomes de campos,
+  e-mail (sempre mascarado: `c***@example.com`) e código de carteirinha (só os 4
+  primeiros caracteres: `0123***`). Não existe método para senha ou documento. O
+  usuário sai mascarado; um login que não é e-mail mostra só a primeira letra
+  (`ate.demo` → `a***`) [PROP]. Quebras de linha nos valores viram `_`.
+- **Eventos:** catálogo em `EventoAuditoria`, com os nomes dos RF. `LOGIN_SUCESSO` é
+  [PROP] (o RF01 não dá nome).
+- **Arquivo:** o logger `AUDITORIA` também grava em `${FURIN_LOG_DIR:-logs}/auditoria.log`,
+  um arquivo por mês, sem apagar nenhum (DEC-36). A pasta `logs/` está no `.gitignore`.
+- **ACESSO_NEGADO:** todo 403 do Spring Security passa por `AcessoNegadoAuditado`, que
+  registra método, rota (sem a query string) e motivo (`AUTORIZACAO` ou `CSRF`).
+
 ### 6.1 Backup do protótipo (DEC-30)
 
 **Por que existe:** a LGPD exige medidas contra a perda e a destruição acidental dos
@@ -775,3 +794,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 29/10/2026 | T-07: parâmetros implementados em `FurinProperties` (§4), com os detalhes [PROP] de formato, tipos MIME e diretório padrão |
 | 01/11/2026 | T-08: layout-base Thymeleaf e CSS base (§4, "Layout-base"), com as cores [PROP] de erro e sucesso |
 | 01/11/2026 | T-09: Spring Security base (§6, "Implementação da base"), com a CSP e o `Referrer-Policy` [PROP] |
+| 01/11/2026 | T-10: log de auditoria (§6, "Log de auditoria"), com a máscara de login [PROP] e o evento `LOGIN_SUCESSO` [PROP] |

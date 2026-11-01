@@ -21,8 +21,10 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
   (projeto gerado, Boot 4.1.2), T-05 (CI no GitHub Actions com MySQL 8.4), T-06
   (migração `V1__esquema_inicial.sql`), T-07 (propriedades `furin.*` em
   `config/FurinProperties`), T-08 (layout-base `templates/layout/base.html` e
-  `static/css/base.css`) e T-09 (Spring Security base em `config/SegurancaConfig`;
-  rota nova entra em `ROTAS_DO_FUNCIONARIO`) estão concluídas; **nenhuma funcionalidade foi escrita
+  `static/css/base.css`), T-09 (Spring Security base em `config/SegurancaConfig`;
+  rota nova entra em `ROTAS_DO_FUNCIONARIO`) e T-10 (log de auditoria: use
+  `auditoria.Auditoria` e `DetalhesAuditoria`, nunca um logger comum para eventos) estão
+  concluídas; **nenhuma funcionalidade foi escrita
   ainda.** Todos os RF e RNF estão com `Implementação: Planejada`, menos **RF17, RF24 e
   RF25**, que estão **fora do escopo** e não devem ser implementados (DEC-37).
 

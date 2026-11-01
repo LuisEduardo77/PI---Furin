@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
 
+import br.com.furin.access.auditoria.AcessoNegadoAuditado;
 import jakarta.servlet.DispatcherType;
 
 /**
@@ -42,7 +43,7 @@ public class SegurancaConfig {
 	static final String[] ROTAS_PUBLICAS = { "/login", "/css/**", "/js/**", "/img/**", "/favicon.ico" };
 
 	@Bean
-	SecurityFilterChain filtroDeSeguranca(HttpSecurity http) throws Exception {
+	SecurityFilterChain filtroDeSeguranca(HttpSecurity http, AcessoNegadoAuditado acessoNegado) {
 		http
 				.authorizeHttpRequests(rotas -> rotas
 						// O despacho de erro (404, 500) vem de um pedido que já passou pela autorização
@@ -55,6 +56,8 @@ public class SegurancaConfig {
 				.formLogin(Customizer.withDefaults())
 				// POST /logout com o token CSRF; depois, volta ao login
 				.logout(Customizer.withDefaults())
+				// Toda resposta 403 vai para o log de auditoria como ACESSO_NEGADO (T-10)
+				.exceptionHandling(excecoes -> excecoes.accessDeniedHandler(acessoNegado))
 				// Cabeçalhos padrão do Spring Security (nosniff, X-Frame-Options DENY,
 				// Cache-Control no-store, HSTS só em HTTPS) e mais estes:
 				.headers(cabecalhos -> cabecalhos

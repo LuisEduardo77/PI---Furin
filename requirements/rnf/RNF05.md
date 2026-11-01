@@ -4,8 +4,8 @@
 |---|---|
 | **Categoria** | Privacidade |
 | **Documentação** | Revisada em 21/10/2026 (DEC-37 a DEC-39) |
-| **Implementação** | Planejada |
-| **Atualizado em** | 21/10/2026 |
+| **Implementação** | Planejada, em andamento. Canal "Logs": log de auditoria com e-mail, login e código mascarados e sem senha (T-10; testes da CA-RNF05-05 em `AuditoriaTests` e `AuditoriaIntegracaoTests`). Esquema V1 conferido na T-06 (CA-RNF05-01, inspeção no PR). Os demais canais vêm com as telas |
+| **Atualizado em** | 01/11/2026 |
 
 ## Descrição
 
