@@ -170,10 +170,28 @@ furin-access/
     ├── main/resources/
     │   ├── application.yml, application-prototipo.yml
     │   ├── db/migration/  # V1__esquema_inicial.sql, V2__carga_ficticia.sql
-    │   ├── templates/     # Thymeleaf
-    │   └── static/        # css, js
+    │   ├── templates/     # Thymeleaf (layout/base.html: layout-base, T-08)
+    │   └── static/        # css (css/base.css, T-08), js
     └── test/java/...
 ```
+
+### Layout-base (T-08)
+
+Cada tela usa o fragmento `layout/base :: pagina(titulo, menuAtivo, conteudo)`, que
+monta o título "Tela | Furin Access", `lang="pt-BR"`, o link "Ir para o conteúdo
+principal", o cabeçalho e o menu único do RF03. O "Sair" é um formulário `POST /logout`
+com o token CSRF. Sem dependência nova: só fragmentos do Thymeleaf. Detalhes escolhidos
+na implementação [PROP]:
+
+- cores além da paleta de A11 (§5.11.3, §5.11.4): erro `#A4161A`, sucesso `#1E5E2E` e
+  fundo das mensagens `#F1F4F6`, conferidas pelo teste `EstiloBaseTests`;
+- formulários com `novalidate`: o campo continua com `required` e "(obrigatório)", mas o
+  erro descritivo vem do servidor (Bean Validation), com `aria-invalid` e
+  `aria-describedby`;
+- a página `/exemplo/layout` (pacote `exemplo`) é **temporária**: sai quando existir a
+  primeira tela real;
+- os testes leem as páginas com o HtmlUnit (escopo `test`, versão gerenciada pelo
+  Spring Boot).
 
 ### Perfis de execução
 
@@ -732,3 +750,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 29/10/2026 | T-05: GitHub Actions configurado (§1 e §7), com as diferenças em relação ao ponto de partida descritas na §7. Execução verde no PR #4 |
 | 29/10/2026 | T-06: DDL da §5.5 vira a migração `V1__esquema_inicial.sql`, sem alteração (§1 e §5.5) |
 | 29/10/2026 | T-07: parâmetros implementados em `FurinProperties` (§4), com os detalhes [PROP] de formato, tipos MIME e diretório padrão |
+| 01/11/2026 | T-08: layout-base Thymeleaf e CSS base (§4, "Layout-base"), com as cores [PROP] de erro e sucesso |

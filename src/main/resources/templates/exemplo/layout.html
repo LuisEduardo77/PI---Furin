@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: pagina('Exemplo de layout', '', ~{::conteudo})}">
+<body>
+<th:block th:fragment="conteudo">
+  <h1>Exemplo de layout</h1>
+  <p>
+    Página temporária para conferir o layout-base e a checklist de acessibilidade
+    (T-08). Os dados são fictícios e nada é gravado.
+  </p>
+
+  <section aria-labelledby="titulo-mensagens">
+    <h2 id="titulo-mensagens">Mensagens de status</h2>
+    <!-- A11 §5.13.8: role="status" para sucesso; o foco não se move -->
+    <div role="status" class="aviso aviso--sucesso">
+      <p th:if="${enviado}">
+        <strong>Sucesso:</strong> dados recebidos. Este é só um exemplo; nada foi gravado.
+      </p>
+    </div>
+    <div class="aviso aviso--erro">
+      <p>
+        <strong>Erro:</strong> exemplo de mensagem de falha. Em uma tela real, uma falha
+        que pede ação fica em <code>role="alert"</code>.
+      </p>
+    </div>
+  </section>
+
+  <section aria-labelledby="titulo-formulario">
+    <h2 id="titulo-formulario">Formulário</h2>
+    <p>Envie o formulário com o nome vazio para ver a mensagem de erro.</p>
+
+    <!-- novalidate: o erro descritivo vem do servidor (Bean Validation, A11 §5.9.9) -->
+    <form th:action="@{/exemplo/layout}" th:object="${exemplo}" method="post" novalidate>
+      <div class="campo">
+        <label for="nome">Nome do aluno (obrigatório)</label>
+        <p id="nome-dica" class="campo__dica">Exemplo: Ana Teste.</p>
+        <p id="nome-erro" class="campo__erro" th:if="${#fields.hasErrors('nome')}">
+          <span>Erro:</span> <span th:errors="*{nome}">Informe o nome do aluno.</span>
+        </p>
+        <input id="nome" type="text" th:field="*{nome}" required autocomplete="off"
+               th:attr="aria-invalid=${#fields.hasErrors('nome')} ? 'true',
+                        aria-describedby=${#fields.hasErrors('nome')} ? 'nome-erro nome-dica' : 'nome-dica'">
+      </div>
+
+      <div class="campo">
+        <label for="turma">Turma</label>
+        <select id="turma" th:field="*{turma}">
+          <option value="">Escolha a turma</option>
+          <option value="6A">6º ano A</option>
+          <option value="7B">7º ano B</option>
+        </select>
+      </div>
+
+      <button type="submit" class="botao">Enviar exemplo</button>
+    </form>
+  </section>
+
+  <section aria-labelledby="titulo-tabela">
+    <h2 id="titulo-tabela">Tabela</h2>
+    <div class="tabela-rolavel">
+      <table>
+        <caption>Movimentações de exemplo (dados fictícios)</caption>
+        <thead>
+          <tr>
+            <th scope="col">Aluno</th>
+            <th scope="col">Turma</th>
+            <th scope="col">Tipo</th>
+            <th scope="col">Horário</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Ana Teste</th>
+            <td>6º ano A</td>
+            <td>Entrada</td>
+            <td>07:12</td>
+          </tr>
+          <tr>
+            <th scope="row">Carla Teste</th>
+            <td>7º ano B</td>
+            <td>Saída (manual)</td>
+            <td>11:40</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</th:block>
+</body>
+</html>
