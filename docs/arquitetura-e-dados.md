@@ -794,8 +794,24 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   ficam em `RegistrosDaPortaria`, com SQL explícito e os horários em UTC como
   `LocalDateTime`, sem a conversão de fuso do Hibernate. Os testes que precisam do
   perfil `prototipo` desligam a carga V2 com `spring.flyway.target=1`. Ainda não há:
-  janela de 2 s (T-27), expiração de 15 s (T-29), tela (T-30), mensagens (T-31) e
-  notificações (Fase 6).
+  janela de 2 s (T-27), expiração de 15 s (T-29), mensagens (T-31) e notificações
+  (Fase 6).
+- **Tela da portaria (T-30, 02/11/2026, antecipada):** `portaria/inicio.html` e
+  `static/js/portaria.js`, o segundo script do projeto (arquivo próprio por causa da
+  CSP). O campo de leitura manda o código com Enter; o painel "Simular leitura
+  (protótipo)" tem um botão por carteirinha válida de aluno ativo com turma vigente
+  (`CarteirinhasFicticias`, `@Profile("prototipo")`). Os dois fazem
+  `POST /portaria/leituras` com uma `chaveRequisicao` nova. O painel do funcionário e o
+  monitor do aluno são regiões `role="status"` separadas; o foco volta sempre ao campo.
+  A resposta traz o horário do giro já no fuso da escola (`horarioNaEscola`), para a
+  tela não depender do fuso do navegador. A foto aparece como "Foto indisponível" até a
+  área privada (T-18; DEC-28, A9). Os tempos do monitor e da limpeza do painel vêm de
+  `furin.portaria.monitor-exibicao` e `painel-limpeza`. Cada pedido da portaria dispara
+  o evento `furin:atividade`, que recomeça a contagem do aviso de sessão
+  (`sessao.js`): o servidor já renovou a sessão. Testes com JavaScript que dependem de
+  pedidos do script não usam a transação do teste (o HtmlUnit manda esses pedidos de
+  outra thread): gravam a cena e a apagam no fim. Textos [PROP]: o aviso do protótipo,
+  as dicas e "Nenhuma leitura em andamento.".
 
 **Log de auditoria (T-10, 01/11/2026):** pacote `br.com.furin.access.auditoria`.
 
@@ -930,3 +946,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 02/11/2026 | T-16: expiração da sessão e aviso (§6, "Sessão"), com a rota `POST /sessao/renovar` (§4) e os textos [PROP]; DEC-40 |
 | 02/11/2026 | T-17: conta desativada durante a sessão, página 403 e sessão só por cookie (§6, "Autorização"), com o texto [PROP] da página 403 |
 | 02/11/2026 | T-25, T-26 e T-28 antecipadas: tipo automático, leitura e giro simulado (§6, "Portaria, leitura e giro"), com o fuso em constante e a recusa `LIBERACAO_PENDENTE` [PROP] |
+| 02/11/2026 | T-30 antecipada: tela da portaria (§6, "Tela da portaria"), com "Foto indisponível" até a T-18 e os textos [PROP] |

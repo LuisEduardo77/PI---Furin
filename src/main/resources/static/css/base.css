@@ -282,3 +282,75 @@ td {
   text-align: left;
   border: 1px solid var(--cor-borda);
 }
+
+/* Portaria (T-30; RF10, RF22): painéis lado a lado e, em telas estreitas, um embaixo do
+   outro (RNF01). O estado aparece sempre em texto (A11 §5.11.1) */
+.portaria__paineis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  gap: var(--espaco);
+}
+
+.painel {
+  margin: var(--espaco) 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--cor-borda);
+  border-radius: 0.25rem;
+}
+
+.painel h2 {
+  margin-top: 0;
+}
+
+.portaria__leitura {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem 1rem;
+}
+
+.portaria__leitura .campo {
+  flex: 1 1 20rem;
+  margin-bottom: 0;
+}
+
+.portaria__foto {
+  display: inline-block;
+  padding: 1.5rem 1rem;
+  font-style: italic;
+  background-color: var(--cor-fundo-suave);
+  border: 1px dashed var(--cor-borda);
+}
+
+.portaria__dados {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 1rem;
+}
+
+.portaria__dados dt {
+  font-weight: 600;
+}
+
+.portaria__dados dd {
+  margin: 0;
+}
+
+/* Monitor do aluno: letra grande e linguagem simples (A11 §5.12.12) */
+.monitor {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.simulacao__lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.painel--simulacao {
+  background-color: var(--cor-fundo-suave);
+}
