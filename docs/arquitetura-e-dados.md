@@ -765,6 +765,18 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   conectado" resolve), e depois de reiniciar a aplicação o primeiro pedido com o cookie
   antigo também mostra o aviso de sessão encerrada. Textos [PROP]: título, texto e botão
   do aviso e a mensagem do login.
+- **Autorização (T-17, 02/11/2026):** RF03. O filtro `ContaDesativada`, antes da troca
+  de senha e da autorização, confere no banco, a cada pedido de quem entrou, se a conta
+  continua ativa. Se não estiver, registra `ACESSO_NEGADO` com
+  `motivo=CONTA_DESATIVADA`, encerra a sessão e leva a `/login?desativada` ("Sua conta
+  foi desativada. Procure a equipe da escola."). Conta que não existe não conta como
+  desativada, porque nada é apagado fisicamente (só acontece com usuários de teste). Todo
+  403 mostra `templates/error/403.html` ("Acesso não permitido", com "Voltar ao início"),
+  depois de `AcessoNegadoAuditado` registrar o evento. A sessão anda **só no cookie**
+  (`server.servlet.session.tracking-modes: cookie`): antes, o Tomcat punha
+  `;jsessionid=` nos links da primeira página. O teste
+  `AutorizacaoDeTodasAsRotasTests` descobre as rotas pelos controllers registrados e é
+  rodado de novo no fim de cada fase (plano, T-17). Texto [PROP]: o da página 403.
 
 **Log de auditoria (T-10, 01/11/2026):** pacote `br.com.furin.access.auditoria`.
 
@@ -897,3 +909,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 02/11/2026 | T-14: bloqueio do login em memória (§6, "Bloqueio do login"), com as regras [PROP] de prolongamento e de recomeço do contador |
 | 02/11/2026 | T-15: troca obrigatória, senha vencida e "Alterar senha" (§6, "Senha"), com o prazo da temporária mapeado como `Instant` por causa do fuso, e os textos [PROP] |
 | 02/11/2026 | T-16: expiração da sessão e aviso (§6, "Sessão"), com a rota `POST /sessao/renovar` (§4) e os textos [PROP]; DEC-40 |
+| 02/11/2026 | T-17: conta desativada durante a sessão, página 403 e sessão só por cookie (§6, "Autorização"), com o texto [PROP] da página 403 |

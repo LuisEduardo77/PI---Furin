@@ -54,6 +54,16 @@ public class ContasDosFuncionarios implements UserDetailsService {
 	}
 
 	/**
+	 * A conta do funcionário autenticado foi desativada (T-17; RF03, exceções)? Conta que não
+	 * existe não conta como desativada: no sistema nada é apagado fisicamente, então isso só
+	 * acontece com os usuários de teste ({@code @WithMockUser}).
+	 */
+	@Transactional(readOnly = true)
+	public boolean contaDesativada(String login) {
+		return usuarios.existsByLoginAndAtivoFalse(normalizarLogin(login));
+	}
+
+	/**
 	 * A senha temporária passou do prazo gravado em {@code senha_temporaria_expira_em}
 	 * (emissão + {@code furin.senha.validade-temporaria}; RN14)? Os horários são UTC (RN10).
 	 */

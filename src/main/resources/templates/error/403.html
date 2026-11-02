@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: pagina('Acesso não permitido', '', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Acesso não permitido | Furin Access</title>
+</head>
+<body>
+<th:block th:fragment="conteudo">
+  <!--
+    Página 403 (T-17; RF03, CA-RF03-06): o Spring Boot mostra este template em toda
+    resposta 403, depois de AcessoNegadoAuditado registrar ACESSO_NEGADO. Título, h1,
+    texto explicativo e um link de volta, que é um <a> comum e funciona pelo teclado.
+    Nada da rota pedida aparece na tela. Textos [PROP] do RF03
+  -->
+  <h1>Acesso não permitido</h1>
+  <p>Acesso não permitido. Esta página não está disponível para a sua conta, ou o formulário expirou.</p>
+  <p><a th:href="@{/portaria}" href="/portaria">Voltar ao início</a></p>
+</th:block>
+</body>
+</html>

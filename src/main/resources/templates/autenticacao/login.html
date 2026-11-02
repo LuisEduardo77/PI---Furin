@@ -19,6 +19,11 @@
     <p><strong>Aviso:</strong> Sua sessão foi encerrada por inatividade. Entre novamente.</p>
   </div>
 
+  <!-- RF03, exceções (T-17): a conta foi desativada durante a sessão. Texto [PROP] do RF03 -->
+  <div id="aviso-desativada" role="alert" class="aviso aviso--erro" th:if="${param.desativada}">
+    <p><strong>Erro:</strong> Sua conta foi desativada. Procure a equipe da escola.</p>
+  </div>
+
   <!--
     RF02, E1: a mesma mensagem para usuário inexistente, senha errada e conta inativa,
     sem dizer qual dado está errado (A10 §8.5; A11 §5.9.10). role="alert" anuncia a

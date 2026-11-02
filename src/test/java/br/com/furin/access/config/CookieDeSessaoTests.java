@@ -41,4 +41,14 @@ class CookieDeSessaoTests {
 				.doesNotContainIgnoringCase("Secure");
 	}
 
+	@Test
+	void identificadorDaSessaoNuncaVaiNoEndereco() throws Exception {
+		// T-17: na primeira visita, sem tracking-modes=cookie, o Tomcat reescrevia os links
+		HttpResponse<String> resposta = HttpClient.newHttpClient().send(
+				HttpRequest.newBuilder(URI.create("http://localhost:" + porta + "/login")).build(),
+				HttpResponse.BodyHandlers.ofString());
+
+		assertThat(resposta.body()).doesNotContainIgnoringCase("jsessionid");
+	}
+
 }
