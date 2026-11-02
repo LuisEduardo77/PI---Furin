@@ -240,6 +240,25 @@ button {
   border-left-color: var(--cor-erro);
 }
 
+/* Aviso de expiração da sessão (T-16; RF01, fluxo A2): diálogo modal centralizado */
+.aviso-sessao {
+  width: calc(100% - 2rem);
+  max-width: 30rem;
+  padding: 1rem 1.5rem;
+  color: var(--cor-texto);
+  background-color: var(--cor-fundo);
+  border: 2px solid var(--cor-primaria);
+  border-radius: 0.25rem;
+}
+
+.aviso-sessao h2 {
+  margin-top: 0;
+}
+
+.aviso-sessao::backdrop {
+  background-color: rgba(23, 43, 58, 0.6);
+}
+
 /* Tabelas: rolam dentro do próprio contêiner em telas estreitas (RNF01, CA-RNF01-02) */
 .tabela-rolavel {
   max-width: 100%;

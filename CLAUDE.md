@@ -33,7 +33,9 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
   `tentativas.esquecerTodos()` antes, e o tempo é controlado trocando o bean `Clock`) e
   T-15 (troca obrigatória em `TrocaDeSenhaObrigatoria`, telas em `SenhaController`;
   horário lido pelo JPA para comparar com o relógio é `Instant`, porque um
-  `LocalDateTime` vem no fuso da JVM) estão concluídas. RF02 está `Implementada`. RF01, RF03 e RNF03 estão
+  `LocalDateTime` vem no fuso da JVM) e T-16 (sessão: `TemposDaSessao`, `SessaoExpirada`,
+  aviso no layout-base com `static/js/sessao.js`, o único script, e `POST /sessao/renovar`)
+  estão concluídas. RF02 está `Implementada`. RF01, RF03 e RNF03 estão
   `Planejada, em andamento`; os
   demais RF e RNF estão com `Implementação: Planejada`, menos **RF17, RF24 e RF25**, que
   estão **fora do escopo** e não devem ser implementados (DEC-37).
@@ -43,7 +45,7 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
 Em caso de conflito, vale a primeira fonte da lista:
 
 1. Decisões registradas em [`docs/rastreabilidade.md`](docs/rastreabilidade.md) §2
-   (ATU-01 a ATU-07, DEC-01 a DEC-39). Uma decisão marcada como "substituída" não vale
+   (ATU-01 a ATU-07, DEC-01 a DEC-40). Uma decisão marcada como "substituída" não vale
    mais; vale a que a substituiu.
 2. Os requisitos: [`requirements/rf/`](requirements/rf/) (RF01 a RF26) e
    [`requirements/rnf/`](requirements/rnf/) (RNF01 a RNF08).
@@ -129,7 +131,8 @@ executado) e T-04 (gerar o projeto pelo Spring Initializr).
   `lang="pt-BR"`, título por página, link "Ir para o conteúdo principal", `label` em
   todo campo, erros com `aria-invalid` e `aria-describedby`, foco visível de 3 px, alvos
   de 44 px, estado em texto e não só em cor, `role="status"`/`role="alert"` sem mover o
-  foco, funcionamento com 320 px e zoom de 200%.
+  foco, funcionamento com 320 px e zoom de 200%. Exceção: o aviso de expiração da sessão
+  é um diálogo que leva o foco para "Continuar conectado" (DEC-40).
 
 ## 5. O que **não** fazer (fora do MVP)
 

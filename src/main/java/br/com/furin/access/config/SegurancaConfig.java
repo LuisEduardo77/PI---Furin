@@ -5,13 +5,13 @@ import java.util.stream.Stream;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
 
 import br.com.furin.access.auditoria.AcessoNegadoAuditado;
@@ -20,6 +20,8 @@ import br.com.furin.access.autenticacao.CamposDoLoginObrigatorios;
 import br.com.furin.access.autenticacao.LoginComFalhaAuditado;
 import br.com.furin.access.autenticacao.LoginBloqueado;
 import br.com.furin.access.autenticacao.LoginComSucessoAuditado;
+import br.com.furin.access.autenticacao.SessaoController;
+import br.com.furin.access.autenticacao.SessaoExpirada;
 import br.com.furin.access.autenticacao.TentativasDeLogin;
 import br.com.furin.access.autenticacao.TrocaDeSenhaObrigatoria;
 import jakarta.servlet.DispatcherType;
@@ -47,6 +49,8 @@ public class SegurancaConfig {
 			"/presentes/**",
 			"/historico/**",
 			"/contas/equipe/**",
+			// "Continuar conectado" do aviso de expiração (T-16)
+			SessaoController.RENOVAR,
 			// Temporária (T-08): sai quando existir a primeira tela real
 			"/exemplo/layout"
 	};
@@ -60,6 +64,12 @@ public class SegurancaConfig {
 
 	/** Tela inicial de todos os funcionários (RF03; DEC-37). */
 	public static final String TELA_INICIAL = "/portaria";
+
+	/** Login depois de a sessão expirar por inatividade (T-16; RF01, fluxo A2, passo 3). */
+	public static final String LOGIN_SESSAO_EXPIRADA = "/login?expirada";
+
+	/** Cookie da sessão, apagado no "Sair" (T-16). */
+	private static final String COOKIE_DA_SESSAO = "JSESSIONID";
 
 	@Bean
 	SecurityFilterChain filtroDeSeguranca(HttpSecurity http, AcessoNegadoAuditado acessoNegado,
@@ -85,12 +95,17 @@ public class SegurancaConfig {
 				// RF02, E2: login bloqueado é recusado sem conferir a senha (T-14)
 				.addFilterBefore(new LoginBloqueado(tentativas, auditoria), UsernamePasswordAuthenticationFilter.class)
 				// RF01, fluxo A1 (T-15): com a troca pendente, toda rota leva a /senha/definir,
-				// menos o "Sair" e os arquivos estáticos. Antes da autorização: até uma rota
-				// negada leva à troca (CA-RF01-04)
-				.addFilterBefore(new TrocaDeSenhaObrigatoria(Stream.concat(Stream.of("/logout"),
+				// menos o "Sair", o "Continuar conectado" (T-16) e os arquivos estáticos. Antes
+				// da autorização: até uma rota negada leva à troca (CA-RF01-04)
+				.addFilterBefore(new TrocaDeSenhaObrigatoria(Stream.concat(Stream.of("/logout", SessaoController.RENOVAR),
 						Arrays.stream(ARQUIVOS_ESTATICOS)).toArray(String[]::new)), AuthorizationFilter.class)
-				// POST /logout com o token CSRF; depois, volta ao login
-				.logout(Customizer.withDefaults())
+				// RF01, fluxo A2 (T-16): um pedido com o cookie de uma sessão que expirou por
+				// inatividade leva ao login com o aviso. Antes do CSRF: o token do formulário
+				// era da sessão antiga
+				.addFilterBefore(new SessaoExpirada(LOGIN_SESSAO_EXPIRADA), CsrfFilter.class)
+				// POST /logout com o token CSRF; depois, volta ao login. O cookie é apagado
+				// para que o próximo pedido não pareça uma sessão expirada (T-16)
+				.logout(sair -> sair.deleteCookies(COOKIE_DA_SESSAO))
 				// Toda resposta 403 vai para o log de auditoria como ACESSO_NEGADO (T-10)
 				.exceptionHandling(excecoes -> excecoes.accessDeniedHandler(acessoNegado))
 				// Cabeçalhos padrão do Spring Security (nosniff, X-Frame-Options DENY,

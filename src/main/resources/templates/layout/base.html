@@ -16,6 +16,16 @@
   <!-- A11 §5.13.1: "Página | Furin Access" -->
   <title th:text="${titulo} + ' | Furin Access'">Página | Furin Access</title>
   <link rel="stylesheet" th:href="@{/css/base.css}" href="../../static/css/base.css">
+  <!--
+    Aviso de expiração da sessão (T-16), só para quem entrou. O script fica em static/js
+    por causa da CSP (sem script embutido). O token CSRF vai no cabeçalho do
+    "Continuar conectado".
+  -->
+  <th:block sec:authorize="isAuthenticated()">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <script th:src="@{/js/sessao.js}" defer></script>
+  </th:block>
 </head>
 <body>
   <!-- A11 §5.7.12: primeiro elemento focável da página (CA-RF03-07) -->
@@ -31,6 +41,27 @@
 
   <main id="conteudo-principal" tabindex="-1" th:insert="${conteudo}">
   </main>
+
+  <!--
+    RF01, fluxo A2 (T-16; A11 §5.16.2; DEC-40): aviso furin.sessao.aviso-antes antes do fim
+    de furin.sessao.inatividade. Diálogo modal (role="alertdialog"): ao abrir, o foco vai
+    para "Continuar conectado" e o leitor de tela lê o título e o texto. Esc também
+    continua conectado. Os tempos vêm do servidor (TemposDaSessaoNaTela). Textos [PROP]
+  -->
+  <dialog id="aviso-sessao" class="aviso-sessao" role="alertdialog"
+          aria-labelledby="aviso-sessao-titulo" aria-describedby="aviso-sessao-texto"
+          sec:authorize="isAuthenticated()"
+          th:data-inatividade="${sessaoInatividadeSegundos}"
+          th:data-aviso="${sessaoAvisoSegundos}"
+          th:data-renovar="@{/sessao/renovar}"
+          th:data-login="@{/login(expirada)}">
+    <h2 id="aviso-sessao-titulo">Sua sessão vai expirar</h2>
+    <p id="aviso-sessao-texto">
+      Por segurança, a sessão será encerrada em <strong data-tempo-restante>1 minuto</strong>
+      se você não usar o sistema.
+    </p>
+    <button type="button" class="botao" data-continuar>Continuar conectado</button>
+  </dialog>
 </body>
 </html>
 

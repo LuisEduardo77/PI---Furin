@@ -21,6 +21,8 @@ import org.springframework.context.annotation.Import;
 
 import br.com.furin.access.auditoria.AcessoNegadoAuditado;
 import br.com.furin.access.auditoria.Auditoria;
+import br.com.furin.access.autenticacao.TemposDaSessao;
+import br.com.furin.access.autenticacao.TemposDaSessaoNaTela;
 import br.com.furin.access.autenticacao.TentativasDeLogin;
 import br.com.furin.access.config.FurinProperties;
 import br.com.furin.access.config.RelogioConfig;
@@ -34,7 +36,7 @@ import org.springframework.security.test.context.support.WithMockUser;
  */
 @WebMvcTest(ExemploLayoutController.class)
 @Import({ SegurancaConfig.class, AcessoNegadoAuditado.class, Auditoria.class, RelogioConfig.class,
-		TentativasDeLogin.class })
+		TentativasDeLogin.class, TemposDaSessao.class, TemposDaSessaoNaTela.class })
 // TentativasDeLogin (T-14) lê furin.login.*: a fatia @WebMvcTest não registra as propriedades sozinha
 @EnableConfigurationProperties(FurinProperties.class)
 @WithMockUser(roles = SegurancaConfig.PERFIL_FUNCIONARIO)
