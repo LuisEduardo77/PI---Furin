@@ -171,7 +171,7 @@ class SenhaTests {
 		Map<String, Object> linha = linha("nova.conta");
 		assertThat((String) linha.get("senha_hash")).startsWith("{bcrypt}").doesNotContain(NOVA);
 		assertThat(encoder.matches(NOVA, (String) linha.get("senha_hash"))).isTrue();
-		assertThat(linha.get("troca_senha_obrigatoria")).isEqualTo(false);
+		assertThat(linha).containsEntry("troca_senha_obrigatoria", false);
 		assertThat(linha.get("senha_temporaria_expira_em")).isNull();
 		assertThat(sessao.getId()).isNotEqualTo(idAntes);
 		// A troca acabou: as rotas voltam a funcionar na mesma sessão
@@ -221,7 +221,7 @@ class SenhaTests {
 		HtmlPage pagina = enviarDefinicao(entrarPeloFormulario("nova.conta", TEMPORARIA), TEMPORARIA, TEMPORARIA);
 
 		assertThat(pagina.getElementById("nova-senha-erro").getTextContent()).contains("diferente da senha temporária");
-		assertThat(linha("nova.conta").get("troca_senha_obrigatoria")).isEqualTo(true);
+		assertThat(linha("nova.conta")).containsEntry("troca_senha_obrigatoria", true);
 	}
 
 	@Test
@@ -328,7 +328,7 @@ class SenhaTests {
 				.andExpect(unauthenticated());
 
 		assertThat(confere("nova.conta", TEMPORARIA)).isTrue();
-		assertThat(linha("nova.conta").get("troca_senha_obrigatoria")).isEqualTo(true);
+		assertThat(linha("nova.conta")).containsEntry("troca_senha_obrigatoria", true);
 	}
 
 	// --- CA-RF01-13: "Alterar senha" (fluxo A3) ---
@@ -342,7 +342,7 @@ class SenhaTests {
 				.param("senhaAtual", ERRADA).param("novaSenha", NOVA).param("confirmacao", NOVA))
 				.andExpect(status().isOk());
 
-		assertThat(linha("ate.demo").get("senha_hash")).isEqualTo(hashAntes);
+		assertThat(linha("ate.demo")).containsEntry("senha_hash", hashAntes);
 		assertThat(saida.getOut()).contains("motivo=SENHA_ATUAL_INCORRETA").doesNotContain("evento=SENHA_ALTERADA");
 	}
 

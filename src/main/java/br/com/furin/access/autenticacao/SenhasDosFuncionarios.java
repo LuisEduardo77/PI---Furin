@@ -24,8 +24,7 @@ public class SenhasDosFuncionarios {
 	/** A conta do funcionário autenticado. */
 	@Transactional(readOnly = true)
 	public Usuario conta(String login) {
-		return usuarios.findByLogin(ContasDosFuncionarios.normalizarLogin(login))
-				.orElseThrow(() -> new IllegalStateException("Conta do funcionário autenticado não encontrada"));
+		return buscar(login);
 	}
 
 	/** A senha informada é a senha atual da conta (a temporária, no fluxo A1)? */
@@ -39,10 +38,16 @@ public class SenhasDosFuncionarios {
 	 */
 	@Transactional
 	public void trocar(String login, String novaSenha) {
-		Usuario conta = conta(login);
+		// Sem chamar conta(): pelo próprio objeto, o @Transactional dela seria ignorado
+		Usuario conta = buscar(login);
 		conta.trocarSenha(encoder.encode(novaSenha));
 		// Grava já: a troca vale antes da próxima consulta, mesmo dentro de uma transação maior
 		usuarios.saveAndFlush(conta);
+	}
+
+	private Usuario buscar(String login) {
+		return usuarios.findByLogin(ContasDosFuncionarios.normalizarLogin(login))
+				.orElseThrow(() -> new IllegalStateException("Conta do funcionário autenticado não encontrada"));
 	}
 
 }
