@@ -18,7 +18,7 @@ public class SessaoController {
 
 	@PostMapping(RENOVAR)
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	public void renovar() {
+	public void continuarConectado() {
 		// Nada a fazer: o acesso já renovou a sessão
 	}
 

@@ -35,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import br.com.furin.access.config.FurinProperties;
 import br.com.furin.access.config.SegurancaConfig;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpSessionEvent;
 
 /**
@@ -228,6 +229,7 @@ class SessaoTests {
 	/** Como o navegador depois da inatividade: manda o cookie de uma sessão que já não existe. */
 	private static RequestPostProcessor sessaoExpirada() {
 		return pedido -> {
+			pedido.setCookies(new Cookie("JSESSIONID", "sessao-que-expirou"));
 			pedido.setRequestedSessionId("sessao-que-expirou");
 			pedido.setRequestedSessionIdValid(false);
 			pedido.setRequestedSessionIdFromCookie(true);

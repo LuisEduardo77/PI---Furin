@@ -1,11 +1,13 @@
 package br.com.furin.access.autenticacao;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -22,6 +24,9 @@ import jakarta.servlet.http.HttpServletResponse;
  */
 public class SessaoExpirada extends OncePerRequestFilter {
 
+	/** Nome do cookie de sessão quando o servidor não define outro (Servlet). */
+	private static final String COOKIE_PADRAO = "JSESSIONID";
+
 	private final String paginaDoAviso;
 
 	/** @param paginaDoAviso o login com o aviso, por exemplo {@code /login?expirada} */
@@ -32,15 +37,26 @@ public class SessaoExpirada extends OncePerRequestFilter {
 	@Override
 	protected void doFilterInternal(HttpServletRequest pedido, HttpServletResponse resposta, FilterChain cadeia)
 			throws ServletException, IOException {
-		// Cookie de sessão que não vale mais e nenhuma sessão em uso neste pedido
-		if (pedido.getRequestedSessionId() != null && !pedido.isRequestedSessionIdValid()
-				&& pedido.getSession(false) == null) {
+		// Veio um cookie de sessão, ele não vale mais e não há sessão em uso neste pedido.
+		// O valor do cookie (que vem do navegador) não é lido nem usado para decidir nada
+		if (temCookieDeSessao(pedido) && !pedido.isRequestedSessionIdValid() && pedido.getSession(false) == null) {
 			// Sessão nova antes de redirecionar: o cookie antigo é trocado e não há laço
 			pedido.getSession(true);
 			resposta.sendRedirect(pedido.getContextPath() + paginaDoAviso);
 			return;
 		}
 		cadeia.doFilter(pedido, resposta);
+	}
+
+	/** Só a presença do cookie, pelo nome configurado no servidor (padrão JSESSIONID). */
+	private static boolean temCookieDeSessao(HttpServletRequest pedido) {
+		Cookie[] cookies = pedido.getCookies();
+		if (cookies == null) {
+			return false;
+		}
+		String nome = pedido.getServletContext().getSessionCookieConfig().getName();
+		String nomeDoCookie = nome == null ? COOKIE_PADRAO : nome;
+		return Arrays.stream(cookies).anyMatch(cookie -> nomeDoCookie.equals(cookie.getName()));
 	}
 
 }
