@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: pagina('Alterar senha', 'senha', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Alterar senha | Furin Access</title>
+</head>
+<body>
+<th:block th:fragment="conteudo">
+  <h1>Alterar senha</h1>
+
+  <!-- A11 §5.13.8: role="status" sem mover o foco. Texto [PROP] -->
+  <div role="status" class="aviso aviso--sucesso" th:if="${senhaAlterada}">
+    <p><strong>Sucesso:</strong> sua senha foi alterada.</p>
+  </div>
+
+  <!--
+    RF01, fluxo A3 (T-15). CA-RF01-09: senha atual com autocomplete="current-password" e
+    as novas com "new-password"; colar permitido. As senhas nunca voltam preenchidas.
+  -->
+  <form th:action="@{/senha/alterar}" th:object="${alteracao}" method="post" novalidate>
+    <!-- RF02: login bloqueado por tentativas. Não é erro de um campo -->
+    <div id="erro-alteracao" role="alert" class="aviso aviso--erro" th:if="${#fields.hasGlobalErrors()}">
+      <p th:each="erro : ${#fields.globalErrors()}"><strong>Erro:</strong> <span th:text="${erro}">Muitas tentativas sem sucesso.</span></p>
+    </div>
+
+    <div class="campo">
+      <label for="senha-atual">Senha atual (obrigatório)</label>
+      <p id="senha-atual-erro" role="alert" class="campo__erro" th:if="${#fields.hasErrors('senhaAtual')}">
+        <span>Erro:</span> <span th:errors="*{senhaAtual}">A senha atual não confere.</span>
+      </p>
+      <input id="senha-atual" name="senhaAtual" type="password" required autocomplete="current-password"
+             th:autofocus="${#fields.hasErrors('senhaAtual')}"
+             th:attr="aria-invalid=${#fields.hasErrors('senhaAtual')} ? 'true',
+                      aria-describedby=${#fields.hasErrors('senhaAtual')} ? 'senha-atual-erro'">
+    </div>
+
+    <div class="campo">
+      <label for="nova-senha">Nova senha (obrigatório)</label>
+      <p id="nova-senha-dica" class="campo__dica">
+        Pelo menos <span th:text="${tamanhoMinimo}">8</span> caracteres, diferente da senha atual.
+      </p>
+      <p id="nova-senha-erro" role="alert" class="campo__erro" th:if="${#fields.hasErrors('novaSenha')}">
+        <span>Erro:</span> <span th:errors="*{novaSenha}">Informe a nova senha.</span>
+      </p>
+      <input id="nova-senha" name="novaSenha" type="password" required autocomplete="new-password"
+             th:autofocus="${#fields.hasErrors('novaSenha')} and not ${#fields.hasErrors('senhaAtual')}"
+             th:attr="aria-invalid=${#fields.hasErrors('novaSenha')} ? 'true',
+                      aria-describedby=${#fields.hasErrors('novaSenha')} ? 'nova-senha-erro nova-senha-dica' : 'nova-senha-dica'">
+    </div>
+
+    <div class="campo">
+      <label for="confirmacao">Confirme a nova senha (obrigatório)</label>
+      <p id="confirmacao-erro" role="alert" class="campo__erro" th:if="${#fields.hasErrors('confirmacao')}">
+        <span>Erro:</span> <span th:errors="*{confirmacao}">A confirmação não é igual à nova senha.</span>
+      </p>
+      <input id="confirmacao" name="confirmacao" type="password" required autocomplete="new-password"
+             th:autofocus="${#fields.hasErrors('confirmacao')} and not ${#fields.hasErrors('senhaAtual')}
+                           and not ${#fields.hasErrors('novaSenha')}"
+             th:attr="aria-invalid=${#fields.hasErrors('confirmacao')} ? 'true',
+                      aria-describedby=${#fields.hasErrors('confirmacao')} ? 'confirmacao-erro'">
+    </div>
+
+    <button type="submit" class="botao">Alterar senha</button>
+  </form>
+</th:block>
+</body>
+</html>

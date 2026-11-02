@@ -1,6 +1,10 @@
 package br.com.furin.access.autenticacao;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,9 +14,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 /**
- * Conta de um funcionário (tabela {@code usuario}, arquitetura §5.5). Só leitura por
- * enquanto: a T-12 usa a conta para o login. A criação e a troca de senha vêm na T-15
- * e na T-43.
+ * Conta de um funcionário (tabela {@code usuario}, arquitetura §5.5). A T-12 usa a conta
+ * para o login, e a T-15 troca a senha ({@link #trocarSenha}). A criação vem na T-43.
  */
 @Entity
 @Table(name = "usuario")
@@ -39,9 +42,15 @@ public class Usuario {
 	@Column(name = "troca_senha_obrigatoria")
 	private boolean trocaSenhaObrigatoria;
 
-	/** UTC (RN10). */
+	/**
+	 * Gravado em UTC (RN10). É {@code Instant}, e não {@code LocalDateTime}, para ser
+	 * comparado com o relógio sem depender do fuso da JVM: com
+	 * {@code hibernate.jdbc.time_zone: UTC}, um {@code LocalDateTime} lido do banco vem no
+	 * fuso da JVM (T-15).
+	 */
 	@Column(name = "senha_temporaria_expira_em")
-	private LocalDateTime senhaTemporariaExpiraEm;
+	@JdbcTypeCode(SqlTypes.TIMESTAMP)
+	private Instant senhaTemporariaExpiraEm;
 
 	/** UTC (RN10). */
 	@Column(name = "criado_em")
@@ -79,12 +88,22 @@ public class Usuario {
 		return trocaSenhaObrigatoria;
 	}
 
-	public LocalDateTime getSenhaTemporariaExpiraEm() {
+	public Instant getSenhaTemporariaExpiraEm() {
 		return senhaTemporariaExpiraEm;
 	}
 
 	public LocalDateTime getCriadoEm() {
 		return criadoEm;
+	}
+
+	/**
+	 * Grava a nova senha, já como hash (RNF03), e encerra a senha temporária (RF01, fluxo
+	 * A1, passo 3; CA-RF01-06): sem troca pendente e sem prazo.
+	 */
+	void trocarSenha(String novoHash) {
+		this.senhaHash = novoHash;
+		this.trocaSenhaObrigatoria = false;
+		this.senhaTemporariaExpiraEm = null;
 	}
 
 }

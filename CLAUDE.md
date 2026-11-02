@@ -30,8 +30,10 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
   provisória) e T-13 (erros do login: `LoginComFalhaAuditado` com `LOGIN_FALHA`,
   `CamposDoLoginObrigatorios` e `RetornoAoLogin`) e T-14 (bloqueio em
   `TentativasDeLogin` e `LoginBloqueado`; um teste que faz login chama
-  `tentativas.esquecerTodos()` antes, e o tempo é controlado trocando o bean `Clock`)
-  estão concluídas. RF02 está `Implementada`. RF01, RF03 e RNF03 estão
+  `tentativas.esquecerTodos()` antes, e o tempo é controlado trocando o bean `Clock`) e
+  T-15 (troca obrigatória em `TrocaDeSenhaObrigatoria`, telas em `SenhaController`;
+  horário lido pelo JPA para comparar com o relógio é `Instant`, porque um
+  `LocalDateTime` vem no fuso da JVM) estão concluídas. RF02 está `Implementada`. RF01, RF03 e RNF03 estão
   `Planejada, em andamento`; os
   demais RF e RNF estão com `Implementação: Planejada`, menos **RF17, RF24 e RF25**, que
   estão **fora do escopo** e não devem ser implementados (DEC-37).

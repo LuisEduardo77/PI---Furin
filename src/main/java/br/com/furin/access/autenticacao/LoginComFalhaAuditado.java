@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.Map;
 
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
@@ -25,7 +26,8 @@ import jakarta.servlet.http.HttpServletResponse;
  * <p>
  * O motivo fica só no log: {@code CREDENCIAL_INVALIDA} junta usuário inexistente e senha
  * errada (o Spring Security não distingue os dois), e {@code CONTA_INATIVA} vale para a
- * conta com {@code ativo = 0}.
+ * conta com {@code ativo = 0}. {@code SENHA_TEMPORARIA_VENCIDA} (T-15) é a senha certa
+ * com a temporária vencida: só nesse caso a tela mostra outra mensagem (CA-RF01-05).
  */
 public class LoginComFalhaAuditado implements AuthenticationFailureHandler {
 
@@ -46,6 +48,12 @@ public class LoginComFalhaAuditado implements AuthenticationFailureHandler {
 		auditoria.registrarComo(EventoAuditoria.LOGIN_FALHA, login, detalhes()
 				.texto("motivo", motivo(excecao))
 				.texto("origem", pedido.getRemoteAddr()));
+		if (excecao instanceof CredentialsExpiredException) {
+			// RF01 (T-15; CA-RF01-05): a senha conferiu, mas a temporária venceu. Não é
+			// credencial errada, então não conta para o bloqueio do RF02 [PROP]
+			RetornoAoLogin.voltar(pedido, resposta, Map.of(RetornoAoLogin.ERRO_SENHA_VENCIDA, true));
+			return;
+		}
 		// RF02, passos 3.1 e 4 (T-14): conta a falha e, na última permitida, bloqueia
 		Instant bloqueadoAte = tentativas.registrarFalha(login);
 		if (bloqueadoAte != null) {
@@ -60,6 +68,7 @@ public class LoginComFalhaAuditado implements AuthenticationFailureHandler {
 	private static String motivo(AuthenticationException excecao) {
 		return switch (excecao) {
 			case DisabledException inativa -> "CONTA_INATIVA";
+			case CredentialsExpiredException vencida -> "SENHA_TEMPORARIA_VENCIDA";
 			case BadCredentialsException credencial -> "CREDENCIAL_INVALIDA";
 			default -> "OUTRO";
 		};
