@@ -698,6 +698,17 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   `user` saiu do perfil `prototipo`. Textos [PROP]: título "Entrar no Furin Access" e
   "Sucesso: você saiu do sistema." A conta desativada **durante** a sessão é conferida na
   T-17.
+- **Erros do login (T-13, 02/11/2026):** RF02 sem o bloqueio. `LoginComFalhaAuditado`
+  (o `failureHandler` do `formLogin`) registra `LOGIN_FALHA` com o login normalizado e
+  mascarado, `motivo` (`CREDENCIAL_INVALIDA` para usuário inexistente ou senha errada,
+  `CONTA_INATIVA`) e `origem` (o IP do pedido), sem a senha. Na tela, a mensagem é a mesma
+  nos três casos. `CamposDoLoginObrigatorios`, um filtro logo antes do
+  `UsernamePasswordAuthenticationFilter` (depois do CSRF), recusa usuário ou senha vazios
+  sem consultar a conta; isso não é tentativa de autenticação, então não gera
+  `LOGIN_FALHA` nem vai contar para o bloqueio da T-14 [PROP]. Os dois voltam a
+  `GET /login` por redirecionamento, com o erro e o usuário digitado em atributos *flash*
+  (`RetornoAoLogin`), que valem só para essa volta; a senha nunca volta. Textos [PROP]: o
+  prefixo "Erro:" das mensagens e os valores de `motivo`.
 
 **Log de auditoria (T-10, 01/11/2026):** pacote `br.com.furin.access.auditoria`.
 
@@ -826,3 +837,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 01/11/2026 | T-10: log de auditoria (§6, "Log de auditoria"), com a máscara de login [PROP] e o evento `LOGIN_SUCESSO` [PROP] |
 | 01/11/2026 | T-11: carga fictícia como migração Java V2 só no perfil `prototipo` (§4 e §5.6), com telefones, protocolos e contas sem troca obrigatória [PROP] |
 | 01/11/2026 | T-12: login com as contas do banco e portaria provisória (§6, "Login"), com os textos [PROP] da tela |
+| 02/11/2026 | T-13: mensagem única do login e `LOGIN_FALHA` (§6, "Erros do login"), com o campo vazio fora do log e os valores de `motivo` [PROP] |

@@ -70,6 +70,11 @@ dist/
 nbdist/
 .nb-gradle/
 
+# --- Claude Code ---------------------------------------------------------------
+# Configuração local de cada máquina (por exemplo, .claude/launch.json do preview).
+# As instruções do projeto ficam no CLAUDE.md, na raiz, que é versionado. [PROP]
+.claude/
+
 # --- VS Code -------------------------------------------------------------------
 .vscode/*
 !.vscode/extensions.json
