@@ -709,6 +709,20 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   `GET /login` por redirecionamento, com o erro e o usuário digitado em atributos *flash*
   (`RetornoAoLogin`), que valem só para essa volta; a senha nunca volta. Textos [PROP]: o
   prefixo "Erro:" das mensagens e os valores de `motivo`.
+- **Bloqueio do login (T-14, 02/11/2026):** `TentativasDeLogin` guarda em memória, por
+  login normalizado (exista a conta ou não), as falhas seguidas e o fim do bloqueio
+  [PROP, como sugere o RF02: o protótipo tem uma só instância, e um reinício zera tudo].
+  `LoginComFalhaAuditado` soma a falha; na falha de número `furin.login.max-tentativas`,
+  registra `LOGIN_BLOQUEADO` (com `ate`, o fim do bloqueio) e o login fica bloqueado por
+  `furin.login.bloqueio`. Essa falha ainda mostra a mensagem genérica; a seguinte já
+  mostra a E2. `LoginBloqueado`, um filtro logo depois de `CamposDoLoginObrigatorios`,
+  recusa a tentativa durante o bloqueio sem conferir a senha nem consultar a conta, com a
+  mensagem E2 e `LOGIN_FALHA motivo=BLOQUEADO`. Decisões [PROP]: a tentativa durante o
+  bloqueio não o prolonga; quando o bloqueio vence, o contador recomeça do zero;
+  `LoginComSucessoAuditado` zera o contador. O horário vem do `Clock` da aplicação, que
+  os testes trocam por um relógio ajustável (`BloqueioDeLoginTests`). Os contadores de
+  logins que nunca chegam ao bloqueio só somem num login com sucesso ou num reinício;
+  num protótipo local isso não pesa.
 
 **Log de auditoria (T-10, 01/11/2026):** pacote `br.com.furin.access.auditoria`.
 
@@ -838,3 +852,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 01/11/2026 | T-11: carga fictícia como migração Java V2 só no perfil `prototipo` (§4 e §5.6), com telefones, protocolos e contas sem troca obrigatória [PROP] |
 | 01/11/2026 | T-12: login com as contas do banco e portaria provisória (§6, "Login"), com os textos [PROP] da tela |
 | 02/11/2026 | T-13: mensagem única do login e `LOGIN_FALHA` (§6, "Erros do login"), com o campo vazio fora do log e os valores de `motivo` [PROP] |
+| 02/11/2026 | T-14: bloqueio do login em memória (§6, "Bloqueio do login"), com as regras [PROP] de prolongamento e de recomeço do contador |

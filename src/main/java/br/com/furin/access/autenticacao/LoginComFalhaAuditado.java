@@ -3,6 +3,7 @@ package br.com.furin.access.autenticacao;
 import static br.com.furin.access.auditoria.DetalhesAuditoria.detalhes;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Map;
 
 import org.springframework.security.authentication.BadCredentialsException;
@@ -30,8 +31,11 @@ public class LoginComFalhaAuditado implements AuthenticationFailureHandler {
 
 	private final Auditoria auditoria;
 
-	public LoginComFalhaAuditado(Auditoria auditoria) {
+	private final TentativasDeLogin tentativas;
+
+	public LoginComFalhaAuditado(Auditoria auditoria, TentativasDeLogin tentativas) {
 		this.auditoria = auditoria;
+		this.tentativas = tentativas;
 	}
 
 	@Override
@@ -42,6 +46,14 @@ public class LoginComFalhaAuditado implements AuthenticationFailureHandler {
 		auditoria.registrarComo(EventoAuditoria.LOGIN_FALHA, login, detalhes()
 				.texto("motivo", motivo(excecao))
 				.texto("origem", pedido.getRemoteAddr()));
+		// RF02, passos 3.1 e 4 (T-14): conta a falha e, na última permitida, bloqueia
+		Instant bloqueadoAte = tentativas.registrarFalha(login);
+		if (bloqueadoAte != null) {
+			auditoria.registrarComo(EventoAuditoria.LOGIN_BLOQUEADO, login, detalhes()
+					.texto("ate", bloqueadoAte.toString())
+					.texto("origem", pedido.getRemoteAddr()));
+		}
+		// Esta falha mostra a mensagem genérica; o aviso de bloqueio vem na tentativa seguinte (E2)
 		RetornoAoLogin.voltar(pedido, resposta, Map.of(RetornoAoLogin.ERRO_CREDENCIAL, true));
 	}
 

@@ -15,11 +15,14 @@ import org.htmlunit.html.HtmlSelect;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 
 import br.com.furin.access.auditoria.AcessoNegadoAuditado;
 import br.com.furin.access.auditoria.Auditoria;
+import br.com.furin.access.autenticacao.TentativasDeLogin;
+import br.com.furin.access.config.FurinProperties;
 import br.com.furin.access.config.RelogioConfig;
 import br.com.furin.access.config.SegurancaConfig;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -30,7 +33,10 @@ import org.springframework.security.test.context.support.WithMockUser;
  * RF03). Contraste, foco e alvos ficam em {@link EstiloBaseTests}.
  */
 @WebMvcTest(ExemploLayoutController.class)
-@Import({ SegurancaConfig.class, AcessoNegadoAuditado.class, Auditoria.class, RelogioConfig.class })
+@Import({ SegurancaConfig.class, AcessoNegadoAuditado.class, Auditoria.class, RelogioConfig.class,
+		TentativasDeLogin.class })
+// TentativasDeLogin (T-14) lê furin.login.*: a fatia @WebMvcTest não registra as propriedades sozinha
+@EnableConfigurationProperties(FurinProperties.class)
 @WithMockUser(roles = SegurancaConfig.PERFIL_FUNCIONARIO)
 class LayoutBaseTests {
 

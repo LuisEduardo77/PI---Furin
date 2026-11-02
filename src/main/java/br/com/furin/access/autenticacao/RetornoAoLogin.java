@@ -26,6 +26,7 @@ final class RetornoAoLogin {
 	static final String ERRO_CREDENCIAL = "erroCredencial";
 	static final String ERRO_USUARIO_VAZIO = "erroUsuarioVazio";
 	static final String ERRO_SENHA_VAZIA = "erroSenhaVazia";
+	static final String ERRO_BLOQUEADO = "erroBloqueado";
 
 	/** Nenhum login válido passa disso (usuario.login tem 80); só limita o que vai para a sessão. */
 	private static final int TAMANHO_MAXIMO_DO_USUARIO = 200;
