@@ -40,7 +40,7 @@ import org.springframework.test.context.bean.override.convention.TestBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import br.com.furin.access.autenticacao.BloqueioDeLoginTests.RelogioAjustavel;
+import br.com.furin.access.RelogioAjustavel;
 import br.com.furin.access.config.FurinProperties;
 import br.com.furin.access.config.SegurancaConfig;
 

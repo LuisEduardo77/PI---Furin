@@ -141,7 +141,9 @@ class AutorizacaoDeTodasAsRotasTests {
 				new Rota(HttpMethod.GET, "/login"),
 				new Rota(HttpMethod.GET, SegurancaConfig.TELA_INICIAL),
 				new Rota(HttpMethod.POST, "/senha/alterar"),
-				new Rota(HttpMethod.POST, "/sessao/renovar"))
+				new Rota(HttpMethod.POST, "/sessao/renovar"),
+				// Portaria antecipada (T-26)
+				new Rota(HttpMethod.POST, "/portaria/leituras"))
 				.doesNotContain(new Rota(HttpMethod.GET, ROTA_SEM_REGRA));
 	}
 

@@ -15,7 +15,6 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
 
@@ -40,6 +39,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.com.furin.access.RelogioAjustavel;
 import br.com.furin.access.config.FurinProperties;
 import br.com.furin.access.config.SegurancaConfig;
 
@@ -312,36 +312,6 @@ class BloqueioDeLoginTests {
 
 	private static List<String> linhas(CapturedOutput saida, String trecho) {
 		return saida.getOut().lines().filter(linha -> linha.contains(trecho)).toList();
-	}
-
-	/** Relógio em UTC que só anda quando o teste manda. */
-	static final class RelogioAjustavel extends Clock {
-
-		private volatile Instant agora;
-
-		RelogioAjustavel(Instant inicio) {
-			this.agora = inicio;
-		}
-
-		void avancar(Duration tempo) {
-			agora = agora.plus(tempo);
-		}
-
-		@Override
-		public Instant instant() {
-			return agora;
-		}
-
-		@Override
-		public ZoneId getZone() {
-			return ZoneOffset.UTC;
-		}
-
-		@Override
-		public Clock withZone(ZoneId zona) {
-			throw new UnsupportedOperationException("O relógio do teste fica sempre em UTC");
-		}
-
 	}
 
 }
