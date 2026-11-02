@@ -92,7 +92,7 @@ Vale para todo cartão:
 
 | ID | Tarefa | RF/RNF | Depende de | Pronto quando | Segurança e acessibilidade |
 |---|---|---|---|---|---|
-| T-25 | Criar o serviço de tipo automático (RN01), com teste de unidade da tabela de decisão | RF13 | T-06 | Os três casos da RN01 cobertos | O tipo nunca vem da interface |
+| T-25 | Criar o serviço de tipo automático (RN01), com teste de unidade da tabela de decisão | RF13 | T-06 | Os três casos da RN01 cobertos. **Concluída em 02/11/2026, antecipada** (a Fase 3 foi pulada de propósito para a demonstração da portaria): `portaria/TipoAutomatico`, com o dia no fuso da escola (`RelogioConfig.FUSO_DA_ESCOLA`), e `TipoAutomaticoTests` | O tipo nunca vem da interface |
 | T-26 | Criar o endpoint de leitura: validações (RN09), bloqueio por aluno, `chave_requisicao` e registro `AGUARDANDO_GIRO` | RF09, RF14, RNF02 | T-22, T-25 | Liberação devolvida com tipo, nome, turma e foto | A10 §8.26. RN08 |
 | T-27 | Implementar a janela de 2 s, a leitura repetida com pendência (RN04) e uma liberação por vez (RN05) | RF15 | T-26 | Critérios de aceitação do RF15 atendidos | RN03–RN05 |
 | T-28 | Fazer o giro simulado: o botão confirma e grava `ocorrido_em` | RF09, RF14, RNF07 | T-26 | Situação `CONFIRMADA`. Botão disponível só no perfil `prototipo` | Botão de 44 px, operável por teclado |
