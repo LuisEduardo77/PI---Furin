@@ -777,6 +777,25 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   `;jsessionid=` nos links da primeira página. O teste
   `AutorizacaoDeTodasAsRotasTests` descobre as rotas pelos controllers registrados e é
   rodado de novo no fim de cada fase (plano, T-17). Texto [PROP]: o da página 403.
+- **Portaria, leitura e giro (T-25, T-26 e T-28, 02/11/2026, antecipadas para a
+  demonstração):** pacote `br.com.furin.access.portaria`. `TipoAutomatico` aplica a RN01
+  com o dia no fuso da escola (`RelogioConfig.FUSO_DA_ESCOLA`, America/Sao_Paulo) [PROP].
+  `POST /portaria/leituras` recebe JSON (`codigo`, `chaveRequisicao`) com o token CSRF no
+  cabeçalho; um campo `tipo` é ignorado. `Leituras` roda numa transação
+  `READ_COMMITTED`: encontra a carteirinha, **bloqueia o aluno**
+  (`SELECT … FOR UPDATE`), devolve a liberação original num reenvio com a mesma chave,
+  valida (RN09, RN06), calcula o tipo e grava `AGUARDANDO_GIRO`. A resposta traz o ID da
+  liberação, tipo, situação, nome, primeiro nome e turma; a foto entra com a tela
+  (T-30). Uma recusa responde 422 com um motivo técnico (`MotivoDaRecusa`) e vai para o
+  log como `LEITURA_RECUSADA`, com o código mascarado; os textos são da T-31. Até a
+  T-27, uma segunda leitura com liberação pendente é recusada (`LIBERACAO_PENDENTE`)
+  [PROP]. `POST /portaria/giros` (`GiroSimuladoController`, `@Profile("prototipo")`)
+  confirma uma liberação ainda pendente, com `ocorrido_em` do servidor. As consultas
+  ficam em `RegistrosDaPortaria`, com SQL explícito e os horários em UTC como
+  `LocalDateTime`, sem a conversão de fuso do Hibernate. Os testes que precisam do
+  perfil `prototipo` desligam a carga V2 com `spring.flyway.target=1`. Ainda não há:
+  janela de 2 s (T-27), expiração de 15 s (T-29), tela (T-30), mensagens (T-31) e
+  notificações (Fase 6).
 
 **Log de auditoria (T-10, 01/11/2026):** pacote `br.com.furin.access.auditoria`.
 
@@ -910,3 +929,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 02/11/2026 | T-15: troca obrigatória, senha vencida e "Alterar senha" (§6, "Senha"), com o prazo da temporária mapeado como `Instant` por causa do fuso, e os textos [PROP] |
 | 02/11/2026 | T-16: expiração da sessão e aviso (§6, "Sessão"), com a rota `POST /sessao/renovar` (§4) e os textos [PROP]; DEC-40 |
 | 02/11/2026 | T-17: conta desativada durante a sessão, página 403 e sessão só por cookie (§6, "Autorização"), com o texto [PROP] da página 403 |
+| 02/11/2026 | T-25, T-26 e T-28 antecipadas: tipo automático, leitura e giro simulado (§6, "Portaria, leitura e giro"), com o fuso em constante e a recusa `LIBERACAO_PENDENTE` [PROP] |

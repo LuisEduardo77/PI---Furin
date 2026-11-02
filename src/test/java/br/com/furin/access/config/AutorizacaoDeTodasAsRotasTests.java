@@ -38,6 +38,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -63,10 +64,16 @@ import jakarta.persistence.EntityManager;
  * Ficam de fora o {@code POST /login} e o {@code POST /logout}, que são do Spring
  * Security e não de um controller (testados em LoginTests e SessaoTests), e o
  * {@code /error} do Spring Boot.
+ * <p>
+ * Roda também com o perfil {@code prototipo}, onde existem todas as rotas, inclusive as
+ * simuladas, como {@code POST /portaria/giros} (T-28). A carga fictícia desse perfil (V2)
+ * fica desligada com {@code spring.flyway.target=1}, para não gravar dados no banco de
+ * testes.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
+@ActiveProfiles({ "test", "prototipo" })
+@TestPropertySource(properties = "spring.flyway.target=1")
 @Transactional
 @ExtendWith(OutputCaptureExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -141,7 +148,10 @@ class AutorizacaoDeTodasAsRotasTests {
 				new Rota(HttpMethod.GET, "/login"),
 				new Rota(HttpMethod.GET, SegurancaConfig.TELA_INICIAL),
 				new Rota(HttpMethod.POST, "/senha/alterar"),
-				new Rota(HttpMethod.POST, "/sessao/renovar"))
+				new Rota(HttpMethod.POST, "/sessao/renovar"),
+				// Portaria antecipada (T-26 e T-28; o giro simulado só existe no prototipo)
+				new Rota(HttpMethod.POST, "/portaria/leituras"),
+				new Rota(HttpMethod.POST, "/portaria/giros"))
 				.doesNotContain(new Rota(HttpMethod.GET, ROTA_SEM_REGRA));
 	}
 
