@@ -723,6 +723,27 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   os testes trocam por um relógio ajustável (`BloqueioDeLoginTests`). Os contadores de
   logins que nunca chegam ao bloqueio só somem num login com sucesso ou num reinício;
   num protótipo local isso não pesa.
+- **Senha (T-15, 02/11/2026):** RF01, fluxos A1 e A3. `ContasDosFuncionarios` devolve uma
+  `ContaAutenticada`, que sabe se a troca está pendente. A senha temporária vencida
+  (`senha_temporaria_expira_em` no passado) vira "credencial expirada", que o Spring
+  Security só confere **depois** da senha: a orientação de procurar a escola só aparece
+  para quem acertou a senha. Ela gera `LOGIN_FALHA motivo=SENHA_TEMPORARIA_VENCIDA` e não
+  conta para o bloqueio [PROP]. Com a troca pendente, `LoginComSucessoAuditado` leva a
+  `/senha/definir` e marca a sessão; o filtro `TrocaDeSenhaObrigatoria`, antes da
+  autorização, leva toda rota para lá, menos o `POST /logout` e os arquivos estáticos.
+  `SenhaController` confere as regras (pelo menos `furin.senha.tamanho-minimo`
+  caracteres, diferente da senha atual e igual à confirmação), grava só o hash
+  (`SenhasDosFuncionarios`), cria uma nova sessão e registra `SENHA_ALTERADA` com
+  `fluxo=DEFINICAO` ou `fluxo=ALTERACAO`, sem a senha. Se a temporária vencer durante a
+  sessão, a troca encerra a sessão e volta ao login com a orientação. Em "Alterar
+  senha", a senha atual errada gera `LOGIN_FALHA motivo=SENHA_ATUAL_INCORRETA` e conta
+  para o bloqueio do RF02, como diz o RF01; com o login bloqueado, a senha atual nem é
+  conferida [PROP]. **Fuso:** com `hibernate.jdbc.time_zone: UTC`, o Hibernate lê um
+  `LocalDateTime` no fuso da JVM, e não em UTC. Por isso
+  `Usuario.senhaTemporariaExpiraEm` é um `Instant` (`@JdbcTypeCode(SqlTypes.TIMESTAMP)`),
+  comparado direto com o relógio. Os outros horários lidos pelo JPA precisam do mesmo
+  cuidado. Textos [PROP]: as mensagens de campo vazio, "Salvar nova senha" e as
+  mensagens de sucesso.
 
 **Log de auditoria (T-10, 01/11/2026):** pacote `br.com.furin.access.auditoria`.
 
@@ -853,3 +874,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 01/11/2026 | T-12: login com as contas do banco e portaria provisória (§6, "Login"), com os textos [PROP] da tela |
 | 02/11/2026 | T-13: mensagem única do login e `LOGIN_FALHA` (§6, "Erros do login"), com o campo vazio fora do log e os valores de `motivo` [PROP] |
 | 02/11/2026 | T-14: bloqueio do login em memória (§6, "Bloqueio do login"), com as regras [PROP] de prolongamento e de recomeço do contador |
+| 02/11/2026 | T-15: troca obrigatória, senha vencida e "Alterar senha" (§6, "Senha"), com o prazo da temporária mapeado como `Instant` por causa do fuso, e os textos [PROP] |

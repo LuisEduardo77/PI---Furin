@@ -17,7 +17,8 @@ import jakarta.servlet.http.HttpServletResponse;
  * Depois do login, zera o contador de falhas (RF02, passo 5), registra
  * {@code LOGIN_SUCESSO} (RF01, passo 6) e leva sempre à tela
  * inicial, a mesma para todos os funcionários (RF03; DEC-37), mesmo que o pedido
- * original tenha sido outra rota.
+ * original tenha sido outra rota. Com a troca de senha pendente, vai para "Definir nova
+ * senha" (T-15; RF01, passo 5).
  */
 public class LoginComSucessoAuditado extends SimpleUrlAuthenticationSuccessHandler {
 
@@ -38,6 +39,13 @@ public class LoginComSucessoAuditado extends SimpleUrlAuthenticationSuccessHandl
 		// RF02, passo 5 (T-14): o login com sucesso zera o contador de falhas
 		tentativas.registrarSucesso(autenticacao.getName());
 		auditoria.registrarComo(EventoAuditoria.LOGIN_SUCESSO, autenticacao.getName(), detalhes());
+		if (autenticacao.getPrincipal() instanceof ContaAutenticada conta && conta.isTrocaSenhaObrigatoria()) {
+			// RF01, passo 5 (T-15): senha temporária vai para "Definir nova senha" (fluxo A1)
+			TrocaDeSenhaObrigatoria.marcarPendente(pedido);
+			clearAuthenticationAttributes(pedido);
+			getRedirectStrategy().sendRedirect(pedido, resposta, TrocaDeSenhaObrigatoria.TELA_DE_TROCA);
+			return;
+		}
 		super.onAuthenticationSuccess(pedido, resposta, autenticacao);
 	}
 

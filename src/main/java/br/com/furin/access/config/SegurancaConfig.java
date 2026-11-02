@@ -1,5 +1,8 @@
 package br.com.furin.access.config;
 
+import java.util.Arrays;
+import java.util.stream.Stream;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -7,6 +10,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
 
@@ -17,6 +21,7 @@ import br.com.furin.access.autenticacao.LoginComFalhaAuditado;
 import br.com.furin.access.autenticacao.LoginBloqueado;
 import br.com.furin.access.autenticacao.LoginComSucessoAuditado;
 import br.com.furin.access.autenticacao.TentativasDeLogin;
+import br.com.furin.access.autenticacao.TrocaDeSenhaObrigatoria;
 import jakarta.servlet.DispatcherType;
 
 /**
@@ -46,8 +51,12 @@ public class SegurancaConfig {
 			"/exemplo/layout"
 	};
 
+	/** Arquivos estáticos (static/), públicos. */
+	static final String[] ARQUIVOS_ESTATICOS = { "/css/**", "/js/**", "/img/**", "/favicon.ico" };
+
 	/** Públicos: a tela de login (T-12) e os arquivos estáticos. */
-	static final String[] ROTAS_PUBLICAS = { "/login", "/css/**", "/js/**", "/img/**", "/favicon.ico" };
+	static final String[] ROTAS_PUBLICAS = Stream.concat(Stream.of("/login"), Arrays.stream(ARQUIVOS_ESTATICOS))
+			.toArray(String[]::new);
 
 	/** Tela inicial de todos os funcionários (RF03; DEC-37). */
 	public static final String TELA_INICIAL = "/portaria";
@@ -75,6 +84,11 @@ public class SegurancaConfig {
 				.addFilterBefore(new CamposDoLoginObrigatorios(), UsernamePasswordAuthenticationFilter.class)
 				// RF02, E2: login bloqueado é recusado sem conferir a senha (T-14)
 				.addFilterBefore(new LoginBloqueado(tentativas, auditoria), UsernamePasswordAuthenticationFilter.class)
+				// RF01, fluxo A1 (T-15): com a troca pendente, toda rota leva a /senha/definir,
+				// menos o "Sair" e os arquivos estáticos. Antes da autorização: até uma rota
+				// negada leva à troca (CA-RF01-04)
+				.addFilterBefore(new TrocaDeSenhaObrigatoria(Stream.concat(Stream.of("/logout"),
+						Arrays.stream(ARQUIVOS_ESTATICOS)).toArray(String[]::new)), AuthorizationFilter.class)
 				// POST /logout com o token CSRF; depois, volta ao login
 				.logout(Customizer.withDefaults())
 				// Toda resposta 403 vai para o log de auditoria como ACESSO_NEGADO (T-10)

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: pagina('Definir nova senha', '', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Definir nova senha | Furin Access</title>
+</head>
+<body>
+<th:block th:fragment="conteudo">
+  <h1>Definir nova senha</h1>
+  <!-- RF01, fluxo A1 (T-15). Texto [PROP] -->
+  <p>Você entrou com uma senha temporária. Para continuar, defina uma senha nova, só sua.</p>
+
+  <!--
+    A11 §5.9.18; CA-RF01-09: autocomplete="new-password" e colar permitido. As senhas
+    nunca voltam preenchidas depois de um erro. O foco vai para o primeiro campo com
+    erro, que aponta para a mensagem (aria-describedby; A11 §5.9.9).
+  -->
+  <form th:action="@{/senha/definir}" th:object="${troca}" method="post" novalidate>
+    <div class="campo">
+      <label for="nova-senha">Nova senha (obrigatório)</label>
+      <p id="nova-senha-dica" class="campo__dica">
+        Pelo menos <span th:text="${tamanhoMinimo}">8</span> caracteres, diferente da senha temporária.
+      </p>
+      <p id="nova-senha-erro" role="alert" class="campo__erro" th:if="${#fields.hasErrors('novaSenha')}">
+        <span>Erro:</span> <span th:errors="*{novaSenha}">Informe a nova senha.</span>
+      </p>
+      <input id="nova-senha" name="novaSenha" type="password" required autocomplete="new-password"
+             th:autofocus="${#fields.hasErrors('novaSenha')}"
+             th:attr="aria-invalid=${#fields.hasErrors('novaSenha')} ? 'true',
+                      aria-describedby=${#fields.hasErrors('novaSenha')} ? 'nova-senha-erro nova-senha-dica' : 'nova-senha-dica'">
+    </div>
+
+    <div class="campo">
+      <label for="confirmacao">Confirme a nova senha (obrigatório)</label>
+      <p id="confirmacao-erro" role="alert" class="campo__erro" th:if="${#fields.hasErrors('confirmacao')}">
+        <span>Erro:</span> <span th:errors="*{confirmacao}">A confirmação não é igual à nova senha.</span>
+      </p>
+      <input id="confirmacao" name="confirmacao" type="password" required autocomplete="new-password"
+             th:autofocus="${#fields.hasErrors('confirmacao')} and not ${#fields.hasErrors('novaSenha')}"
+             th:attr="aria-invalid=${#fields.hasErrors('confirmacao')} ? 'true',
+                      aria-describedby=${#fields.hasErrors('confirmacao')} ? 'confirmacao-erro'">
+    </div>
+
+    <button type="submit" class="botao">Salvar nova senha</button>
+  </form>
+</th:block>
+</body>
+</html>

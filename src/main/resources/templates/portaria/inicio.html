@@ -9,6 +9,10 @@
 <body>
 <th:block th:fragment="conteudo">
   <h1>Portaria</h1>
+  <!-- RF01, fluxo A1 (T-15): volta da troca obrigatória. role="status" sem mover o foco. Texto [PROP] -->
+  <div role="status" class="aviso aviso--sucesso" th:if="${senhaDefinida}">
+    <p><strong>Sucesso:</strong> sua nova senha foi salva.</p>
+  </div>
   <p>Você entrou como <strong sec:authentication="name">ate.demo</strong>.</p>
   <p>
     A leitura da carteirinha e os painéis da portaria entram nas próximas tarefas

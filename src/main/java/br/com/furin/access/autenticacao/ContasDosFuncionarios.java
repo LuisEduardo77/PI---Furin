@@ -1,8 +1,11 @@
 package br.com.furin.access.autenticacao;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.util.List;
 import java.util.Locale;
 
-import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -16,14 +19,21 @@ import org.springframework.transaction.annotation.Transactional;
  * CA-RF01-02). O perfil vem do banco, nunca da tela (DEC-37). Uma conta com
  * {@code ativo = 0} fica desabilitada e não entra, com a mesma mensagem de credencial
  * inválida (RF02; LoginComFalhaAuditado).
+ * <p>
+ * T-15: uma senha temporária vencida (RN14; CA-RF01-05) vira "credencial expirada". O
+ * Spring Security só confere isso <b>depois</b> da senha, então a orientação de procurar
+ * a escola só aparece para quem acertou a senha e não revela quais contas existem.
  */
 @Service
 public class ContasDosFuncionarios implements UserDetailsService {
 
 	private final UsuarioRepository usuarios;
 
-	public ContasDosFuncionarios(UsuarioRepository usuarios) {
+	private final Clock relogio;
+
+	public ContasDosFuncionarios(UsuarioRepository usuarios, Clock relogio) {
 		this.usuarios = usuarios;
+		this.relogio = relogio;
 	}
 
 	/** Tira os espaços das pontas e passa para minúsculas: " ATE.Demo " vira "ate.demo". */
@@ -37,11 +47,19 @@ public class ContasDosFuncionarios implements UserDetailsService {
 		Usuario usuario = usuarios.findByLogin(normalizarLogin(login))
 				// Sem o login na mensagem: ela não pode revelar quais contas existem
 				.orElseThrow(() -> new UsernameNotFoundException("Conta não encontrada"));
-		return User.withUsername(usuario.getLogin())
-				.password(usuario.getSenhaHash())
-				.roles(usuario.getPerfil())
-				.disabled(!usuario.isAtivo())
-				.build();
+		return new ContaAutenticada(usuario.getLogin(), usuario.getSenhaHash(), usuario.isAtivo(),
+				!senhaTemporariaVencida(usuario),
+				List.of(new SimpleGrantedAuthority("ROLE_" + usuario.getPerfil())),
+				usuario.isTrocaSenhaObrigatoria());
+	}
+
+	/**
+	 * A senha temporária passou do prazo gravado em {@code senha_temporaria_expira_em}
+	 * (emissão + {@code furin.senha.validade-temporaria}; RN14)? Os horários são UTC (RN10).
+	 */
+	boolean senhaTemporariaVencida(Usuario usuario) {
+		Instant expiraEm = usuario.getSenhaTemporariaExpiraEm();
+		return usuario.isTrocaSenhaObrigatoria() && expiraEm != null && !relogio.instant().isBefore(expiraEm);
 	}
 
 }
