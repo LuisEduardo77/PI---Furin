@@ -143,9 +143,10 @@ public class RegistrosDaPortaria {
 
 	private static Liberacao liberacao(ResultSet rs, int linha) throws SQLException {
 		String nome = rs.getString("nome");
+		Instant ocorridoEm = instante(rs, "ocorrido_em");
 		return new Liberacao(rs.getLong("id_registro"), TipoMovimentacao.valueOf(rs.getString("tipo")),
 				rs.getString("situacao"), nome, Liberacao.primeiroNomeDe(nome), rs.getString("turma"),
-				instante(rs, "lancado_em"), instante(rs, "ocorrido_em"));
+				instante(rs, "lancado_em"), ocorridoEm, Liberacao.horarioNaEscola(ocorridoEm));
 	}
 
 	private static LocalDateTime utc(Instant instante) {

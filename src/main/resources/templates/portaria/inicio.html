@@ -14,10 +14,85 @@
     <p><strong>Sucesso:</strong> sua nova senha foi salva.</p>
   </div>
   <p>Você entrou como <strong sec:authentication="name">ate.demo</strong>.</p>
-  <p>
-    A leitura da carteirinha e os painéis da portaria entram nas próximas tarefas
-    do plano.
-  </p>
+
+  <!--
+    T-30 (RF09, RF10, RF14, RF22). Os números e o fuso vêm do servidor; o script fica em
+    static/js/portaria.js por causa da CSP. Textos [PROP], menos os dos RF.
+  -->
+  <div id="portaria" class="portaria"
+       th:data-leituras="@{/portaria/leituras}"
+       th:data-giros="@{/portaria/giros}"
+       th:data-monitor-ms="${monitorExibicaoMs}"
+       th:data-painel-ms="${painelLimpezaMs}">
+
+    <p class="aviso" th:if="${simulacao}">
+      <strong>Protótipo:</strong> não há leitor nem catraca. A leitura e a passagem pela
+      catraca são simuladas pelos botões marcados com "(protótipo)" (DEC-18, DEC-25).
+    </p>
+
+    <!-- RF09, passo 1; RNF07: o leitor USB "digita" o código e tecla Enter. O foco fica aqui -->
+    <section class="painel" aria-labelledby="titulo-leitura">
+      <h2 id="titulo-leitura">Leitura da carteirinha</h2>
+      <form id="form-leitura" class="portaria__leitura" novalidate>
+        <div class="campo">
+          <label for="campo-leitura">Código da carteirinha</label>
+          <p id="dica-leitura" class="campo__dica">Leia a carteirinha, ou digite ou cole o código e tecle Enter.</p>
+          <input id="campo-leitura" name="codigo" type="text" autocomplete="off" autocapitalize="none"
+                 spellcheck="false" autofocus aria-describedby="dica-leitura">
+        </div>
+        <button type="submit" class="botao">Registrar leitura</button>
+      </form>
+    </section>
+
+    <div class="portaria__paineis">
+      <!-- RF10: dados completos só aqui. A região role="status" anuncia sem mover o foco -->
+      <section class="painel" aria-labelledby="titulo-funcionario">
+        <h2 id="titulo-funcionario">Painel do funcionário</h2>
+        <h3>Último registro</h3>
+        <div id="painel-funcionario" role="status">
+          <p data-vazio>Nenhuma leitura em andamento.</p>
+        </div>
+      </section>
+
+      <!--
+        RF22: só o primeiro nome e o estado, numa região role="status" separada da do
+        funcionário (CA-RF22-06). Em espera, nenhum dado pessoal (CA-RF22-05)
+      -->
+      <section class="painel painel--monitor" aria-labelledby="titulo-monitor">
+        <h2 id="titulo-monitor">Monitor do aluno</h2>
+        <p id="monitor-aluno" class="monitor" role="status">Aproxime sua carteirinha do leitor.</p>
+      </section>
+    </div>
+
+    <!--
+      DEC-25 e DEC-18: simulações só no perfil prototipo, sempre identificadas
+      (CA-RF09-11). O painel não existe fora dele, e a rota do giro responde 404
+    -->
+    <section class="painel painel--simulacao" aria-labelledby="titulo-simulacao" th:if="${simulacao}">
+      <h2 id="titulo-simulacao">Simular leitura (protótipo)</h2>
+      <p>
+        Simulação: cada botão envia o código de uma carteirinha fictícia, como se ela
+        tivesse sido lida.
+      </p>
+      <ul class="simulacao__lista" th:unless="${#lists.isEmpty(carteirinhasFicticias)}">
+        <li th:each="carteirinha : ${carteirinhasFicticias}">
+          <button type="button" class="botao botao--secundario" data-simular-leitura
+                  th:data-codigo="${carteirinha.codigo()}"
+                  th:text="|Simular leitura: ${carteirinha.nome()} (${carteirinha.turma()})|">Simular leitura: Ana Teste (6A)</button>
+        </li>
+      </ul>
+      <p th:if="${#lists.isEmpty(carteirinhasFicticias)}">Nenhuma carteirinha fictícia ativa.</p>
+
+      <h3>Catraca (protótipo)</h3>
+      <p id="dica-giro" class="campo__dica">
+        Simulação: confirma a passagem da liberação em curso. Fica disponível depois de uma
+        leitura liberada.
+      </p>
+      <button type="button" id="botao-giro" class="botao" disabled aria-describedby="dica-giro">Simular passagem (giro)</button>
+    </section>
+  </div>
+
+  <script th:src="@{/js/portaria.js}" defer></script>
 </th:block>
 </body>
 </html>

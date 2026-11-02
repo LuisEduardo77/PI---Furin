@@ -100,6 +100,13 @@
     pedido.send();
   }
 
+  // Um pedido em segundo plano (por exemplo, uma leitura na portaria, T-30) também
+  // renova a sessão no servidor: a contagem recomeça, se o aviso não estiver aberto
+  document.addEventListener('furin:atividade', function () {
+    if (!aviso.open) {
+      iniciar();
+    }
+  });
   botao.addEventListener('click', continuar);
   aviso.addEventListener('cancel', function (evento) {
     // Esc: quem apertou está presente, então continua conectado
