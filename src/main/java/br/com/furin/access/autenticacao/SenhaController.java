@@ -40,6 +40,8 @@ public class SenhaController {
 	private static final String CAMPO_ATUAL = "senhaAtual";
 	private static final String CAMPO_NOVA = "novaSenha";
 	private static final String CAMPO_CONFIRMACAO = "confirmacao";
+	private static final String PARA_A_TELA_INICIAL = "redirect:" + SegurancaConfig.TELA_INICIAL;
+	private static final String PARA_O_LOGIN = "redirect:" + RetornoAoLogin.PAGINA_DE_LOGIN;
 
 	private final SenhasDosFuncionarios senhas;
 
@@ -70,7 +72,7 @@ public class SenhaController {
 	@GetMapping(TrocaDeSenhaObrigatoria.TELA_DE_TROCA)
 	public String exibirDefinir(HttpServletRequest pedido, Model model) {
 		if (!TrocaDeSenhaObrigatoria.trocaPendente(pedido)) {
-			return "redirect:" + SegurancaConfig.TELA_INICIAL;
+			return PARA_A_TELA_INICIAL;
 		}
 		model.addAttribute("troca", new DefinirSenhaForm());
 		return TELA_DEFINIR;
@@ -81,14 +83,14 @@ public class SenhaController {
 			Authentication autenticacao, HttpServletRequest pedido, RedirectAttributes redirecionamento)
 			throws ServletException {
 		if (!TrocaDeSenhaObrigatoria.trocaPendente(pedido)) {
-			return "redirect:" + SegurancaConfig.TELA_INICIAL;
+			return PARA_A_TELA_INICIAL;
 		}
 		Usuario conta = senhas.conta(autenticacao.getName());
 		if (contas.senhaTemporariaVencida(conta)) {
 			// A1, passo 2: a temporária venceu durante a sessão. Sai e orienta (CA-RF01-05)
 			pedido.logout();
 			redirecionamento.addFlashAttribute(RetornoAoLogin.ERRO_SENHA_VENCIDA, true);
-			return "redirect:" + RetornoAoLogin.PAGINA_DE_LOGIN;
+			return PARA_O_LOGIN;
 		}
 		conferirNovaSenha(form.getNovaSenha(), form.getConfirmacao(), conta, erros,
 				"A nova senha precisa ter pelo menos " + tamanhoMinimo
@@ -99,7 +101,7 @@ public class SenhaController {
 		trocar(autenticacao.getName(), form.getNovaSenha(), "DEFINICAO", pedido);
 		TrocaDeSenhaObrigatoria.concluir(pedido);
 		redirecionamento.addFlashAttribute("senhaDefinida", true);
-		return "redirect:" + SegurancaConfig.TELA_INICIAL;
+		return PARA_A_TELA_INICIAL;
 	}
 
 	// --- Fluxo A3: alterar a própria senha ---
