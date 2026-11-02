@@ -27,7 +27,9 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
   (carga fictícia: migração Java `carga/V2__CargaFicticia`, só no perfil `prototipo`; a
   próxima migração de esquema é a V3) e T-12 (login pelas contas do banco no pacote
   `autenticacao`; tela inicial em `SegurancaConfig.TELA_INICIAL`; `/portaria` ainda é
-  provisória) estão concluídas. RF01, RF03 e RNF03 estão `Planejada, em andamento`; os
+  provisória) e T-13 (erros do login: `LoginComFalhaAuditado` com `LOGIN_FALHA`,
+  `CamposDoLoginObrigatorios` e `RetornoAoLogin`; o bloqueio é a T-14) estão concluídas.
+  RF01, RF02, RF03 e RNF03 estão `Planejada, em andamento`; os
   demais RF e RNF estão com `Implementação: Planejada`, menos **RF17, RF24 e RF25**, que
   estão **fora do escopo** e não devem ser implementados (DEC-37).
 

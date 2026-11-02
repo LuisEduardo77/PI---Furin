@@ -110,22 +110,22 @@ class LoginTests {
 	@Test
 	void senhaNaoEhNormalizada() throws Exception {
 		mvc.perform(formLogin().user("ate.demo").password(" " + SENHA_ATE.toUpperCase() + " "))
-				.andExpect(redirectedUrl("/login?error"))
+				.andExpect(redirectedUrl("/login"))
 				.andExpect(unauthenticated());
 	}
 
 	@Test
 	void senhaErradaNaoEntra() throws Exception {
 		mvc.perform(formLogin().user("ate.demo").password("senha-errada-T12"))
-				.andExpect(redirectedUrl("/login?error"))
+				.andExpect(redirectedUrl("/login"))
 				.andExpect(unauthenticated());
 	}
 
 	@Test
 	void contaInativaNaoEntra() throws Exception {
-		// Parte do CA-RF01-03; a mensagem igual à de credencial inválida é da T-13
+		// Parte do CA-RF01-03; a mensagem igual à de credencial inválida está em ErroDeLoginTests
 		mvc.perform(formLogin().user("inativa.teste").password(SENHA_INATIVA))
-				.andExpect(redirectedUrl("/login?error"))
+				.andExpect(redirectedUrl("/login"))
 				.andExpect(unauthenticated());
 	}
 

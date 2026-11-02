@@ -7,10 +7,13 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
 
 import br.com.furin.access.auditoria.AcessoNegadoAuditado;
 import br.com.furin.access.auditoria.Auditoria;
+import br.com.furin.access.autenticacao.CamposDoLoginObrigatorios;
+import br.com.furin.access.autenticacao.LoginComFalhaAuditado;
 import br.com.furin.access.autenticacao.LoginComSucessoAuditado;
 import jakarta.servlet.DispatcherType;
 
@@ -62,7 +65,11 @@ public class SegurancaConfig {
 				// Spring Security, com as contas do banco (autenticacao/ContasDosFuncionarios)
 				.formLogin(login -> login
 						.loginPage("/login")
-						.successHandler(new LoginComSucessoAuditado(auditoria, TELA_INICIAL)))
+						.successHandler(new LoginComSucessoAuditado(auditoria, TELA_INICIAL))
+						// RF02: mensagem única e LOGIN_FALHA no log (T-13)
+						.failureHandler(new LoginComFalhaAuditado(auditoria)))
+				// RF02, E3: campo vazio volta à tela sem consultar a conta. Depois do CSRF
+				.addFilterBefore(new CamposDoLoginObrigatorios(), UsernamePasswordAuthenticationFilter.class)
 				// POST /logout com o token CSRF; depois, volta ao login
 				.logout(Customizer.withDefaults())
 				// Toda resposta 403 vai para o log de auditoria como ACESSO_NEGADO (T-10)

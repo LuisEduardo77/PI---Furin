@@ -14,8 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
  * <p>
  * O login digitado é normalizado antes da busca (RF01, fluxo principal, passo 3;
  * CA-RF01-02). O perfil vem do banco, nunca da tela (DEC-37). Uma conta com
- * {@code ativo = 0} fica desabilitada e não entra; a mensagem igual à de credencial
- * inválida e o log da tentativa são da T-13 (RF02).
+ * {@code ativo = 0} fica desabilitada e não entra, com a mesma mensagem de credencial
+ * inválida (RF02; LoginComFalhaAuditado).
  */
 @Service
 public class ContasDosFuncionarios implements UserDetailsService {

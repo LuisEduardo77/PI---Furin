@@ -15,21 +15,45 @@
   </div>
 
   <!--
+    RF02, E1: a mesma mensagem para usuário inexistente, senha errada e conta inativa,
+    sem dizer qual dado está errado (A10 §8.5; A11 §5.9.10). role="alert" anuncia a
+    mensagem; o foco vai para o primeiro campo, que aponta para ela (aria-describedby).
+  -->
+  <div id="erro-login" role="alert" class="aviso aviso--erro" th:if="${erroCredencial}">
+    <p><strong>Erro:</strong> Usuário ou senha inválidos. Confira os dados e tente novamente.</p>
+  </div>
+
+  <!--
     RF01; A11 §5.9.18; CA-RF01-09: autocomplete para o gerenciador de senhas e colar
     permitido (nenhum bloqueio de paste). th:action inclui o token CSRF.
-    A mensagem de credencial inválida e o log da tentativa vêm na T-13 (RF02).
+    RF02 (CA-RF02-07): depois de um erro, o usuário digitado volta preenchido e a senha
+    volta vazia (ela nunca é devolvida pelo servidor).
   -->
   <form th:action="@{/login}" method="post" novalidate>
     <div class="campo">
       <label for="usuario">Usuário (obrigatório)</label>
+      <!-- RF02, E3: validação de preenchimento, sem consultar a conta -->
+      <p id="usuario-erro" role="alert" class="campo__erro" th:if="${erroUsuarioVazio}">
+        <span>Erro:</span> Informe o usuário.
+      </p>
       <input id="usuario" name="username" type="text" required
-             autocomplete="username" autocapitalize="none" spellcheck="false">
+             autocomplete="username" autocapitalize="none" spellcheck="false"
+             th:value="${usuarioDigitado}"
+             th:autofocus="${erroCredencial} or ${erroUsuarioVazio}"
+             th:attr="aria-invalid=(${erroCredencial} or ${erroUsuarioVazio}) ? 'true',
+                      aria-describedby=${erroCredencial} ? 'erro-login' : (${erroUsuarioVazio} ? 'usuario-erro')">
     </div>
 
     <div class="campo">
       <label for="senha">Senha (obrigatório)</label>
+      <p id="senha-erro" role="alert" class="campo__erro" th:if="${erroSenhaVazia}">
+        <span>Erro:</span> Informe a senha.
+      </p>
       <input id="senha" name="password" type="password" required
-             autocomplete="current-password">
+             autocomplete="current-password"
+             th:autofocus="${erroSenhaVazia} and not ${erroUsuarioVazio}"
+             th:attr="aria-invalid=(${erroCredencial} or ${erroSenhaVazia}) ? 'true',
+                      aria-describedby=${erroCredencial} ? 'erro-login' : (${erroSenhaVazia} ? 'senha-erro')">
     </div>
 
     <button type="submit" class="botao">Entrar</button>
