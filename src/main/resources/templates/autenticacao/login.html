@@ -24,6 +24,15 @@
   </div>
 
   <!--
+    RF02, E2 (T-14): login bloqueado por excesso de tentativas. Igual para contas
+    existentes e inexistentes, sem dizer quanto tempo falta. Não é erro de um campo:
+    nenhum campo fica marcado como inválido. Texto [PROP]
+  -->
+  <div id="erro-bloqueio" role="alert" class="aviso aviso--erro" th:if="${erroBloqueado}">
+    <p><strong>Erro:</strong> Muitas tentativas sem sucesso. Aguarde alguns minutos e tente novamente.</p>
+  </div>
+
+  <!--
     RF01; A11 §5.9.18; CA-RF01-09: autocomplete para o gerenciador de senhas e colar
     permitido (nenhum bloqueio de paste). th:action inclui o token CSRF.
     RF02 (CA-RF02-07): depois de um erro, o usuário digitado volta preenchido e a senha

@@ -14,7 +14,9 @@ import br.com.furin.access.auditoria.AcessoNegadoAuditado;
 import br.com.furin.access.auditoria.Auditoria;
 import br.com.furin.access.autenticacao.CamposDoLoginObrigatorios;
 import br.com.furin.access.autenticacao.LoginComFalhaAuditado;
+import br.com.furin.access.autenticacao.LoginBloqueado;
 import br.com.furin.access.autenticacao.LoginComSucessoAuditado;
+import br.com.furin.access.autenticacao.TentativasDeLogin;
 import jakarta.servlet.DispatcherType;
 
 /**
@@ -52,7 +54,7 @@ public class SegurancaConfig {
 
 	@Bean
 	SecurityFilterChain filtroDeSeguranca(HttpSecurity http, AcessoNegadoAuditado acessoNegado,
-			Auditoria auditoria) {
+			Auditoria auditoria, TentativasDeLogin tentativas) {
 		http
 				.authorizeHttpRequests(rotas -> rotas
 						// O despacho de erro (404, 500) vem de um pedido que já passou pela autorização
@@ -65,11 +67,14 @@ public class SegurancaConfig {
 				// Spring Security, com as contas do banco (autenticacao/ContasDosFuncionarios)
 				.formLogin(login -> login
 						.loginPage("/login")
-						.successHandler(new LoginComSucessoAuditado(auditoria, TELA_INICIAL))
-						// RF02: mensagem única e LOGIN_FALHA no log (T-13)
-						.failureHandler(new LoginComFalhaAuditado(auditoria)))
-				// RF02, E3: campo vazio volta à tela sem consultar a conta. Depois do CSRF
+						.successHandler(new LoginComSucessoAuditado(auditoria, tentativas, TELA_INICIAL))
+						// RF02: mensagem única e LOGIN_FALHA no log (T-13); conta a falha (T-14)
+						.failureHandler(new LoginComFalhaAuditado(auditoria, tentativas)))
+				// Antes do login, nesta ordem e depois do CSRF:
+				// RF02, E3: campo vazio volta à tela sem consultar a conta (T-13)
 				.addFilterBefore(new CamposDoLoginObrigatorios(), UsernamePasswordAuthenticationFilter.class)
+				// RF02, E2: login bloqueado é recusado sem conferir a senha (T-14)
+				.addFilterBefore(new LoginBloqueado(tentativas, auditoria), UsernamePasswordAuthenticationFilter.class)
 				// POST /logout com o token CSRF; depois, volta ao login
 				.logout(Customizer.withDefaults())
 				// Toda resposta 403 vai para o log de auditoria como ACESSO_NEGADO (T-10)

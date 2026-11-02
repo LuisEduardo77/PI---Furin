@@ -71,6 +71,9 @@ class ErroDeLoginTests {
 	@Autowired
 	private PasswordEncoder encoder;
 
+	@Autowired
+	private TentativasDeLogin tentativas;
+
 	/** Para conferir que um campo vazio não consulta a conta (RF02, E3). */
 	@MockitoSpyBean
 	private UsuarioRepository usuarios;
@@ -82,6 +85,8 @@ class ErroDeLoginTests {
 		navegador.getOptions().setCssEnabled(false);
 		navegador.getOptions().setJavaScriptEnabled(false);
 		navegador.getCookieManager().clearCookies();
+		// O contador de falhas fica em memória e dura entre os testes (T-14)
+		tentativas.esquecerTodos();
 	}
 
 	/** As três falhas do E1: senha errada, login inexistente e conta inativa com a senha certa. */

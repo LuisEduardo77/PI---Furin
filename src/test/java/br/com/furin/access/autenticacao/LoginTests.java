@@ -74,6 +74,9 @@ class LoginTests {
 	@Autowired
 	private PasswordEncoder encoder;
 
+	@Autowired
+	private TentativasDeLogin tentativas;
+
 	@BeforeEach
 	void prepararContas() {
 		conta("ate.demo", "ATE Demo", SENHA_ATE, true);
@@ -82,6 +85,8 @@ class LoginTests {
 		navegador.getOptions().setCssEnabled(false);
 		navegador.getOptions().setJavaScriptEnabled(false);
 		navegador.getCookieManager().clearCookies();
+		// O contador de falhas fica em memória e dura entre os testes (T-14)
+		tentativas.esquecerTodos();
 	}
 
 	static Stream<Arguments> contasDeDemonstracao() {
