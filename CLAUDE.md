@@ -37,7 +37,11 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
   aviso no layout-base com `static/js/sessao.js`, o único script, e `POST /sessao/renovar`)
   e T-17 (conta desativada em `ContaDesativada`, página `error/403.html`, sessão só por
   cookie; `config/AutorizacaoDeTodasAsRotasTests` descobre as rotas sozinho e roda de novo
-  no fim de cada fase) estão concluídas. RF02 e RF03 estão `Implementada`. RF01 e RNF03 estão
+  no fim de cada fase) estão concluídas. A **Fase 3 foi pulada de propósito** para
+  demonstrar a portaria: T-25 (`portaria/TipoAutomatico`), T-26 (`POST /portaria/leituras`
+  em `Leituras`, SQL explícito em `RegistrosDaPortaria`) e T-28 (`POST /portaria/giros`,
+  `@Profile("prototipo")`) estão concluídas, antecipadas; teste que precisa do
+  `prototipo` usa `spring.flyway.target=1` para não rodar a carga V2. RF02 e RF03 estão `Implementada`. RF01 e RNF03 estão
   `Planejada, em andamento`; os
   demais RF e RNF estão com `Implementação: Planejada`, menos **RF17, RF24 e RF25**, que
   estão **fora do escopo** e não devem ser implementados (DEC-37).

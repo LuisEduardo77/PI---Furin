@@ -265,6 +265,17 @@ class LeituraTests {
 	}
 
 	@Test
+	void giroSimuladoNaoExisteForaDoPerfilPrototipo() throws Exception {
+		// CA-RF09-08: este teste roda só no perfil test
+		ler(CODIGO_ANA, UUID.randomUUID()).andExpect(status().isOk());
+
+		mvc.perform(post("/portaria/giros").with(funcionario()).with(csrf())
+				.contentType(MediaType.APPLICATION_JSON).content("{\"idLiberacao\":1}"))
+				.andExpect(status().isNotFound());
+		assertThat(unicoRegistroDaAna()).containsEntry("situacao", "AGUARDANDO_GIRO");
+	}
+
+	@Test
 	void leituraSemTokenCsrfEhRecusada() throws Exception {
 		mvc.perform(post("/portaria/leituras").with(funcionario())
 				.contentType(MediaType.APPLICATION_JSON).content(corpo(CODIGO_ANA, UUID.randomUUID())))
