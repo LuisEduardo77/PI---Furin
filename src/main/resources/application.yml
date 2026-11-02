@@ -28,6 +28,9 @@ spring:
 server:
   servlet:
     session:
+      # Sessão só por cookie (T-17): sem isso, o Tomcat põe ;jsessionid=... nos links da
+      # primeira página, e o identificador da sessão vaza no endereço (A10 §8.5)
+      tracking-modes: cookie
       cookie:
         http-only: true
         same-site: lax

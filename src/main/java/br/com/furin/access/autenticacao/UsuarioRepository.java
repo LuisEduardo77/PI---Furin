@@ -9,4 +9,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 	/** O login precisa chegar já normalizado ({@link ContasDosFuncionarios#normalizarLogin}). */
 	Optional<Usuario> findByLogin(String login);
 
+	/** Existe a conta com esse login e ela está desativada? (T-17; RF03) */
+	boolean existsByLoginAndAtivoFalse(String login);
+
 }

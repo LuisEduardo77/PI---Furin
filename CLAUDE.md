@@ -35,7 +35,9 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
   horário lido pelo JPA para comparar com o relógio é `Instant`, porque um
   `LocalDateTime` vem no fuso da JVM) e T-16 (sessão: `TemposDaSessao`, `SessaoExpirada`,
   aviso no layout-base com `static/js/sessao.js`, o único script, e `POST /sessao/renovar`)
-  estão concluídas. RF02 está `Implementada`. RF01, RF03 e RNF03 estão
+  e T-17 (conta desativada em `ContaDesativada`, página `error/403.html`, sessão só por
+  cookie; `config/AutorizacaoDeTodasAsRotasTests` descobre as rotas sozinho e roda de novo
+  no fim de cada fase) estão concluídas. RF02 e RF03 estão `Implementada`. RF01 e RNF03 estão
   `Planejada, em andamento`; os
   demais RF e RNF estão com `Implementação: Planejada`, menos **RF17, RF24 e RF25**, que
   estão **fora do escopo** e não devem ser implementados (DEC-37).

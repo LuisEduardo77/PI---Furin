@@ -18,9 +18,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import br.com.furin.access.auditoria.AcessoNegadoAuditado;
 import br.com.furin.access.auditoria.Auditoria;
+import br.com.furin.access.autenticacao.ContasDosFuncionarios;
 import br.com.furin.access.autenticacao.TemposDaSessao;
 import br.com.furin.access.autenticacao.TemposDaSessaoNaTela;
 import br.com.furin.access.autenticacao.TentativasDeLogin;
@@ -37,7 +39,9 @@ import org.springframework.security.test.context.support.WithMockUser;
 @WebMvcTest(ExemploLayoutController.class)
 @Import({ SegurancaConfig.class, AcessoNegadoAuditado.class, Auditoria.class, RelogioConfig.class,
 		TentativasDeLogin.class, TemposDaSessao.class, TemposDaSessaoNaTela.class })
-// TentativasDeLogin (T-14) lê furin.login.*: a fatia @WebMvcTest não registra as propriedades sozinha
+// TentativasDeLogin (T-14) lê furin.login.*: a fatia @WebMvcTest não registra as propriedades sozinha.
+// ContasDosFuncionarios (T-17) é simulada: a fatia não tem banco, e o usuário de teste não
+// tem conta, então não conta como desativado
 @EnableConfigurationProperties(FurinProperties.class)
 @WithMockUser(roles = SegurancaConfig.PERFIL_FUNCIONARIO)
 class LayoutBaseTests {
@@ -46,6 +50,10 @@ class LayoutBaseTests {
 
 	@Autowired
 	private WebClient navegador;
+
+	/** Simulada: {@code contaDesativada} responde {@code false} (T-17). */
+	@MockitoBean
+	private ContasDosFuncionarios contas;
 
 	@BeforeEach
 	void configurarNavegador() {

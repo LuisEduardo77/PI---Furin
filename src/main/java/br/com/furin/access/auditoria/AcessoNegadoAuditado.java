@@ -17,7 +17,8 @@ import jakarta.servlet.http.HttpServletResponse;
 /**
  * Registra {@link EventoAuditoria#ACESSO_NEGADO} em toda resposta 403 do Spring Security,
  * com a rota e o usuário mascarado, e depois responde 403 como o padrão
- * (RF03, CA-RF03-05). A página 403 acessível (CA-RF03-06) vem depois.
+ * (RF03, CA-RF03-05). O 403 padrão chama a página de erro do Spring Boot, que mostra
+ * templates/error/403.html, a página acessível do CA-RF03-06 (T-17).
  */
 @Component
 public class AcessoNegadoAuditado implements AccessDeniedHandler {

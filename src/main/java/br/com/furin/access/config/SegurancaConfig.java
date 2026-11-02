@@ -17,6 +17,8 @@ import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWrite
 import br.com.furin.access.auditoria.AcessoNegadoAuditado;
 import br.com.furin.access.auditoria.Auditoria;
 import br.com.furin.access.autenticacao.CamposDoLoginObrigatorios;
+import br.com.furin.access.autenticacao.ContaDesativada;
+import br.com.furin.access.autenticacao.ContasDosFuncionarios;
 import br.com.furin.access.autenticacao.LoginComFalhaAuditado;
 import br.com.furin.access.autenticacao.LoginBloqueado;
 import br.com.furin.access.autenticacao.LoginComSucessoAuditado;
@@ -68,12 +70,15 @@ public class SegurancaConfig {
 	/** Login depois de a sessão expirar por inatividade (T-16; RF01, fluxo A2, passo 3). */
 	public static final String LOGIN_SESSAO_EXPIRADA = "/login?expirada";
 
+	/** Login depois de a conta ser desativada durante a sessão (T-17; RF03, exceções). */
+	public static final String LOGIN_CONTA_DESATIVADA = "/login?desativada";
+
 	/** Cookie da sessão, apagado no "Sair" (T-16). */
 	private static final String COOKIE_DA_SESSAO = "JSESSIONID";
 
 	@Bean
 	SecurityFilterChain filtroDeSeguranca(HttpSecurity http, AcessoNegadoAuditado acessoNegado,
-			Auditoria auditoria, TentativasDeLogin tentativas) {
+			Auditoria auditoria, TentativasDeLogin tentativas, ContasDosFuncionarios contas) {
 		http
 				.authorizeHttpRequests(rotas -> rotas
 						// O despacho de erro (404, 500) vem de um pedido que já passou pela autorização
@@ -94,6 +99,10 @@ public class SegurancaConfig {
 				.addFilterBefore(new CamposDoLoginObrigatorios(), UsernamePasswordAuthenticationFilter.class)
 				// RF02, E2: login bloqueado é recusado sem conferir a senha (T-14)
 				.addFilterBefore(new LoginBloqueado(tentativas, auditoria), UsernamePasswordAuthenticationFilter.class)
+				// RF03 (T-17): conta desativada durante a sessão encerra a sessão. Antes da troca
+				// de senha e da autorização: nenhuma rota passa com a conta desativada
+				.addFilterBefore(new ContaDesativada(contas, auditoria, LOGIN_CONTA_DESATIVADA),
+						AuthorizationFilter.class)
 				// RF01, fluxo A1 (T-15): com a troca pendente, toda rota leva a /senha/definir,
 				// menos o "Sair", o "Continuar conectado" (T-16) e os arquivos estáticos. Antes
 				// da autorização: até uma rota negada leva à troca (CA-RF01-04)
