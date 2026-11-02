@@ -261,6 +261,7 @@ inválido (Bean Validation). Qualquer valor pode ser trocado pelo ambiente, por 
 | `GET/POST /login`, `POST /logout` | público / autenticado | RF01–RF03 |
 | `GET/POST /senha/definir` | FUNCIONARIO | RF01, RN14 |
 | `GET/POST /senha/alterar` | FUNCIONARIO | RF01 (fluxo A3) |
+| `POST /sessao/renovar` | FUNCIONARIO | RF01 (fluxo A2, "Continuar conectado"; T-16) [PROP] |
 | `GET /portaria` | FUNCIONARIO | RF09–RF16, RF22, RF23 |
 | `POST /portaria/leituras` | FUNCIONARIO | RF09, RF13–RF15 |
 | `POST /portaria/giros` (só no perfil `prototipo`) | FUNCIONARIO | RF09, RF14 |
@@ -744,6 +745,26 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   comparado direto com o relógio. Os outros horários lidos pelo JPA precisam do mesmo
   cuidado. Textos [PROP]: as mensagens de campo vazio, "Salvar nova senha" e as
   mensagens de sucesso.
+- **Sessão (T-16, 02/11/2026):** RF01, fluxo A2. `TemposDaSessao` lê
+  `furin.sessao.inatividade` e `furin.sessao.aviso-antes` e, como `HttpSessionListener`,
+  aplica a inatividade a cada sessão em segundos (o `server.servlet.session.timeout`
+  arredonda para minutos). `TemposDaSessaoNaTela` leva os dois tempos ao layout-base, que
+  para quem entrou tem o diálogo `#aviso-sessao` (`role="alertdialog"`), o token CSRF em
+  `<meta>` e o primeiro script do projeto, `static/js/sessao.js` (arquivo próprio por
+  causa da CSP). A contagem começa quando a página carrega. O aviso abre
+  `aviso-antes` antes do fim, leva o foco para "Continuar conectado" e mostra o tempo
+  restante (DEC-40). O botão, ou Esc, faz `POST /sessao/renovar` (`SessaoController`, 204)
+  com o token no cabeçalho. Se o tempo acabar, a página é pedida de novo. O filtro
+  `SessaoExpirada`, antes do CSRF, leva um pedido com o cookie de uma sessão que já não
+  existe para `/login?expirada` ("Sua sessão foi encerrada por inatividade. Entre
+  novamente."); um pedido sem cookie continua indo para `/login`, e um POST sem sessão e
+  sem token continua recebendo 403. O `invalidSessionUrl` do Spring Security não é usado
+  porque também redireciona esse POST. O "Sair" apaga o cookie `JSESSIONID`, para que a
+  tela de saída não vire o aviso de expiração. **Limites:** a contagem é por aba (uma aba
+  aberta e parada pode avisar enquanto outra mantém a sessão viva, e "Continuar
+  conectado" resolve), e depois de reiniciar a aplicação o primeiro pedido com o cookie
+  antigo também mostra o aviso de sessão encerrada. Textos [PROP]: título, texto e botão
+  do aviso e a mensagem do login.
 
 **Log de auditoria (T-10, 01/11/2026):** pacote `br.com.furin.access.auditoria`.
 
@@ -875,3 +896,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 02/11/2026 | T-13: mensagem única do login e `LOGIN_FALHA` (§6, "Erros do login"), com o campo vazio fora do log e os valores de `motivo` [PROP] |
 | 02/11/2026 | T-14: bloqueio do login em memória (§6, "Bloqueio do login"), com as regras [PROP] de prolongamento e de recomeço do contador |
 | 02/11/2026 | T-15: troca obrigatória, senha vencida e "Alterar senha" (§6, "Senha"), com o prazo da temporária mapeado como `Instant` por causa do fuso, e os textos [PROP] |
+| 02/11/2026 | T-16: expiração da sessão e aviso (§6, "Sessão"), com a rota `POST /sessao/renovar` (§4) e os textos [PROP]; DEC-40 |

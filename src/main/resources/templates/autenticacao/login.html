@@ -14,6 +14,11 @@
     <p><strong>Sucesso:</strong> você saiu do sistema.</p>
   </div>
 
+  <!-- RF01, fluxo A2, passo 3 (T-16): a sessão expirou por inatividade. role="status" sem mover o foco -->
+  <div id="aviso-expirada" role="status" class="aviso" th:if="${param.expirada}">
+    <p><strong>Aviso:</strong> Sua sessão foi encerrada por inatividade. Entre novamente.</p>
+  </div>
+
   <!--
     RF02, E1: a mesma mensagem para usuário inexistente, senha errada e conta inativa,
     sem dizer qual dado está errado (A10 §8.5; A11 §5.9.10). role="alert" anuncia a

@@ -1,6 +1,6 @@
 # Rastreabilidade
 
-**Documentação:** Revisada em 21/10/2026 (DEC-37 a DEC-39) · **Atualizado em:** 21/10/2026
+**Documentação:** Revisada em 21/10/2026 (DEC-37 a DEC-39) · **Atualizado em:** 02/11/2026 (DEC-40)
 
 Este arquivo reúne:
 
@@ -117,6 +117,7 @@ confirmação". As opções de detalhe foram escolhidas por ele na mesma data.
 | DEC-37 | **Perfil único `FUNCIONARIO`** para o ATE e a Gestão Escolar, com o **sistema completo**: portaria, cadastro, carteirinhas, registros manuais, presentes, histórico, impressão e contas da equipe. **Alunos** não têm conta: só apresentam a carteirinha. **Pais/responsáveis** não têm conta: só recebem o e-mail de entrada e saída, sem link para o sistema. Substitui ATU-04, DEC-10, DEC-11, DEC-13 (divisão de contas), DEC-15, DEC-23, a parte de WhatsApp e de responsável da DEC-21 e da DEC-32, e os itens E1, E3, E5, E8, parte do E7 e o Safari do G3 da DEC-28. **RF17, RF24 e RF25 saem do escopo**, com os IDs preservados. RN13 fica obsoleta | RF01–RF05, RF07–RF26; RNF01, RNF03–RNF07; RN11, RN13, RN14; arquitetura; escopo |
 | DEC-38 | **Aviso por e-mail ligado ou desligado pelo funcionário, a pedido do responsável**, na edição do aluno (RF08, fluxo A5). Padrão "receber" (DEC-22). A mudança vai para o log como `PREFERENCIA_AVISO_ALTERADA`, com o autor | RF08, RF21; RN11; RNF05 |
 | DEC-39 | **Qualquer funcionário gerencia as contas da equipe** (criar, gerar nova senha temporária, desativar e reativar), pelo RF26 "Gerenciar contas da equipe". Ninguém desativa a própria conta. As primeiras contas vêm da carga inicial | RF26; RN14; PEND-02 |
+| DEC-40 | **O aviso de expiração da sessão é um diálogo modal** (`role="alertdialog"`) e, ao abrir, **leva o foco para "Continuar conectado"**, com o tempo restante no texto. Esc também continua conectado. Substitui o "anunciado sem mover o foco" do CA-RF01-10; a regra de não mover o foco continua valendo para as mensagens de status e de erro (`role="status"`/`role="alert"`). Decidida pelo integrante na T-16 (02/11/2026), a partir do pedido da tarefa | RF01 (fluxo A2, CA-RF01-10); RNF06 |
 
 **Consequências registradas:**
 
@@ -230,7 +231,7 @@ Siglas de **verificação**:
 
 | RF | Título (igual ao do arquivo) | Fonte original | US (A07) | Decisões | Arquivo | Depende de | RN | Verificação |
 |---|---|---|---|---|---|---|---|---|
-| RF01 | Autenticar o usuário com usuário e senha individuais | A08 p.2 | US1, US8 | DEC-21, DEC-28, DEC-37 | [RF01](../requirements/rf/RF01.md) | RNF03, RNF04, RNF06 | RN14 | INT, MAN (A11), DEM |
+| RF01 | Autenticar o usuário com usuário e senha individuais | A08 p.2 | US1, US8 | DEC-21, DEC-28, DEC-37, DEC-40 | [RF01](../requirements/rf/RF01.md) | RNF03, RNF04, RNF06 | RN14 | INT, MAN (A11), DEM |
 | RF02 | Bloquear o acesso com credenciais inválidas e exibir mensagem de erro | A08 p.2 | US1, US8 | — | [RF02](../requirements/rf/RF02.md) | RF01 | — | INT |
 | RF03 | Direcionar cada usuário às telas do seu perfil | A08 p.2 | US1, US8 | DEC-37 | [RF03](../requirements/rf/RF03.md) | RF01 | — | INT, DEM |
 | RF04 | Cadastrar aluno com nome, matrícula, turma, foto e contato principal | A08 p.2 | US2 | DEC-05, DEC-08, DEC-09, DEC-37 | [RF04](../requirements/rf/RF04.md) | RF01, RF03, RF05, RF07; RNF05, RNF06 | RN16 | INT, MAN (A11), DEM |
@@ -388,3 +389,4 @@ As atividades não serão reenviadas (DEC-35). Esta tabela só registra as difer
 | 19/10/2026 | 0.7 | Revisão de consistência em 10 itens (P10). Títulos da matriz iguais aos dos arquivos, decisões atualizadas na matriz, RF08 incluído nas alterações e verificação do RNF07 corrigida |
 | 19/10/2026 | 0.8 | DEC-35 (atividades não serão reenviadas; valem os Markdown) e DEC-36 (guarda por 5 anos). Decisões confirmadas pelo grupo |
 | 21/10/2026 | 0.9 | DEC-37 a DEC-39: perfil único `FUNCIONARIO`, aviso alterado pelo funcionário a pedido, contas da equipe por qualquer funcionário. RF17, RF24 e RF25 fora do escopo (IDs preservados). RF26 com título novo. RN13 obsoleta. PEND-02 e PEND-06 atualizadas. Confirmação do grupo pendente |
+| 02/11/2026 | 1.0 | DEC-40 (T-16): aviso de expiração da sessão como diálogo modal com o foco em "Continuar conectado". CA-RF01-10 e o fluxo A2 do RF01 atualizados |
