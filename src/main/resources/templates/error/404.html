@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: pagina('Página não encontrada', '', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Página não encontrada | Furin Access</title>
+</head>
+<body>
+<th:block th:fragment="conteudo">
+  <!-- RF03, exceções: rota inexistente. O Spring Boot mostra este template em toda resposta 404 -->
+  <h1>Página não encontrada</h1>
+  <p>Página não encontrada. Confira o endereço ou volte ao início.</p>
+  <p><a th:href="@{/portaria}" href="/portaria">Voltar ao início</a></p>
+</th:block>
+</body>
+</html>

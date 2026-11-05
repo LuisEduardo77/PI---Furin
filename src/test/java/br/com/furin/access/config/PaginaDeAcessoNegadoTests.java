@@ -73,6 +73,25 @@ class PaginaDeAcessoNegadoTests {
 		}
 	}
 
+	@Test
+	void rotaInexistenteMostraAPaginaNaoEncontrada() throws Exception {
+		// RF03, exceções. Um arquivo estático que não existe dá 404 sem precisar de login
+		try (WebClient navegador = new WebClient()) {
+			navegador.getOptions().setThrowExceptionOnFailingStatusCode(false);
+			navegador.getOptions().setCssEnabled(false);
+			navegador.getOptions().setJavaScriptEnabled(false);
+			WebRequest pedido = new WebRequest(URI.create(endereco("/css/nao-existe.css")).toURL());
+			pedido.setAdditionalHeader("Accept", "text/html");
+			HtmlPage pagina = navegador.getPage(pedido);
+
+			assertThat(pagina.getWebResponse().getStatusCode()).isEqualTo(404);
+			assertThat(pagina.getTitleText()).isEqualTo("Página não encontrada | Furin Access");
+			assertThat(pagina.querySelector("main p").getTextContent()).contains("Página não encontrada.");
+			assertThat(pagina.getAnchorByText("Voltar ao início").getHrefAttribute())
+					.isEqualTo(SegurancaConfig.TELA_INICIAL);
+		}
+	}
+
 	private String endereco(String caminho) {
 		return "http://localhost:" + porta + caminho;
 	}

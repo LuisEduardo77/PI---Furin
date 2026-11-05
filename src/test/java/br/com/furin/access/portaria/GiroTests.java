@@ -30,7 +30,6 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.furin.access.RelogioAjustavel;
-import br.com.furin.access.config.RelogioConfig;
 import br.com.furin.access.config.SegurancaConfig;
 
 /**
@@ -52,7 +51,7 @@ class GiroTests {
 
 	/** 20/10/2026, 07:00 no horário da escola. */
 	private static final Instant INICIO = LocalDateTime.of(2026, 10, 20, 7, 0)
-			.atZone(RelogioConfig.FUSO_DA_ESCOLA).toInstant();
+			.atZone(RelogioAjustavel.FUSO_DA_ESCOLA).toInstant();
 
 	@TestBean(name = "relogio")
 	private Clock relogio;

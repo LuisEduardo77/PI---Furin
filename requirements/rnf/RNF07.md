@@ -4,8 +4,8 @@
 |---|---|
 | **Categoria** | Hardware |
 | **Documentação** | Revisada em 21/10/2026 (DEC-37 a DEC-39) |
-| **Implementação** | Planejada. Meta no protótipo: **Simulada**. O grupo **não tem leitor USB** (DEC-25), então a leitura, a catraca e o sensor de giro são simulados pelas telas |
-| **Atualizado em** | 21/10/2026 |
+| **Implementação** | Planejada. Meta no protótipo: **Simulada**. O grupo **não tem leitor USB** (DEC-25), então a leitura, a catraca e o sensor de giro são simulados pelas telas. Em andamento: leitura pelo campo com Enter (CA-RNF07-01 e 03), aviso `Leitor não está pronto` (CA-RNF07-04), botão `Ler carteirinha de Ana Teste` (CA-RNF07-05) e simulações só no `prototipo` (CA-RNF07-07), em `PortariaTelaTests` e `PortariaSemSimulacaoTests` |
+| **Atualizado em** | 05/11/2026 |
 
 ## Descrição
 

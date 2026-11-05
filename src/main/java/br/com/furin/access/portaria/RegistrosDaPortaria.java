@@ -7,6 +7,7 @@ import java.sql.Statement;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -15,6 +16,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import br.com.furin.access.config.FurinProperties;
 import br.com.furin.access.portaria.TipoAutomatico.UltimaMovimentacao;
 
 /**
@@ -42,15 +44,19 @@ public class RegistrosDaPortaria {
 	}
 
 	private static final String LIBERACAO = "SELECT r.id_registro, r.tipo, r.situacao, r.lancado_em, r.ocorrido_em, "
-			+ "a.nome, t.nome AS turma FROM registro_acesso r "
+			+ "a.nome, t.nome AS turma, t.turno FROM registro_acesso r "
 			+ "JOIN vinculo_turma v ON v.id_vinculo = r.id_vinculo "
 			+ "JOIN aluno a ON a.id_aluno = v.id_aluno "
 			+ "JOIN turma t ON t.id_turma = v.id_turma ";
 
 	private final JdbcTemplate jdbc;
 
-	public RegistrosDaPortaria(JdbcTemplate jdbc) {
+	/** "07:02" no fuso da escola (RN10). */
+	private final DateTimeFormatter horaNaEscola;
+
+	public RegistrosDaPortaria(JdbcTemplate jdbc, FurinProperties propriedades) {
 		this.jdbc = jdbc;
+		this.horaNaEscola = DateTimeFormatter.ofPattern("HH:mm").withZone(propriedades.escola().fuso());
 	}
 
 	Optional<Carteirinha> carteirinhaPorCodigo(String codigo) {
@@ -84,7 +90,7 @@ public class RegistrosDaPortaria {
 
 	/** RN04: a liberação do aluno que ainda espera o giro, se houver. O banco garante no máximo uma. */
 	Optional<Liberacao> liberacaoPendente(long idAluno) {
-		return jdbc.query(LIBERACAO + "WHERE v.id_aluno = ? AND r.situacao = ?", RegistrosDaPortaria::liberacao,
+		return jdbc.query(LIBERACAO + "WHERE v.id_aluno = ? AND r.situacao = ?", this::liberacaoDaLinha,
 				idAluno, AGUARDANDO_GIRO).stream().findFirst();
 	}
 
@@ -123,7 +129,7 @@ public class RegistrosDaPortaria {
 	}
 
 	Optional<Liberacao> liberacao(long idRegistro) {
-		return jdbc.query(LIBERACAO + "WHERE r.id_registro = ?", RegistrosDaPortaria::liberacao, idRegistro)
+		return jdbc.query(LIBERACAO + "WHERE r.id_registro = ?", this::liberacaoDaLinha, idRegistro)
 				.stream().findFirst();
 	}
 
@@ -140,12 +146,14 @@ public class RegistrosDaPortaria {
 				CONFIRMADA, utc(giro), idRegistro, AGUARDANDO_GIRO) == 1;
 	}
 
-	private static Liberacao liberacao(ResultSet rs, int linha) throws SQLException {
+	private Liberacao liberacaoDaLinha(ResultSet rs, int linha) throws SQLException {
 		String nome = rs.getString("nome");
 		Instant ocorridoEm = instante(rs, "ocorrido_em");
 		return new Liberacao(rs.getLong("id_registro"), TipoMovimentacao.valueOf(rs.getString("tipo")),
-				rs.getString("situacao"), nome, Liberacao.primeiroNomeDe(nome), rs.getString("turma"),
-				instante(rs, "lancado_em"), ocorridoEm, Liberacao.horarioNaEscola(ocorridoEm), false);
+				rs.getString("situacao"), nome, Liberacao.primeiroNomeDe(nome),
+				Liberacao.turmaComTurno(rs.getString("turma"), rs.getString("turno")),
+				instante(rs, "lancado_em"), ocorridoEm,
+				ocorridoEm == null ? null : horaNaEscola.format(ocorridoEm), false);
 	}
 
 	private static LocalDateTime utc(Instant instante) {

@@ -28,7 +28,6 @@ import org.springframework.test.context.bean.override.convention.TestBean;
 
 import br.com.furin.access.RelogioAjustavel;
 import br.com.furin.access.config.FurinProperties;
-import br.com.furin.access.config.RelogioConfig;
 import br.com.furin.access.config.SegurancaConfig;
 
 /**
@@ -55,10 +54,12 @@ class PortariaTelaTests {
 	private static final String CODIGO_ANA = "c1b2c3d4e5f60718293a4b5c6d7e8f92";
 	private static final String CODIGO_REVOGADO = "d1b2c3d4e5f60718293a4b5c6d7e8f93";
 	private static final String ESPERA = "Aproxime sua carteirinha do leitor.";
+	private static final String MONITOR_RECUSA = "Não foi possível ler sua carteirinha. Tente de novo ou procure "
+			+ "o funcionário da portaria.";
 
 	/** 20/10/2026, 07:02 no horário da escola. */
 	private static final Instant AGORA = LocalDateTime.of(2026, 10, 20, 7, 2)
-			.atZone(RelogioConfig.FUSO_DA_ESCOLA).toInstant();
+			.atZone(RelogioAjustavel.FUSO_DA_ESCOLA).toInstant();
 
 	@TestBean(name = "relogio")
 	private Clock relogio;
@@ -155,7 +156,7 @@ class PortariaTelaTests {
 		assertThat(portaria.getElementById("titulo-simulacao").getTextContent()).isEqualTo("Simular leitura (protótipo)");
 		List<String> botoes = portaria.querySelectorAll("[data-simular-leitura]").stream()
 				.map(botao -> botao.getTextContent().trim()).toList();
-		assertThat(botoes).contains("Simular leitura: Ana Teste (6A-T30)");
+		assertThat(botoes).contains("Ler carteirinha de Ana Teste");
 		// A carteirinha revogada não entra no painel
 		assertThat(portaria.querySelectorAll("[data-codigo='" + CODIGO_REVOGADO + "']")).isEmpty();
 
@@ -174,7 +175,7 @@ class PortariaTelaTests {
 
 		// CA-RF10-01 e 03: nome, turma, tipo e situação em texto; foto indisponível (DEC-28, A9)
 		String painel = texto(portaria, "painel-funcionario");
-		assertThat(painel).contains("Foto indisponível", "Ana Teste", "6A-T30", "Entrada",
+		assertThat(painel).contains("Foto indisponível", "Ana Teste", "6A-T30 — Manhã", "Entrada",
 				"Entrada liberada — aguardando passagem");
 		// CA-RF22-01 e 04: só o primeiro nome e o estado
 		assertThat(texto(portaria, "monitor-aluno")).isEqualTo("Ana, entrada liberada. Pode passar.");
@@ -231,10 +232,28 @@ class PortariaTelaTests {
 
 		// Motivo técnico até a T-31; o monitor recebe só a mensagem genérica (RF22; RN17)
 		assertThat(texto(portaria, "painel-funcionario")).contains("Leitura recusada", "CARTEIRINHA_REVOGADA");
-		assertThat(texto(portaria, "monitor-aluno")).isEqualTo("Leitura não reconhecida. Tente novamente.")
+		assertThat(texto(portaria, "monitor-aluno")).isEqualTo(MONITOR_RECUSA)
 				.doesNotContain("Ana", "REVOGADA");
 		assertThat(((HtmlButton) portaria.getElementById("botao-giro")).isDisabled()).isTrue();
 		assertThat(portaria.getFocusedElement()).isEqualTo(campo);
+	}
+
+	// --- Aviso do leitor (DEC-28, A8; CA-RNF07-04) ---
+
+	@Test
+	void focoForaDoCampoAvisaQueOLeitorNaoEstaProntoEClicarNaTelaODevolve() throws Exception {
+		HtmlPage portaria = abrir();
+		assertThat(texto(portaria, "aviso-leitor")).isEmpty();
+		assertThat(portaria.getElementById("aviso-leitor").getAttribute("role")).isEqualTo("status");
+
+		((HtmlButton) portaria.querySelector("[data-codigo='" + CODIGO_ANA + "']")).focus();
+		esperar(Duration.ofMillis(500));
+		assertThat(texto(portaria, "aviso-leitor")).isEqualTo("Leitor não está pronto. Clique no campo de leitura.");
+
+		portaria.getElementById("titulo-leitura").click();
+		esperar(Duration.ofMillis(300));
+		assertThat(portaria.getFocusedElement().getId()).isEqualTo("campo-leitura");
+		assertThat(texto(portaria, "aviso-leitor")).isEmpty();
 	}
 
 	// --- Leitura repetida (RN04): a liberação pendente nunca fica sem saída pela tela ---

@@ -22,13 +22,17 @@
   }
 
   var MONITOR_EM_ESPERA = 'Aproxime sua carteirinha do leitor.';
-  var MONITOR_RECUSA = 'Leitura não reconhecida. Tente novamente.';
+  // RF23, passo 2: a mesma mensagem em toda recusa
+  var MONITOR_RECUSA = 'Não foi possível ler sua carteirinha. Tente de novo ou procure o funcionário da portaria.';
+  var LEITOR_NAO_PRONTO = 'Leitor não está pronto. Clique no campo de leitura.';
+  var ESPERA_DO_AVISO_DO_LEITOR_MS = 200;
   var ERRO_INESPERADO = 'Não foi possível registrar. Tente novamente ou use o registro manual.';
 
   var formulario = document.getElementById('form-leitura');
   var campo = document.getElementById('campo-leitura');
   var painel = document.getElementById('painel-funcionario');
   var monitor = document.getElementById('monitor-aluno');
+  var avisoDoLeitor = document.getElementById('aviso-leitor');
   var botaoGiro = document.getElementById('botao-giro');
   var token = document.querySelector('meta[name="_csrf"]');
   var cabecalhoDoToken = document.querySelector('meta[name="_csrf_header"]');
@@ -151,6 +155,7 @@
       return;
     }
     botaoGiro.disabled = true;
+    campo.focus();
     enviar(raiz.getAttribute('data-giros'), { idLiberacao: liberacaoEmCurso.idLiberacao },
       function (status, dados) {
         if (status === 200 && dados) {
@@ -244,7 +249,27 @@
     lista.appendChild(dd);
   }
 
+  // --- Aviso do leitor (DEC-28, A8; CA-RNF07-04) ---
+
+  function atualizarAvisoDoLeitor() {
+    var pronto = document.activeElement === campo;
+    avisoDoLeitor.textContent = pronto ? '' : LEITOR_NAO_PRONTO;
+    avisoDoLeitor.className = pronto ? '' : 'aviso aviso--erro';
+  }
+
   // --- Ligações ---
+
+  campo.addEventListener('focus', atualizarAvisoDoLeitor);
+  campo.addEventListener('blur', function () {
+    // Espera um instante: as ações da tela devolvem o foco ao campo logo em seguida
+    setTimeout(atualizarAvisoDoLeitor, ESPERA_DO_AVISO_DO_LEITOR_MS);
+  });
+  // Acionar a portaria fora de um controle devolve o foco ao campo (DEC-28, A8)
+  raiz.addEventListener('click', function (evento) {
+    if (!evento.target.closest('a, button, input, label, select, textarea')) {
+      campo.focus();
+    }
+  });
 
   formulario.addEventListener('submit', function (evento) {
     evento.preventDefault();

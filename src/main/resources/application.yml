@@ -43,6 +43,7 @@ furin:
   escola:
     # Só valor fictício no repositório (A10 §8.33). O nome real vem do ambiente.
     nome: Escola Exemplo
+    fuso: America/Sao_Paulo    # RN10 ("mesmo dia", "hoje" e horários na tela)
   portaria:
     janela-repeticao: 2s       # DEC-02
     tempo-resposta-max: 2s     # A08 RNF02 (meta de desempenho)
@@ -51,6 +52,7 @@ furin:
     painel-limpeza: 60s        # RF10; DEC-28 (A7)
   carteirinha:
     tentativas-colisao: 3      # RF06; DEC-28 (D7)
+    tamanho-codigo: 32         # A14 p.6: caracteres hexadecimais
   presentes:
     intervalo-atualizacao: 30s # RF16; DEC-28 (C2)
   busca:

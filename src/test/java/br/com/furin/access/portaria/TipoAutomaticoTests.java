@@ -15,7 +15,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import br.com.furin.access.config.RelogioConfig;
+import br.com.furin.access.RelogioAjustavel;
 import br.com.furin.access.portaria.TipoAutomatico.Decisao;
 import br.com.furin.access.portaria.TipoAutomatico.UltimaMovimentacao;
 
@@ -28,7 +28,7 @@ class TipoAutomaticoTests {
 	/** "Agora" nos casos: 20/10/2026, 12:30 no horário da escola. */
 	private static final LocalDateTime AGORA_NA_ESCOLA = LocalDateTime.of(2026, 10, 20, 12, 30);
 
-	private final TipoAutomatico servico = new TipoAutomatico(relogioEm(AGORA_NA_ESCOLA));
+	private final TipoAutomatico servico = new TipoAutomatico(relogioEm(AGORA_NA_ESCOLA), RelogioAjustavel.FUSO_DA_ESCOLA);
 
 	static Stream<Arguments> tabelaDeDecisao() {
 		return Stream.of(
@@ -74,7 +74,8 @@ class TipoAutomaticoTests {
 	void viradaDoDiaUsaOFusoDaEscolaENaoUtc() {
 		// CA-RF13-05: ENTRADA às 23:50 de 19/10 na escola (já é 20/10 em UTC) e leitura à
 		// 00:10 de 20/10 na escola → dia anterior
-		TipoAutomatico logoDepoisDaMeiaNoite = new TipoAutomatico(relogioEm(LocalDateTime.of(2026, 10, 20, 0, 10)));
+		TipoAutomatico logoDepoisDaMeiaNoite = new TipoAutomatico(relogioEm(LocalDateTime.of(2026, 10, 20, 0, 10)),
+				RelogioAjustavel.FUSO_DA_ESCOLA);
 		Instant entrada = naEscola(LocalDateTime.of(2026, 10, 19, 23, 50));
 		assertThat(LocalDate.ofInstant(entrada, ZoneOffset.UTC)).isEqualTo(LocalDate.of(2026, 10, 20));
 
@@ -88,7 +89,8 @@ class TipoAutomaticoTests {
 	@Test
 	void entradaDeHojeAntesDaMeiaNoiteEmUtcContinuaSendoHoje() {
 		// O contrário da virada: 21:30 na escola já é o dia seguinte em UTC, mas é "hoje"
-		TipoAutomatico aNoite = new TipoAutomatico(relogioEm(LocalDateTime.of(2026, 10, 20, 22, 0)));
+		TipoAutomatico aNoite = new TipoAutomatico(relogioEm(LocalDateTime.of(2026, 10, 20, 22, 0)),
+				RelogioAjustavel.FUSO_DA_ESCOLA);
 
 		Decisao decisao = aNoite.decidir(Optional.of(
 				new UltimaMovimentacao(TipoMovimentacao.ENTRADA, naEscola(LocalDateTime.of(2026, 10, 20, 21, 30)))));
@@ -97,7 +99,7 @@ class TipoAutomaticoTests {
 	}
 
 	private static Instant naEscola(LocalDateTime horario) {
-		return horario.atZone(RelogioConfig.FUSO_DA_ESCOLA).toInstant();
+		return horario.atZone(RelogioAjustavel.FUSO_DA_ESCOLA).toInstant();
 	}
 
 	/** O relógio da aplicação continua em UTC; só o instante é escolhido no horário da escola. */

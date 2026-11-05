@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 public class CarteirinhasFicticias {
 
 	/** Um botão do painel: quem é e o código que o botão envia. */
-	public record CarteirinhaParaSimular(String nome, String turma, String codigo) {
+	public record CarteirinhaParaSimular(String nome, String codigo) {
 	}
 
 	private final JdbcTemplate jdbc;
@@ -34,15 +34,13 @@ public class CarteirinhasFicticias {
 
 	public List<CarteirinhaParaSimular> ativas() {
 		LocalDateTime agora = LocalDateTime.ofInstant(relogio.instant(), ZoneOffset.UTC);
-		return jdbc.query("SELECT a.nome, t.nome AS turma, c.codigo FROM carteirinha c "
+		return jdbc.query("SELECT a.nome, c.codigo FROM carteirinha c "
 				+ "JOIN aluno a ON a.id_aluno = c.id_aluno "
 				+ "JOIN vinculo_turma v ON v.id_aluno = a.id_aluno "
-				+ "JOIN turma t ON t.id_turma = v.id_turma "
 				+ "WHERE a.ativo = 1 AND c.revogada_em IS NULL AND (c.expira_em IS NULL OR c.expira_em > ?) "
 				+ "AND v.inicio_em <= ? AND (v.fim_em IS NULL OR v.fim_em > ?) "
 				+ "ORDER BY a.nome, c.id_carteirinha",
-				(rs, linha) -> new CarteirinhaParaSimular(rs.getString("nome"), rs.getString("turma"),
-						rs.getString("codigo")),
+				(rs, linha) -> new CarteirinhaParaSimular(rs.getString("nome"), rs.getString("codigo")),
 				agora, agora, agora);
 	}
 

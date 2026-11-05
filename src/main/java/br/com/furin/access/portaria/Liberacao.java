@@ -1,9 +1,6 @@
 package br.com.furin.access.portaria;
 
 import java.time.Instant;
-import java.time.format.DateTimeFormatter;
-
-import br.com.furin.access.config.RelogioConfig;
 
 /**
  * A liberação devolvida à tela depois da leitura (RF09, passo 4): tipo, nome, primeiro
@@ -25,18 +22,22 @@ public record Liberacao(
 		String horarioNaEscola,
 		boolean repetida) {
 
-	private static final DateTimeFormatter HORA_E_MINUTO = DateTimeFormatter.ofPattern("HH:mm")
-			.withZone(RelogioConfig.FUSO_DA_ESCOLA);
-
 	/** A mesma liberação, como resposta a uma leitura repetida (RN04). */
 	Liberacao comoLeituraRepetida() {
 		return new Liberacao(idLiberacao, tipo, situacao, nome, primeiroNome, turma, lancadoEm, ocorridoEm,
 				horarioNaEscola, true);
 	}
 
-	/** "07:02" no fuso da escola, ou {@code null} enquanto não houve giro. */
-	static String horarioNaEscola(Instant ocorridoEm) {
-		return ocorridoEm == null ? null : HORA_E_MINUTO.format(ocorridoEm);
+	/** RF10: "6A — Manhã". O turno vem de {@code turma.turno}. */
+	static String turmaComTurno(String turma, String turno) {
+		String nomeDoTurno = switch (turno) {
+			case "MANHA" -> "Manhã";
+			case "TARDE" -> "Tarde";
+			case "INTEGRAL" -> "Integral";
+			case "NOITE" -> "Noite";
+			default -> throw new IllegalArgumentException("Turno desconhecido: " + turno);
+		};
+		return turma + " — " + nomeDoTurno;
 	}
 
 	static String primeiroNomeDe(String nome) {
