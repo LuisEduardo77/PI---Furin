@@ -31,8 +31,9 @@ import br.com.furin.access.portaria.TipoAutomatico.Decisao;
  * liberação {@code AGUARDANDO_GIRO}. A transação é {@code READ_COMMITTED}: depois do
  * bloqueio, cada consulta vê o que outra operação sobre o mesmo aluno acabou de gravar.
  * <p>
- * Ficam para depois: a janela de 2 s e a RN04/RN05 completas (T-27), a expiração de 15 s
- * (T-29) e os textos das recusas (T-31).
+ * Com o aluno já aguardando o giro, a leitura repetida devolve a mesma liberação (RN04).
+ * Ficam para depois: a janela de 2 s e a RN05 (T-27), a expiração de 15 s (T-29) e os
+ * textos das recusas (T-31).
  */
 @Service
 public class Leituras {
@@ -90,8 +91,11 @@ public class Leituras {
 		}
 		Vinculo vinculo = registros.vinculoVigente(aluno.id(), agora)
 				.orElseThrow(() -> recusar(normalizado, MotivoDaRecusa.SEM_TURMA_VIGENTE, null));
-		if (registros.temLiberacaoPendente(aluno.id())) {
-			throw recusar(normalizado, MotivoDaRecusa.LIBERACAO_PENDENTE, null);
+		// RN04: com liberação pendente, nada é gravado e o prazo não é renovado. Devolver a
+		// liberação permite confirmar o giro mesmo se a tela a perdeu (página recarregada)
+		Optional<Liberacao> pendente = registros.liberacaoPendente(aluno.id());
+		if (pendente.isPresent()) {
+			return pendente.get().comoLeituraRepetida();
 		}
 
 		Decisao decisao = tipoAutomatico.decidir(registros.ultimaConfirmada(aluno.id()));

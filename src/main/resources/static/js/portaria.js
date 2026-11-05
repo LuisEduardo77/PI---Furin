@@ -114,18 +114,28 @@
     var registrada = liberacao.situacao === 'CONFIRMADA';
     liberacaoEmCurso = registrada ? null : liberacao;
     preencherPainel(liberacao, situacaoNoPainel(liberacao));
-    mostrarNoMonitor(liberacao.primeiroNome + ', ' + nomeDoTipo(liberacao.tipo) + (registrada
-      ? ' registrada.' : ' liberada. Pode passar.'), registrada);
+    mostrarNoMonitor(mensagemDoMonitor(liberacao), registrada);
     if (botaoGiro) {
       botaoGiro.disabled = registrada;
     }
     reiniciarLimpezaDoPainel();
   }
 
+  function mensagemDoMonitor(liberacao) {
+    if (liberacao.situacao === 'CONFIRMADA') {
+      return liberacao.primeiroNome + ', ' + nomeDoTipo(liberacao.tipo) + ' registrada.';
+    }
+    // RN04: leitura repetida com a liberação pendente (RF09, exceções)
+    if (liberacao.repetida) {
+      return liberacao.primeiroNome + ', pode passar.';
+    }
+    return liberacao.primeiroNome + ', ' + nomeDoTipo(liberacao.tipo) + ' liberada. Pode passar.';
+  }
+
   function mostrarRecusa(texto) {
-    liberacaoEmCurso = null;
+    // A recusa de uma leitura não encerra a liberação em curso: o giro continua disponível
     if (botaoGiro) {
-      botaoGiro.disabled = true;
+      botaoGiro.disabled = !liberacaoEmCurso;
     }
     painel.textContent = '';
     paragrafo(painel, texto);
@@ -179,7 +189,7 @@
       // O horário já vem no fuso da escola (RN10), formatado pelo servidor
       return tipo + ' registrada às ' + liberacao.horarioNaEscola;
     }
-    return tipo + ' liberada — aguardando passagem';
+    return liberacao.repetida ? 'Aguardando passagem' : tipo + ' liberada — aguardando passagem';
   }
 
   function reiniciarLimpezaDoPainel() {

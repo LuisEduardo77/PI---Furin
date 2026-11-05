@@ -17,10 +17,5 @@ public enum MotivoDaRecusa {
 	/** Aluno sem vínculo de turma vigente (RN09). */
 	SEM_TURMA_VIGENTE,
 	/** Entrada de dia anterior sem saída (RN01, linha 3; RN06). */
-	SAIDA_PENDENTE,
-	/**
-	 * O aluno já tem uma liberação aguardando giro. A T-27 completa a RN04 ("Aguardando
-	 * passagem") e a RN05 (outro aluno) [PROP].
-	 */
-	LIBERACAO_PENDENTE
+	SAIDA_PENDENTE
 }

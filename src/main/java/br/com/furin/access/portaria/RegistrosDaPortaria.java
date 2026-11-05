@@ -82,11 +82,10 @@ public class RegistrosDaPortaria {
 				idAluno, utc, utc).stream().findFirst();
 	}
 
-	boolean temLiberacaoPendente(long idAluno) {
-		Integer pendentes = jdbc.queryForObject("SELECT COUNT(*) FROM registro_acesso r "
-				+ "JOIN vinculo_turma v ON v.id_vinculo = r.id_vinculo WHERE v.id_aluno = ? AND r.situacao = ?",
-				Integer.class, idAluno, AGUARDANDO_GIRO);
-		return pendentes != null && pendentes > 0;
+	/** RN04: a liberação do aluno que ainda espera o giro, se houver. O banco garante no máximo uma. */
+	Optional<Liberacao> liberacaoPendente(long idAluno) {
+		return jdbc.query(LIBERACAO + "WHERE v.id_aluno = ? AND r.situacao = ?", RegistrosDaPortaria::liberacao,
+				idAluno, AGUARDANDO_GIRO).stream().findFirst();
 	}
 
 	/** RN01; RF13, passo 1: a última CONFIRMADA, por {@code ocorrido_em} e, no empate, pelo ID. */
@@ -146,7 +145,7 @@ public class RegistrosDaPortaria {
 		Instant ocorridoEm = instante(rs, "ocorrido_em");
 		return new Liberacao(rs.getLong("id_registro"), TipoMovimentacao.valueOf(rs.getString("tipo")),
 				rs.getString("situacao"), nome, Liberacao.primeiroNomeDe(nome), rs.getString("turma"),
-				instante(rs, "lancado_em"), ocorridoEm, Liberacao.horarioNaEscola(ocorridoEm));
+				instante(rs, "lancado_em"), ocorridoEm, Liberacao.horarioNaEscola(ocorridoEm), false);
 	}
 
 	private static LocalDateTime utc(Instant instante) {
