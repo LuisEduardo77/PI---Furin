@@ -231,6 +231,7 @@ atualizada.
 | `furin.sessao.aviso-antes` | 60 s (mínimo de A11: 20 s) | A11 §5.16.2; DEC-28 (E2) |
 | `furin.notificacao.max-tentativas` | 3 | PEND-13 → DEC-28 (F1) |
 | `furin.termo.versao-atual` | `v1-2026` | RF05; DEC-26 |
+| `furin.contato.ddi` | 55 | RF04 (telefone com DDI e DDD) [PROP: nome] |
 | `furin.arquivos.diretorio` | caminho fora do projeto e fora de `static/` | DEC-08 |
 | `furin.arquivos.foto.tipos`, `furin.arquivos.foto.tamanho-max` | JPEG, PNG; 2 MB | PEND-05 → DEC-28 (D1) |
 | `furin.arquivos.termo.tipos`, `furin.arquivos.termo.tamanho-max` | PDF, JPEG, PNG; 5 MB | PEND-05 → DEC-28 (D2) |
@@ -269,7 +270,7 @@ inválido (Bean Validation). Qualquer valor pode ser trocado pelo ambiente, por 
 | `POST /portaria/giros` (só no perfil `prototipo`) | FUNCIONARIO | RF09, RF14 |
 | `POST /portaria/liberacoes/{id}/cancelar` | FUNCIONARIO | RN02 (DEC-28, A2) |
 | `GET/POST /portaria/manual` | FUNCIONARIO | RF11, RF12 |
-| `GET/POST /alunos`, `/alunos/{id}/editar` (inclui o aviso por e-mail, DEC-38) | FUNCIONARIO | RF04–RF06, RF08 |
+| `GET/POST /alunos`, `GET /alunos/novo` [PROP], `/alunos/{id}/editar` (inclui o aviso por e-mail, DEC-38) | FUNCIONARIO | RF04–RF06, RF08 |
 | `POST /alunos/{id}/carteirinhas`, `GET /carteirinhas/{id}/imprimir` | FUNCIONARIO | RF07 |
 | `POST /alunos/{id}/consentimentos/{idConsentimento}/revogacao` | FUNCIONARIO | RF05 (DEC-34) |
 | `GET /arquivos/{chave}` | FUNCIONARIO | DEC-08 |
@@ -835,6 +836,17 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   Spring Security. Arquivo que falta responde 404 e vai para o log como
   `ARQUIVO_INDISPONIVEL`, só com a chave [PROP: nome]. Testes usam um diretório
   temporário, nunca a área privada de verdade.
+- **Cadastro de aluno (T-19, 05/11/2026; DEC-44):** pacote `br.com.furin.access.aluno`.
+  `AlunoController` confere tudo de uma vez: Bean Validation em `AlunoForm`, turma ativa,
+  telefone (`TelefoneDoContato`, gravado como `+55 11 900000001`), matrícula e foto
+  (`AreaPrivada.conferir`, sem gravar). `CadastroDeAlunos` grava a foto e, com
+  `TransactionTemplate`, aluno, vínculo e contato. Pelo RF04, o cadastro só é salvo com
+  todos os blocos: `CadastroIncompleto` desfaz a transação e a foto sai da área privada,
+  como em qualquer falha (CA-RF04-02). A UNIQUE da matrícula continua sendo a garantia
+  contra dois envios ao mesmo tempo. `spring.servlet.multipart` (8 MB) só
+  barra pedidos enormes e fica acima das regras de `furin.arquivos.*`, para o erro
+  aparecer no campo: acima desse limite, o Tomcat não lê o token CSRF, e a resposta tende
+  a ser a página 403 (não testado). O foco vai para o resumo pelo `static/js/resumo-de-erros.js`.
 
 **Log de auditoria (T-10, 01/11/2026):** pacote `br.com.furin.access.auditoria`.
 
@@ -974,3 +986,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 05/11/2026 | Ajuste de requisitos: `furin.escola.fuso` e `furin.carteirinha.tamanho-codigo` (§4), no lugar de valores no código; turma com turno na resposta da leitura; página `error/404.html` e aviso "Leitor não está pronto" |
 | 05/11/2026 | DEC-41 a DEC-43: coluna `chave_giro` (§5, migração V3), `NegarRotaExistenteSemRegra` (404 para rota inexistente), resposta da leitura reduzida com status 201 ou 200 [PROP] e `furin.carga.ativa` para os testes |
 | 05/11/2026 | T-18: área privada e `GET /arquivos/{chave}` (§6, "Área privada"), com `fotoChave` na resposta da leitura e do giro e o evento `ARQUIVO_INDISPONIVEL` [PROP] |
+| 05/11/2026 | T-19: formulário de aluno sem salvar (§6, "Cadastro de aluno"; DEC-44), com `GET /alunos/novo` e `furin.contato.ddi` [PROP] |

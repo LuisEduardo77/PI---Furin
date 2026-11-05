@@ -225,6 +225,23 @@ button {
 }
 
 /* Mensagens de status: o texto sempre diz o estado ("Sucesso:", "Erro:") (A11 §5.11.1, §5.13.8) */
+.grupo-de-campos {
+  min-width: 0;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  border: 0;
+}
+
+.grupo-de-campos legend {
+  padding: 0;
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
 .aviso {
   margin: 1rem 0;
   padding: 0.75rem 1rem;

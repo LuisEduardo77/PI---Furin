@@ -20,7 +20,7 @@ public record Liberacao(
 		String horarioNaEscola) {
 
 	/** RF10: "6A — Manhã". O turno vem de {@code turma.turno}. */
-	static String turmaComTurno(String turma, String turno) {
+	public static String turmaComTurno(String turma, String turno) {
 		String nomeDoTurno = switch (turno) {
 			case "MANHA" -> "Manhã";
 			case "TARDE" -> "Tarde";

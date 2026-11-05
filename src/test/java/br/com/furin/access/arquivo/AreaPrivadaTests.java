@@ -121,6 +121,28 @@ class AreaPrivadaTests {
 	}
 
 	@Test
+	void conferirAplicaAsMesmasRegrasSemGravar() throws IOException {
+		area.conferir(TipoDeDocumento.FOTO, new ByteArrayInputStream(PNG));
+
+		ByteArrayInputStream pdf = new ByteArrayInputStream(PDF);
+		assertThatThrownBy(() -> area.conferir(TipoDeDocumento.FOTO, pdf)).isInstanceOf(ArquivoRecusado.class);
+		try (var arquivos = Files.list(diretorio)) {
+			assertThat(arquivos).isEmpty();
+		}
+	}
+
+	@Test
+	void apagarTiraOArquivoEIgnoraChaveInvalida() throws IOException {
+		String chave = guardar(TipoDeDocumento.FOTO, PNG);
+
+		area.apagar("../" + chave);
+		assertThat(diretorio.resolve(chave)).exists();
+
+		area.apagar(chave);
+		assertThat(diretorio.resolve(chave)).doesNotExist();
+	}
+
+	@Test
 	void arquivoQueNaoExisteVoltaVazio() {
 		assertThat(area.abrir("00000000-0000-0000-0000-000000000001.png")).isEmpty();
 	}

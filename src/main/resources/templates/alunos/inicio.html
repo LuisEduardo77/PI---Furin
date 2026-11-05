@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: pagina('Alunos', 'alunos', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Alunos | Furin Access</title>
+</head>
+<body>
+<th:block th:fragment="conteudo">
+  <h1>Alunos</h1>
+  <!-- RF04, passo 1. A busca por nome ou matrícula é da T-24 -->
+  <p><a class="botao" th:href="@{/alunos/novo}">Novo aluno</a></p>
+</th:block>
+</body>
+</html>

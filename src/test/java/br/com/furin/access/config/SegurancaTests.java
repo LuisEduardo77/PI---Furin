@@ -84,7 +84,7 @@ class SegurancaTests {
 	@WithMockUser(roles = SegurancaConfig.PERFIL_FUNCIONARIO)
 	void rotaLiberadaAindaSemTelaDa404AoFuncionario() throws Exception {
 		// RF03: rota inexistente dá 404, e não 403, dentro da área do funcionário
-		mvc.perform(get("/alunos")).andExpect(status().isNotFound());
+		mvc.perform(get("/presentes")).andExpect(status().isNotFound());
 	}
 
 	@Test

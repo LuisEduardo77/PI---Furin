@@ -9,6 +9,13 @@ spring:
     default: prototipo
   config:
     import: optional:file:./application-local.yml
+  servlet:
+    multipart:
+      # Só evitam que um pedido enorme ocupe o servidor. As regras são as de furin.arquivos.*:
+      # estes limites ficam acima delas, para o erro aparecer no campo do formulário, e
+      # comportam a foto e o termo no mesmo envio (T-19, T-20)
+      max-file-size: 8MB
+      max-request-size: 8MB
   datasource:
     url: jdbc:mysql://localhost:3306/furin
     username: furin
@@ -77,6 +84,8 @@ furin:
     max-tentativas: 3          # DEC-28 (F1); só com envio real (DEC-32)
   termo:
     versao-atual: v1-2026      # RF05; DEC-26
+  contato:
+    ddi: "55"                  # RF04: telefone gravado com DDI e DDD [PROP]
   arquivos:
     # Área privada de fotos e termos, fora do projeto e de static/ (DEC-08)
     diretorio: ${user.home}/furin-access/arquivos
