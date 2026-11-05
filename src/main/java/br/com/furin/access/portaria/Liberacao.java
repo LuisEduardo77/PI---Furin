@@ -14,6 +14,7 @@ public record Liberacao(
 		String nome,
 		String primeiroNome,
 		String turma,
+		String fotoChave,
 		Instant lancadoEm,
 		Instant ocorridoEm,
 		String horarioNaEscola) {

@@ -41,6 +41,8 @@ public enum EventoAuditoria {
 	REGISTRO_MANUAL,
 	/** RF23: só os 4 primeiros caracteres do código lido (DEC-28, A12). */
 	LEITURA_RECUSADA,
+	/** RF10; DEC-28, A9: foto ou termo que não pôde ser entregue. Só a chave. [PROP: nome] */
+	ARQUIVO_INDISPONIVEL,
 	/** RF20. */
 	RELATORIO_IMPRESSO,
 

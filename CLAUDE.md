@@ -41,7 +41,10 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
   demonstrar a portaria: T-25 (`portaria/TipoAutomatico`), T-26 (`POST /portaria/leituras`
   em `Leituras`, SQL explícito em `RegistrosDaPortaria`) e T-28 (`POST /portaria/giros`,
   `@Profile("prototipo")`) e T-30 (tela `/portaria` com `static/js/portaria.js`; foto como
-  "Foto indisponível" até a T-18) estão concluídas, antecipadas; teste que precisa do
+  "Foto indisponível" quando não carrega) estão concluídas, antecipadas. T-18 (área
+  privada em `arquivo/AreaPrivada`, entrega em `GET /arquivos/{chave}`) está concluída,
+  e teste que grava arquivo usa um diretório temporário em `furin.arquivos.diretorio`;
+  teste que precisa do
   `prototipo` usa `furin.carga.ativa=false` para não rodar a carga V2, e teste com
   JavaScript que faz pedidos não usa a transação do teste (grava e apaga a cena). RF02 e RF03 estão `Implementada`. RF01 e RNF03 estão
   `Planejada, em andamento`; os

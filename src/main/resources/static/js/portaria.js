@@ -5,9 +5,9 @@
  *   leitura (protótipo)" envia o código de uma carteirinha fictícia. Os dois fazem
  *   POST /portaria/leituras com uma chaveRequisicao nova (RN08). O tipo nunca é enviado:
  *   quem decide é o servidor (RN01).
- * - O painel do funcionário mostra nome, turma, tipo e situação, sempre em texto
- *   (A11 §5.11.1). A foto ainda não é entregue (T-18): aparece "Foto indisponível", sem
- *   bloquear a liberação (DEC-28, A9).
+ * - O painel do funcionário mostra a foto (GET /arquivos/{chave}, T-18) e, sempre em texto
+ *   (A11 §5.11.1), nome, turma, tipo e situação. Se a foto não carregar, aparece "Foto
+ *   indisponível", sem bloquear a liberação (DEC-28, A9).
  * - O monitor do aluno mostra só o primeiro nome e o estado (RF22; RN17).
  * - "Simular passagem (giro)" faz POST /portaria/giros com o ID da liberação e uma
  *   chaveRequisicao. Depois de uma falha, a tentativa repete a mesma chave (RN08; DEC-41).
@@ -184,9 +184,7 @@
 
   function preencherPainel(liberacao, situacao) {
     painel.textContent = '';
-    // DEC-28, A9: sem a área privada (T-18), a foto não carrega e a liberação segue
-    var foto = paragrafo(painel, 'Foto indisponível');
-    foto.className = 'portaria__foto';
+    colocarFoto(liberacao);
     var lista = document.createElement('dl');
     lista.className = 'portaria__dados';
     item(lista, 'Nome', liberacao.nome);
@@ -194,6 +192,27 @@
     item(lista, 'Tipo', nomeDoTipoComMaiuscula(liberacao.tipo));
     item(lista, 'Situação', situacao);
     painel.appendChild(lista);
+  }
+
+  function colocarFoto(liberacao) {
+    var imagem = document.createElement('img');
+    imagem.className = 'portaria__foto-imagem';
+    imagem.alt = 'Foto de identificação de ' + liberacao.nome;
+    // DEC-28, A9: a foto que não carrega nunca bloqueia a liberação
+    imagem.addEventListener('error', function () {
+      if (imagem.parentNode) {
+        imagem.parentNode.replaceChild(textoDeFotoIndisponivel(), imagem);
+      }
+    });
+    painel.appendChild(imagem);
+    imagem.src = raiz.getAttribute('data-arquivos') + encodeURIComponent(liberacao.fotoChave);
+  }
+
+  function textoDeFotoIndisponivel() {
+    var aviso = document.createElement('p');
+    aviso.className = 'portaria__foto';
+    aviso.textContent = 'Foto indisponível';
+    return aviso;
   }
 
   function situacaoNoPainel(liberacao, repetida) {

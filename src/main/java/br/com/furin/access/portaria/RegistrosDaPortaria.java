@@ -44,7 +44,7 @@ public class RegistrosDaPortaria {
 	}
 
 	private static final String LIBERACAO = "SELECT r.id_registro, r.tipo, r.situacao, r.lancado_em, r.ocorrido_em, "
-			+ "a.nome, t.nome AS turma, t.turno FROM registro_acesso r "
+			+ "a.nome, a.foto_chave, t.nome AS turma, t.turno FROM registro_acesso r "
 			+ "JOIN vinculo_turma v ON v.id_vinculo = r.id_vinculo "
 			+ "JOIN aluno a ON a.id_aluno = v.id_aluno "
 			+ "JOIN turma t ON t.id_turma = v.id_turma ";
@@ -158,7 +158,7 @@ public class RegistrosDaPortaria {
 		Instant ocorridoEm = instante(rs, "ocorrido_em");
 		return new Liberacao(rs.getLong("id_registro"), TipoMovimentacao.valueOf(rs.getString("tipo")),
 				rs.getString("situacao"), nome, Liberacao.primeiroNomeDe(nome),
-				Liberacao.turmaComTurno(rs.getString("turma"), rs.getString("turno")),
+				Liberacao.turmaComTurno(rs.getString("turma"), rs.getString("turno")), rs.getString("foto_chave"),
 				instante(rs, "lancado_em"), ocorridoEm,
 				ocorridoEm == null ? null : horaNaEscola.format(ocorridoEm));
 	}
