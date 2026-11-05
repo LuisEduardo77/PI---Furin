@@ -82,16 +82,19 @@ class EsquemaInicialTests {
 	}
 
 	@Test
-	void registraAV1ComSucesso() {
+	void registraAsMigracoesDeEsquemaComSucesso() {
+		// A V2 é a carga fictícia, que só existe no perfil prototipo
 		List<Map<String, Object>> migracoes = jdbc.queryForList("""
 				SELECT version, description, success FROM flyway_schema_history
 				WHERE version IS NOT NULL ORDER BY installed_rank
 				""");
-		assertThat(migracoes).hasSize(1);
+		assertThat(migracoes).hasSize(2).allSatisfy(migracao -> assertThat(migracao).containsEntry("success", true));
 		assertThat(migracoes.getFirst())
 				.containsEntry("version", "1")
-				.containsEntry("description", "esquema inicial")
-				.containsEntry("success", true);
+				.containsEntry("description", "esquema inicial");
+		assertThat(migracoes.getLast())
+				.containsEntry("version", "3")
+				.containsEntry("description", "chave do giro");
 	}
 
 }

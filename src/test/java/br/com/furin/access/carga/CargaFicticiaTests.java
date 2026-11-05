@@ -34,7 +34,7 @@ import org.springframework.test.context.DynamicPropertySource;
 /**
  * Carga fictícia do protótipo (T-11; arquitetura §5.6), aplicada pelo Flyway num
  * furin_test vazio. As senhas são descartáveis e existem só neste teste (CA-RNF03-05).
- * No fim, o banco volta a ter só a V1, como os outros testes esperam.
+ * No fim, o banco volta a ter só o esquema, sem a carga, como os outros testes esperam.
  */
 @SpringBootTest(properties = {
 		"spring.flyway.clean-disabled=false",
@@ -80,10 +80,10 @@ class CargaFicticiaTests {
 	private DataSource dataSource;
 
 	@AfterAll
-	void voltarSoParaAV1() throws IOException {
-		Flyway soV1 = Flyway.configure().dataSource(dataSource).cleanDisabled(false).load();
-		soV1.clean();
-		soV1.migrate();
+	void voltarSoParaOEsquema() throws IOException {
+		Flyway soEsquema = Flyway.configure().dataSource(dataSource).cleanDisabled(false).load();
+		soEsquema.clean();
+		soEsquema.migrate();
 		try (var arquivos = Files.walk(AREA_PRIVADA)) {
 			arquivos.sorted(java.util.Comparator.reverseOrder()).forEach(p -> p.toFile().delete());
 		}
@@ -93,7 +93,7 @@ class CargaFicticiaTests {
 	void flywayRegistraACargaComoV2() {
 		List<Map<String, Object>> migracoes = jdbc.queryForList(
 				"SELECT version, success FROM flyway_schema_history WHERE version IS NOT NULL ORDER BY installed_rank");
-		assertThat(migracoes).extracting(m -> m.get("version")).containsExactly("1", "2");
+		assertThat(migracoes).extracting(m -> m.get("version")).containsExactly("1", "2", "3");
 		assertThat(migracoes).allSatisfy(m -> assertThat(m).containsEntry("success", true));
 	}
 

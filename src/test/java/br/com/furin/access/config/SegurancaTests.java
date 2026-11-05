@@ -55,9 +55,23 @@ class SegurancaTests {
 
 	@Test
 	@WithMockUser(roles = SegurancaConfig.PERFIL_FUNCIONARIO)
-	void rotaForaDaListaEhNegadaMesmoComLogin() throws Exception {
-		// CA-RF03-04: uma rota nova sem regra explícita é negada
-		mvc.perform(get("/rota-de-exemplo-sem-regra")).andExpect(status().isForbidden());
+	void rotaQueNaoExisteDa404AoFuncionario() throws Exception {
+		// RF03, exceções; DEC-42. A rota com controller e sem regra (CA-RF03-04) continua
+		// negada: está em AutorizacaoDeTodasAsRotasTests
+		mvc.perform(get("/rota-que-nao-existe")).andExpect(status().isNotFound());
+	}
+
+	@Test
+	@WithMockUser(roles = "OUTRO")
+	void rotaQueNaoExisteEhNegadaParaQuemNaoEhFuncionario() throws Exception {
+		mvc.perform(get("/rota-que-nao-existe")).andExpect(status().isForbidden());
+	}
+
+	@Test
+	@WithMockUser(roles = SegurancaConfig.PERFIL_FUNCIONARIO)
+	void rotaComControllerSemRegraContinuaNegada() throws Exception {
+		// CA-RF03-04: /error existe (Spring Boot), e nenhuma regra a libera a um pedido direto
+		mvc.perform(get("/error")).andExpect(status().isForbidden());
 	}
 
 	@Test

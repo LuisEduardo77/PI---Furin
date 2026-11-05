@@ -5,7 +5,6 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
-import java.io.UnsupportedEncodingException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -82,9 +81,9 @@ class LeituraConcorrenteTests {
 	void duasLeiturasAoMesmoTempoGeramUmaLiberacaoSo() throws Exception {
 		List<MockHttpServletResponse> respostas = aoMesmoTempo(UUID.randomUUID(), UUID.randomUUID());
 
-		// RN04: a que chegar depois recebe a mesma liberação, marcada como repetida
-		assertThat(respostas).extracting(MockHttpServletResponse::getStatus).containsOnly(200);
-		assertThat(respostas).filteredOn(this::repetida).hasSize(1);
+		// RN04: a que chegar depois recebe a mesma liberação, com 200 no lugar do 201
+		assertThat(respostas).extracting(MockHttpServletResponse::getStatus).containsExactlyInAnyOrder(201, 200);
+		assertThat(respostas.get(0).getContentAsString()).isEqualTo(respostas.get(1).getContentAsString());
 		assertThat(registros()).isEqualTo(1);
 	}
 
@@ -93,17 +92,9 @@ class LeituraConcorrenteTests {
 		UUID chave = UUID.randomUUID();
 		List<MockHttpServletResponse> respostas = aoMesmoTempo(chave, chave);
 
-		assertThat(respostas).extracting(MockHttpServletResponse::getStatus).containsOnly(200);
+		assertThat(respostas).extracting(MockHttpServletResponse::getStatus).containsOnly(201);
 		assertThat(respostas.get(0).getContentAsString()).isEqualTo(respostas.get(1).getContentAsString());
 		assertThat(registros()).isEqualTo(1);
-	}
-
-	private boolean repetida(MockHttpServletResponse resposta) {
-		try {
-			return resposta.getContentAsString().contains("\"repetida\":true");
-		} catch (UnsupportedEncodingException falha) {
-			throw new IllegalStateException(falha);
-		}
 	}
 
 	private List<MockHttpServletResponse> aoMesmoTempo(UUID... chaves) throws Exception {

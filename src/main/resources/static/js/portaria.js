@@ -9,7 +9,10 @@
  *   (A11 §5.11.1). A foto ainda não é entregue (T-18): aparece "Foto indisponível", sem
  *   bloquear a liberação (DEC-28, A9).
  * - O monitor do aluno mostra só o primeiro nome e o estado (RF22; RN17).
- * - "Simular passagem (giro)" faz POST /portaria/giros com o ID da liberação.
+ * - "Simular passagem (giro)" faz POST /portaria/giros com o ID da liberação e uma
+ *   chaveRequisicao. Depois de uma falha, a tentativa repete a mesma chave (RN08; DEC-41).
+ * - A resposta da leitura tem só o que o CA-RNF05-03 lista (DEC-43). O status diz se a
+ *   liberação é nova (201) ou se já estava pendente (200; RN04).
  * - Os dois painéis são regiões role="status" separadas: anunciam sem mover o foco, e o
  *   foco volta sempre ao campo de leitura (A11 §5.1.13, §5.13.8).
  */
@@ -41,6 +44,7 @@
   var tempoDoPainel = Number(raiz.getAttribute('data-painel-ms'));
 
   var liberacaoEmCurso = null;
+  var giroEmCurso = null;
   var esperaDoMonitor = null;
   var esperaDoPainel = null;
 
@@ -103,8 +107,8 @@
     }
     enviar(raiz.getAttribute('data-leituras'), { codigo: limpo, chaveRequisicao: novaChave() },
       function (status, dados) {
-        if (status === 200 && dados) {
-          mostrarLiberacao(dados);
+        if ((status === 201 || status === 200) && dados) {
+          mostrarLiberacao(dados, status === 200);
         } else if (status === 422 && dados) {
           mostrarRecusa('Leitura recusada: ' + dados.motivo + '.');
         } else {
@@ -114,23 +118,23 @@
       });
   }
 
-  function mostrarLiberacao(liberacao) {
+  function mostrarLiberacao(liberacao, repetida) {
     var registrada = liberacao.situacao === 'CONFIRMADA';
     liberacaoEmCurso = registrada ? null : liberacao;
-    preencherPainel(liberacao, situacaoNoPainel(liberacao));
-    mostrarNoMonitor(mensagemDoMonitor(liberacao), registrada);
+    preencherPainel(liberacao, situacaoNoPainel(liberacao, repetida));
+    mostrarNoMonitor(mensagemDoMonitor(liberacao, repetida), registrada);
     if (botaoGiro) {
       botaoGiro.disabled = registrada;
     }
     reiniciarLimpezaDoPainel();
   }
 
-  function mensagemDoMonitor(liberacao) {
+  function mensagemDoMonitor(liberacao, repetida) {
     if (liberacao.situacao === 'CONFIRMADA') {
       return liberacao.primeiroNome + ', ' + nomeDoTipo(liberacao.tipo) + ' registrada.';
     }
     // RN04: leitura repetida com a liberação pendente (RF09, exceções)
-    if (liberacao.repetida) {
+    if (repetida) {
       return liberacao.primeiroNome + ', pode passar.';
     }
     return liberacao.primeiroNome + ', ' + nomeDoTipo(liberacao.tipo) + ' liberada. Pode passar.';
@@ -156,10 +160,14 @@
     }
     botaoGiro.disabled = true;
     campo.focus();
-    enviar(raiz.getAttribute('data-giros'), { idLiberacao: liberacaoEmCurso.idLiberacao },
+    // RN08: repetir o giro depois de uma falha usa a mesma chave, sem confirmar duas vezes
+    if (!giroEmCurso || giroEmCurso.idLiberacao !== liberacaoEmCurso.idLiberacao) {
+      giroEmCurso = { idLiberacao: liberacaoEmCurso.idLiberacao, chaveRequisicao: novaChave() };
+    }
+    enviar(raiz.getAttribute('data-giros'), giroEmCurso,
       function (status, dados) {
         if (status === 200 && dados) {
-          mostrarLiberacao(dados);
+          mostrarLiberacao(dados, false);
         } else if (status === 422 && dados) {
           liberacaoEmCurso = null;
           paragrafo(painel, 'Giro recusado: ' + dados.motivo + '.');
@@ -188,13 +196,13 @@
     painel.appendChild(lista);
   }
 
-  function situacaoNoPainel(liberacao) {
+  function situacaoNoPainel(liberacao, repetida) {
     var tipo = nomeDoTipoComMaiuscula(liberacao.tipo);
     if (liberacao.situacao === 'CONFIRMADA') {
       // O horário já vem no fuso da escola (RN10), formatado pelo servidor
       return tipo + ' registrada às ' + liberacao.horarioNaEscola;
     }
-    return liberacao.repetida ? 'Aguardando passagem' : tipo + ' liberada — aguardando passagem';
+    return repetida ? 'Aguardando passagem' : tipo + ' liberada — aguardando passagem';
   }
 
   function reiniciarLimpezaDoPainel() {

@@ -140,10 +140,17 @@ public class RegistrosDaPortaria {
 				.stream().findFirst();
 	}
 
-	/** RN02, passo 3: só uma liberação ainda pendente vira CONFIRMADA. */
-	boolean confirmar(long idRegistro, Instant giro) {
-		return jdbc.update("UPDATE registro_acesso SET situacao = ?, ocorrido_em = ? WHERE id_registro = ? AND situacao = ?",
-				CONFIRMADA, utc(giro), idRegistro, AGUARDANDO_GIRO) == 1;
+	/** DEC-41: o registro já confirmado por um giro com esta chave, se houver. */
+	Optional<Long> registroPorChaveDoGiro(UUID chaveDoGiro) {
+		return jdbc.queryForList("SELECT id_registro FROM registro_acesso WHERE chave_giro = ?", Long.class,
+				chaveDoGiro.toString()).stream().findFirst();
+	}
+
+	/** RN02, passo 3: só uma liberação ainda pendente vira CONFIRMADA. A chave fica gravada (DEC-41). */
+	boolean confirmar(long idRegistro, Instant giro, UUID chaveDoGiro) {
+		return jdbc.update("UPDATE registro_acesso SET situacao = ?, ocorrido_em = ?, chave_giro = ? "
+				+ "WHERE id_registro = ? AND situacao = ?",
+				CONFIRMADA, utc(giro), chaveDoGiro.toString(), idRegistro, AGUARDANDO_GIRO) == 1;
 	}
 
 	private Liberacao liberacaoDaLinha(ResultSet rs, int linha) throws SQLException {
@@ -153,7 +160,7 @@ public class RegistrosDaPortaria {
 				rs.getString("situacao"), nome, Liberacao.primeiroNomeDe(nome),
 				Liberacao.turmaComTurno(rs.getString("turma"), rs.getString("turno")),
 				instante(rs, "lancado_em"), ocorridoEm,
-				ocorridoEm == null ? null : horaNaEscola.format(ocorridoEm), false);
+				ocorridoEm == null ? null : horaNaEscola.format(ocorridoEm));
 	}
 
 	private static LocalDateTime utc(Instant instante) {
