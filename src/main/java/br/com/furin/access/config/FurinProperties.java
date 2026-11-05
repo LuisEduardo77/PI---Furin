@@ -2,6 +2,7 @@ package br.com.furin.access.config;
 
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.ZoneId;
 import java.util.List;
 
 import org.hibernate.validator.constraints.time.DurationMin;
@@ -42,8 +43,8 @@ public record FurinProperties(
 		@NotNull @Valid Arquivos arquivos,
 		@NotNull @Valid Retencao retencao) {
 
-	/** RF20. No repositório, só valor fictício (A10 §8.33). */
-	public record Escola(@NotBlank String nome) {
+	/** RF20: nome, no repositório só valor fictício (A10 §8.33). RN10: fuso da escola. */
+	public record Escola(@NotBlank String nome, @NotNull ZoneId fuso) {
 	}
 
 	/** DEC-02, A08 RNF02, DEC-28 (A1, A6, A7). */
@@ -55,8 +56,13 @@ public record FurinProperties(
 			@NotNull @DurationMin(millis = 1) Duration painelLimpeza) {
 	}
 
-	/** RF06; DEC-28 (D7). */
-	public record Carteirinha(@Min(1) int tentativasColisao) {
+	/** RF06; DEC-28 (D7). A14 p.6: o código tem um número par de caracteres hexadecimais. */
+	public record Carteirinha(@Min(1) int tentativasColisao, @Min(2) int tamanhoCodigo) {
+
+		@AssertTrue(message = "o tamanho do código deve ser par (cada byte vira 2 caracteres hexadecimais)")
+		public boolean isTamanhoCodigoPar() {
+			return tamanhoCodigo % 2 == 0;
+		}
 	}
 
 	/** RF16; DEC-28 (C2). */

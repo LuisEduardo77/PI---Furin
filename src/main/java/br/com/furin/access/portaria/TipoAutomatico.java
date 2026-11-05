@@ -3,11 +3,13 @@ package br.com.furin.access.portaria;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import br.com.furin.access.config.RelogioConfig;
+import br.com.furin.access.config.FurinProperties;
 
 /**
  * Tipo automático da movimentação (T-25; RN01; RF13). O tipo <b>nunca</b> vem da
@@ -52,8 +54,16 @@ public class TipoAutomatico {
 
 	private final Clock relogio;
 
-	public TipoAutomatico(Clock relogio) {
+	private final ZoneId fusoDaEscola;
+
+	@Autowired
+	public TipoAutomatico(Clock relogio, FurinProperties propriedades) {
+		this(relogio, propriedades.escola().fuso());
+	}
+
+	TipoAutomatico(Clock relogio, ZoneId fusoDaEscola) {
 		this.relogio = relogio;
+		this.fusoDaEscola = fusoDaEscola;
 	}
 
 	public Decisao decidir(Optional<UltimaMovimentacao> ultimaConfirmada) {
@@ -65,8 +75,8 @@ public class TipoAutomatico {
 		return diaDaEntrada.equals(hoje) ? Decisao.tipo(TipoMovimentacao.SAIDA) : Decisao.saidaPendente(diaDaEntrada);
 	}
 
-	private static LocalDate diaNaEscola(Instant instante) {
-		return LocalDate.ofInstant(instante, RelogioConfig.FUSO_DA_ESCOLA);
+	private LocalDate diaNaEscola(Instant instante) {
+		return LocalDate.ofInstant(instante, fusoDaEscola);
 	}
 
 }

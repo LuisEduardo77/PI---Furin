@@ -50,8 +50,6 @@ public class V2__CargaFicticia extends BaseJavaMigration {
 	static final String VARIAVEL_SENHA_ATE = "FURIN_SENHA_ATE_DEMO";
 	static final String VARIAVEL_SENHA_GESTAO = "FURIN_SENHA_GESTAO_DEMO";
 
-	private static final int BYTES_DO_CODIGO = 16; // 32 caracteres hexadecimais (A14 p.6)
-
 	private final PasswordEncoder encoder;
 	private final FurinProperties furin;
 	private final Clock relogio;
@@ -173,7 +171,8 @@ public class V2__CargaFicticia extends BaseJavaMigration {
 		}
 
 		private void carteirinha(long aluno) throws SQLException {
-			byte[] bytes = new byte[BYTES_DO_CODIGO];
+			// Cada byte vira 2 caracteres hexadecimais (furin.carteirinha.tamanho-codigo; A14 p.6)
+			byte[] bytes = new byte[furin.carteirinha().tamanhoCodigo() / 2];
 			aleatorio.nextBytes(bytes);
 			inserir("INSERT INTO carteirinha (id_aluno, codigo, emitida_em, expira_em, revogada_em) "
 					+ "VALUES (?, ?, ?, NULL, NULL)", aluno, HexFormat.of().formatHex(bytes), agora);

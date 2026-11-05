@@ -41,9 +41,13 @@ class FurinPropertiesValidacaoTests {
 		Path dentroDoProjeto = Path.of("").toAbsolutePath().resolve("src/main/resources/static");
 		return new String[] {
 				"furin.escola.nome= ",
+				"furin.escola.fuso=",
+				"furin.escola.fuso=Fuso/Inexistente",
 				"furin.portaria.prazo-giro=0s",
 				"furin.portaria.janela-repeticao=-2s",
 				"furin.carteirinha.tentativas-colisao=0",
+				"furin.carteirinha.tamanho-codigo=0",
+				"furin.carteirinha.tamanho-codigo=31",
 				"furin.busca.max-resultados=0",
 				"furin.historico.periodo-max-dias=-1",
 				"furin.login.bloqueio=",

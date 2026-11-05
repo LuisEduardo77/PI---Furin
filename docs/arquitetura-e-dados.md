@@ -212,12 +212,14 @@ atualizada.
 | Propriedade | Valor | Fonte |
 |---|---|---|
 | `furin.escola.nome` | Texto do cabeçalho do relatório. **No repositório, só valor fictício** (por exemplo, "Escola Exemplo"). O valor da implantação é configurado no ambiente, fora do repositório | RF20; A10 §8.33 |
+| `furin.escola.fuso` | America/Sao_Paulo | RN10 [PROP: nome] |
 | `furin.portaria.janela-repeticao` | 2 s | DEC-02 |
 | `furin.portaria.tempo-resposta-max` | 2 s (meta de desempenho) | A08 RNF02 |
 | `furin.portaria.prazo-giro` | 15 s | PEND-01 → DEC-28 (A1) |
 | `furin.portaria.monitor-exibicao` | 4 s | PEND-12 → DEC-28 (A6) |
 | `furin.portaria.painel-limpeza` | 60 s sem leitura | RF10; DEC-28 (A7) |
 | `furin.carteirinha.tentativas-colisao` | 3 | RF06; DEC-28 (D7) |
+| `furin.carteirinha.tamanho-codigo` | 32 (par) | A14 p.6; RN15 [PROP: nome] |
 | `furin.presentes.intervalo-atualizacao` | 30 s | RF16; DEC-28 (C2) |
 | `furin.busca.max-resultados`, `furin.busca.tamanho-minimo-nome` | 20; 2 caracteres | RF11; DEC-28 (C4) |
 | `furin.historico.tamanho-pagina`, `furin.historico.periodo-max-dias` | 50; 31 dias | RF18; DEC-28 (C5) |
@@ -779,7 +781,7 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   rodado de novo no fim de cada fase (plano, T-17). Texto [PROP]: o da página 403.
 - **Portaria, leitura e giro (T-25, T-26 e T-28, 02/11/2026, antecipadas para a
   demonstração):** pacote `br.com.furin.access.portaria`. `TipoAutomatico` aplica a RN01
-  com o dia no fuso da escola (`RelogioConfig.FUSO_DA_ESCOLA`, America/Sao_Paulo) [PROP].
+  com o dia no fuso da escola (`furin.escola.fuso`).
   `POST /portaria/leituras` recebe JSON (`codigo`, `chaveRequisicao`) com o token CSRF no
   cabeçalho; um campo `tipo` é ignorado. `Leituras` roda numa transação
   `READ_COMMITTED`: encontra a carteirinha, **bloqueia o aluno**
@@ -949,3 +951,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 02/11/2026 | T-25, T-26 e T-28 antecipadas: tipo automático, leitura e giro simulado (§6, "Portaria, leitura e giro"), com o fuso em constante e a recusa `LIBERACAO_PENDENTE` [PROP] |
 | 02/11/2026 | T-30 antecipada: tela da portaria (§6, "Tela da portaria"), com "Foto indisponível" até a T-18 e os textos [PROP] |
 | 05/11/2026 | RN04 (parte da T-27): a leitura repetida devolve a liberação pendente, no lugar da recusa `LIBERACAO_PENDENTE` da T-26 (§6, "Portaria, leitura e giro") |
+| 05/11/2026 | Ajuste de requisitos: `furin.escola.fuso` e `furin.carteirinha.tamanho-codigo` (§4), no lugar de valores no código; turma com turno na resposta da leitura; página `error/404.html` e aviso "Leitor não está pronto" |

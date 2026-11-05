@@ -37,7 +37,6 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.furin.access.RelogioAjustavel;
-import br.com.furin.access.config.RelogioConfig;
 import br.com.furin.access.config.SegurancaConfig;
 
 /**
@@ -57,7 +56,7 @@ class LeituraTests {
 
 	/** 20/10/2026, 12:30 no horário da escola. */
 	private static final Instant AGORA = LocalDateTime.of(2026, 10, 20, 12, 30)
-			.atZone(RelogioConfig.FUSO_DA_ESCOLA).toInstant();
+			.atZone(RelogioAjustavel.FUSO_DA_ESCOLA).toInstant();
 
 	@TestBean(name = "relogio")
 	private Clock relogio;
@@ -101,7 +100,7 @@ class LeituraTests {
 				.andExpect(jsonPath("$.situacao").value("AGUARDANDO_GIRO"))
 				.andExpect(jsonPath("$.nome").value("Ana Teste"))
 				.andExpect(jsonPath("$.primeiroNome").value("Ana"))
-				.andExpect(jsonPath("$.turma").value("6A-T26"))
+				.andExpect(jsonPath("$.turma").value("6A-T26 — Manhã"))
 				.andExpect(jsonPath("$.idLiberacao").isNumber())
 				.andExpect(jsonPath("$.ocorridoEm").value(nullValue()));
 
@@ -343,7 +342,7 @@ class LeituraTests {
 	}
 
 	private Instant hojeAs(int hora, int minuto) {
-		return LocalDateTime.of(2026, 10, 20, hora, minuto).atZone(RelogioConfig.FUSO_DA_ESCOLA).toInstant();
+		return LocalDateTime.of(2026, 10, 20, hora, minuto).atZone(RelogioAjustavel.FUSO_DA_ESCOLA).toInstant();
 	}
 
 }

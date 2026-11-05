@@ -42,6 +42,8 @@
         </div>
         <button type="submit" class="botao">Registrar leitura</button>
       </form>
+      <!-- DEC-28, A8; CA-RNF07-04: "Leitor não está pronto" quando o foco sai do campo -->
+      <p id="aviso-leitor" role="status"></p>
     </section>
 
     <div class="portaria__paineis">
@@ -78,7 +80,7 @@
         <li th:each="carteirinha : ${carteirinhasFicticias}">
           <button type="button" class="botao botao--secundario" data-simular-leitura
                   th:data-codigo="${carteirinha.codigo()}"
-                  th:text="|Simular leitura: ${carteirinha.nome()} (${carteirinha.turma()})|">Simular leitura: Ana Teste (6A)</button>
+                  th:text="|Ler carteirinha de ${carteirinha.nome()}|">Ler carteirinha de Ana Teste</button>
         </li>
       </ul>
       <p th:if="${#lists.isEmpty(carteirinhasFicticias)}">Nenhuma carteirinha fictícia ativa.</p>

@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import br.com.furin.access.auditoria.Auditoria;
 import br.com.furin.access.auditoria.EventoAuditoria;
+import br.com.furin.access.config.FurinProperties;
 import br.com.furin.access.portaria.RegistrosDaPortaria.Aluno;
 import br.com.furin.access.portaria.RegistrosDaPortaria.Carteirinha;
 import br.com.furin.access.portaria.RegistrosDaPortaria.Vinculo;
@@ -38,8 +39,8 @@ import br.com.furin.access.portaria.TipoAutomatico.Decisao;
 @Service
 public class Leituras {
 
-	/** RN15: 32 caracteres hexadecimais (A14 p.6). */
-	private static final Pattern FORMATO_DO_CODIGO = Pattern.compile("[0-9a-f]{32}");
+	/** RN15: {@code furin.carteirinha.tamanho-codigo} caracteres hexadecimais (A14 p.6). */
+	private final Pattern formatoDoCodigo;
 
 	private final RegistrosDaPortaria registros;
 
@@ -49,7 +50,9 @@ public class Leituras {
 
 	private final Clock relogio;
 
-	public Leituras(RegistrosDaPortaria registros, TipoAutomatico tipoAutomatico, Auditoria auditoria, Clock relogio) {
+	public Leituras(RegistrosDaPortaria registros, TipoAutomatico tipoAutomatico, Auditoria auditoria, Clock relogio,
+			FurinProperties propriedades) {
+		this.formatoDoCodigo = Pattern.compile("[0-9a-f]{" + propriedades.carteirinha().tamanhoCodigo() + "}");
 		this.registros = registros;
 		this.tipoAutomatico = tipoAutomatico;
 		this.auditoria = auditoria;
@@ -66,7 +69,7 @@ public class Leituras {
 		// DATETIME(6) guarda microssegundos: o instante gravado é o mesmo que volta
 		Instant agora = relogio.instant().truncatedTo(ChronoUnit.MICROS);
 		String normalizado = codigo.strip().toLowerCase(Locale.ROOT);
-		if (!FORMATO_DO_CODIGO.matcher(normalizado).matches()) {
+		if (!formatoDoCodigo.matcher(normalizado).matches()) {
 			throw recusar(normalizado, MotivoDaRecusa.CODIGO_NAO_RECONHECIDO, null);
 		}
 		Carteirinha carteirinha = registros.carteirinhaPorCodigo(normalizado)

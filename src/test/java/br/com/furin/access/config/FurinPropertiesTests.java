@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.ZoneId;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,7 @@ class FurinPropertiesTests {
 	@Test
 	void escolaTemSoNomeFicticio() {
 		assertThat(furin.escola().nome()).isEqualTo("Escola Exemplo");
+		assertThat(furin.escola().fuso()).isEqualTo(ZoneId.of("America/Sao_Paulo"));
 	}
 
 	@Test
@@ -40,6 +42,7 @@ class FurinPropertiesTests {
 	@Test
 	void carregaOsLimitesDeConsulta() {
 		assertThat(furin.carteirinha().tentativasColisao()).isEqualTo(3);
+		assertThat(furin.carteirinha().tamanhoCodigo()).isEqualTo(32);
 		assertThat(furin.presentes().intervaloAtualizacao()).isEqualTo(Duration.ofSeconds(30));
 		assertThat(furin.busca().maxResultados()).isEqualTo(20);
 		assertThat(furin.busca().tamanhoMinimoNome()).isEqualTo(2);

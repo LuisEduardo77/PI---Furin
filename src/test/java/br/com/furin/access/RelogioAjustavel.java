@@ -12,6 +12,9 @@ import java.time.ZoneOffset;
  */
 public final class RelogioAjustavel extends Clock {
 
+	/** O valor de {@code furin.escola.fuso}, para os testes escreverem horários da escola (RN10). */
+	public static final ZoneId FUSO_DA_ESCOLA = ZoneId.of("America/Sao_Paulo");
+
 	private volatile Instant agora;
 
 	public RelogioAjustavel(Instant inicio) {
