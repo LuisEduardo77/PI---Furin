@@ -237,7 +237,58 @@ class PortariaTelaTests {
 		assertThat(portaria.getFocusedElement()).isEqualTo(campo);
 	}
 
+	// --- Leitura repetida (RN04): a liberação pendente nunca fica sem saída pela tela ---
+
+	@Test
+	void leituraRepetidaMantemOGiroDisponivel() throws Exception {
+		HtmlPage portaria = abrir();
+		simularLeituraDaAna(portaria);
+
+		simularLeituraDaAna(portaria);
+
+		assertThat(texto(portaria, "painel-funcionario")).contains("Ana Teste", "Aguardando passagem");
+		assertThat(texto(portaria, "monitor-aluno")).isEqualTo("Ana, pode passar.");
+		confirmarOGiro(portaria);
+	}
+
+	@Test
+	void recusaDeOutraLeituraNaoPerdeALiberacaoEmCurso() throws Exception {
+		HtmlPage portaria = abrir();
+		simularLeituraDaAna(portaria);
+		HtmlInput campo = (HtmlInput) portaria.getElementById("campo-leitura");
+
+		campo.type("abc");
+		campo.type('\n');
+		esperar(Duration.ofMillis(800));
+
+		assertThat(texto(portaria, "painel-funcionario")).contains("CODIGO_NAO_RECONHECIDO");
+		confirmarOGiro(portaria);
+	}
+
+	@Test
+	void depoisDeRecarregarAPaginaNovaLeituraRecuperaALiberacao() throws Exception {
+		HtmlPage portaria = abrir();
+		simularLeituraDaAna(portaria);
+
+		HtmlPage recarregada = navegador.getPage("http://localhost/portaria");
+		assertThat(((HtmlButton) recarregada.getElementById("botao-giro")).isDisabled()).isTrue();
+
+		simularLeituraDaAna(recarregada);
+		confirmarOGiro(recarregada);
+	}
+
 	// --- Apoio ---
+
+	private void confirmarOGiro(HtmlPage portaria) throws Exception {
+		HtmlButton giro = (HtmlButton) portaria.getElementById("botao-giro");
+		assertThat(giro.isDisabled()).as("o giro continua disponível").isFalse();
+
+		giro.click();
+		esperar(Duration.ofMillis(800));
+
+		assertThat(texto(portaria, "painel-funcionario")).contains("Entrada registrada às 07:02");
+		assertThat(texto(portaria, "monitor-aluno")).isEqualTo("Ana, entrada registrada.");
+	}
 
 	/** Entra pelo formulário de login, que leva à portaria. */
 	private HtmlPage abrir() throws Exception {

@@ -226,12 +226,20 @@ class LeituraTests {
 	}
 
 	@Test
-	void segundaLeituraComLiberacaoPendenteNaoCriaOutra() throws Exception {
-		// Proteção mínima até a T-27 (RN04): nunca duas liberações pendentes para o mesmo aluno
-		ler(CODIGO_ANA, UUID.randomUUID()).andExpect(status().isOk());
+	void leituraRepetidaDevolveALiberacaoPendenteSemCriarOutra() throws Exception {
+		// RN04: mesmo depois de um tempo, não cria outra liberação nem renova o prazo
+		long primeira = idDaLiberacao(ler(CODIGO_ANA, UUID.randomUUID())
+				.andExpect(jsonPath("$.repetida").value(false)));
+		Object lancadoEm = unicoRegistroDaAna().get("lancado_em");
+		((RelogioAjustavel) relogio).avancar(Duration.ofSeconds(5));
 
-		ler(CODIGO_ANA, UUID.randomUUID()).andExpect(recusa("LIBERACAO_PENDENTE"));
-		assertThat(quantidadeDeRegistrosDaAna()).isEqualTo(1);
+		long repetida = idDaLiberacao(ler(CODIGO_ANA, UUID.randomUUID())
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.situacao").value("AGUARDANDO_GIRO"))
+				.andExpect(jsonPath("$.repetida").value(true)));
+
+		assertThat(repetida).isEqualTo(primeira);
+		assertThat(unicoRegistroDaAna()).containsEntry("lancado_em", lancadoEm);
 	}
 
 	@Test

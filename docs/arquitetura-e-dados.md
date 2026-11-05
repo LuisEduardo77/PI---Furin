@@ -787,9 +787,10 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   valida (RN09, RN06), calcula o tipo e grava `AGUARDANDO_GIRO`. A resposta traz o ID da
   liberação, tipo, situação, nome, primeiro nome e turma; a foto entra com a tela
   (T-30). Uma recusa responde 422 com um motivo técnico (`MotivoDaRecusa`) e vai para o
-  log como `LEITURA_RECUSADA`, com o código mascarado; os textos são da T-31. Até a
-  T-27, uma segunda leitura com liberação pendente é recusada (`LIBERACAO_PENDENTE`)
-  [PROP]. `POST /portaria/giros` (`GiroSimuladoController`, `@Profile("prototipo")`)
+  log como `LEITURA_RECUSADA`, com o código mascarado; os textos são da T-31. Uma
+  leitura repetida com liberação pendente (RN04) não grava nada e devolve a mesma
+  liberação, com `repetida: true`, o que permite confirmar o giro mesmo depois de
+  recarregar a página. `POST /portaria/giros` (`GiroSimuladoController`, `@Profile("prototipo")`)
   confirma uma liberação ainda pendente, com `ocorrido_em` do servidor. As consultas
   ficam em `RegistrosDaPortaria`, com SQL explícito e os horários em UTC como
   `LocalDateTime`, sem a conversão de fuso do Hibernate. Os testes que precisam do
@@ -947,3 +948,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 02/11/2026 | T-17: conta desativada durante a sessão, página 403 e sessão só por cookie (§6, "Autorização"), com o texto [PROP] da página 403 |
 | 02/11/2026 | T-25, T-26 e T-28 antecipadas: tipo automático, leitura e giro simulado (§6, "Portaria, leitura e giro"), com o fuso em constante e a recusa `LIBERACAO_PENDENTE` [PROP] |
 | 02/11/2026 | T-30 antecipada: tela da portaria (§6, "Tela da portaria"), com "Foto indisponível" até a T-18 e os textos [PROP] |
+| 05/11/2026 | RN04 (parte da T-27): a leitura repetida devolve a liberação pendente, no lugar da recusa `LIBERACAO_PENDENTE` da T-26 (§6, "Portaria, leitura e giro") |
