@@ -100,8 +100,9 @@ class LeituraTests {
 				.andExpect(jsonPath("$.primeiroNome").value("Ana"))
 				.andExpect(jsonPath("$.turma").value("6A-T26 — Manhã"))
 				.andExpect(jsonPath("$.idLiberacao").isNumber())
-				// CA-RNF05-03; DEC-43: só estes campos. A referência da foto entra com a T-18
-				.andExpect(jsonPath("$.length()").value(5));
+				.andExpect(jsonPath("$.fotoChave").value(fotoDaAna()))
+				// CA-RNF05-03; DEC-43: só estes campos
+				.andExpect(jsonPath("$.length()").value(6));
 
 		Map<String, Object> registro = unicoRegistroDaAna();
 		// Os IDs são BIGINT UNSIGNED e voltam do JDBC como BigInteger
@@ -157,6 +158,10 @@ class LeituraTests {
 	void codigoEmMaiusculasEComEspacosEhAceito() throws Exception {
 		// Leitor ou colagem podem mandar o código em maiúsculas
 		ler("  " + CODIGO_ANA.toUpperCase() + " ", UUID.randomUUID()).andExpect(status().isCreated());
+	}
+
+	private String fotoDaAna() {
+		return jdbc.queryForObject("SELECT foto_chave FROM aluno WHERE id_aluno = ?", String.class, ana);
 	}
 
 	// --- Reenvio (RN08; CA-RF09-07) ---
@@ -233,7 +238,7 @@ class LeituraTests {
 		// O 200, no lugar do 201, é o que diz à tela que a liberação já estava pendente
 		long repetida = idDaLiberacao(ler(CODIGO_ANA, UUID.randomUUID())
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.length()").value(5)));
+				.andExpect(jsonPath("$.length()").value(6)));
 
 		assertThat(repetida).isEqualTo(primeira);
 		assertThat(unicoRegistroDaAna()).containsEntry("lancado_em", lancadoEm);

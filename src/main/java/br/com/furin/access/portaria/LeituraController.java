@@ -37,15 +37,15 @@ public class LeituraController {
 	}
 
 	/**
-	 * CA-RNF05-03: tipo, nomes, turma e ID da liberação, e nada além disso. A referência da
-	 * foto entra com a área privada (T-18).
+	 * CA-RNF05-03: tipo, nomes, turma, referência da foto e ID da liberação, e nada além
+	 * disso. A referência é a chave da área privada, que só abre em {@code GET /arquivos/{chave}}.
 	 */
 	public record RespostaDaLeitura(long idLiberacao, TipoMovimentacao tipo, String nome, String primeiroNome,
-			String turma) {
+			String turma, String fotoChave) {
 
 		static RespostaDaLeitura de(Liberacao liberacao) {
 			return new RespostaDaLeitura(liberacao.idLiberacao(), liberacao.tipo(), liberacao.nome(),
-					liberacao.primeiroNome(), liberacao.turma());
+					liberacao.primeiroNome(), liberacao.turma(), liberacao.fotoChave());
 		}
 	}
 

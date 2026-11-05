@@ -170,7 +170,7 @@ furin-access/
     │   └── carga/         # carga fictícia V2, só no perfil prototipo (T-11)
     ├── main/resources/
     │   ├── application.yml, application-prototipo.yml
-    │   ├── db/migration/  # V1__esquema_inicial.sql (a V2 é a migração Java carga/V2__CargaFicticia)
+    │   ├── db/migration/  # V1__esquema_inicial.sql, V3__chave_do_giro.sql (a V2 é a migração Java carga/V2__CargaFicticia)
     │   ├── templates/     # Thymeleaf (layout/base.html: layout-base, T-08)
     │   └── static/        # css (css/base.css, T-08), js
     └── test/java/...
@@ -790,8 +790,8 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   `READ_COMMITTED`: encontra a carteirinha, **bloqueia o aluno**
   (`SELECT … FOR UPDATE`), devolve a liberação original num reenvio com a mesma chave,
   valida (RN09, RN06), calcula o tipo e grava `AGUARDANDO_GIRO`. A resposta traz só o ID
-  da liberação, tipo, nome, primeiro nome e turma (CA-RNF05-03, DEC-43), com 201; a
-  referência da foto entra com a T-18. Uma recusa responde 422 com um motivo técnico (`MotivoDaRecusa`) e vai para o
+  da liberação, tipo, nome, primeiro nome, turma e a referência da foto em `fotoChave`
+  (CA-RNF05-03, DEC-43), com 201. Uma recusa responde 422 com um motivo técnico (`MotivoDaRecusa`) e vai para o
   log como `LEITURA_RECUSADA`, com o código mascarado; os textos são da T-31. Uma
   leitura repetida com liberação pendente (RN04) não grava nada e devolve a mesma
   liberação, com 200 no lugar do 201, o que permite confirmar o giro mesmo depois de
@@ -814,14 +814,27 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   repete a chave dele. O painel do funcionário e o
   monitor do aluno são regiões `role="status"` separadas; o foco volta sempre ao campo.
   A resposta do giro traz o horário já no fuso da escola (`horarioNaEscola`), para a
-  tela não depender do fuso do navegador. A foto aparece como "Foto indisponível" até a
-  área privada (T-18; DEC-28, A9). Os tempos do monitor e da limpeza do painel vêm de
+  tela não depender do fuso do navegador. A foto vem de `GET /arquivos/{chave}`; se não
+  carregar, o painel mostra "Foto indisponível" (DEC-28, A9). Os tempos do monitor e da limpeza do painel vêm de
   `furin.portaria.monitor-exibicao` e `painel-limpeza`. Cada pedido da portaria dispara
   o evento `furin:atividade`, que recomeça a contagem do aviso de sessão
   (`sessao.js`): o servidor já renovou a sessão. Testes com JavaScript que dependem de
   pedidos do script não usam a transação do teste (o HtmlUnit manda esses pedidos de
   outra thread): gravam a cena e a apagam no fim. Textos [PROP]: o aviso do protótipo,
   as dicas e "Nenhuma leitura em andamento.".
+- **Área privada (T-18, 05/11/2026; DEC-08):** pacote `br.com.furin.access.arquivo`.
+  `AreaPrivada.guardar` lê no máximo `tamanho-max` + 1 byte, reconhece o formato pelos
+  primeiros bytes (`FormatoDeArquivo`: JPEG, PNG ou PDF), confere se ele está em
+  `furin.arquivos.*.tipos` e grava `<UUID>.<extensão do conteúdo>`. Fora das regras,
+  lança `ArquivoRecusado` e não grava nada; o nome e a extensão enviados não contam.
+  A validação olha a assinatura do arquivo, não a estrutura inteira: é a resposta com o
+  tipo fixo e `nosniff` que impede o navegador de tratar o conteúdo como outra coisa.
+  `ArquivoController` entrega em `GET /arquivos/{chave}`, com a regra `/arquivos/**` de
+  `SegurancaConfig`. Só chaves no formato gerado pelo sistema chegam ao disco, o tipo da
+  resposta vem do conteúdo, e a entrega é `inline`, com o `no-store` e o `nosniff` do
+  Spring Security. Arquivo que falta responde 404 e vai para o log como
+  `ARQUIVO_INDISPONIVEL`, só com a chave [PROP: nome]. Testes usam um diretório
+  temporário, nunca a área privada de verdade.
 
 **Log de auditoria (T-10, 01/11/2026):** pacote `br.com.furin.access.auditoria`.
 
@@ -960,3 +973,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 05/11/2026 | RN04 (parte da T-27): a leitura repetida devolve a liberação pendente, no lugar da recusa `LIBERACAO_PENDENTE` da T-26 (§6, "Portaria, leitura e giro") |
 | 05/11/2026 | Ajuste de requisitos: `furin.escola.fuso` e `furin.carteirinha.tamanho-codigo` (§4), no lugar de valores no código; turma com turno na resposta da leitura; página `error/404.html` e aviso "Leitor não está pronto" |
 | 05/11/2026 | DEC-41 a DEC-43: coluna `chave_giro` (§5, migração V3), `NegarRotaExistenteSemRegra` (404 para rota inexistente), resposta da leitura reduzida com status 201 ou 200 [PROP] e `furin.carga.ativa` para os testes |
+| 05/11/2026 | T-18: área privada e `GET /arquivos/{chave}` (§6, "Área privada"), com `fotoChave` na resposta da leitura e do giro e o evento `ARQUIVO_INDISPONIVEL` [PROP] |

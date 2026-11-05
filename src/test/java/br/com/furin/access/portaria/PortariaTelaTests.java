@@ -2,11 +2,19 @@ package br.com.furin.access.portaria;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
+
+import javax.imageio.ImageIO;
 
 import org.htmlunit.WebClient;
 import org.htmlunit.html.DomElement;
@@ -14,6 +22,7 @@ import org.htmlunit.html.DomNode;
 import org.htmlunit.html.HtmlButton;
 import org.htmlunit.html.HtmlInput;
 import org.htmlunit.html.HtmlPage;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,10 +32,15 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.convention.TestBean;
+import org.springframework.util.FileSystemUtils;
 
 import br.com.furin.access.RelogioAjustavel;
+import br.com.furin.access.arquivo.AreaPrivada;
+import br.com.furin.access.arquivo.AreaPrivada.TipoDeDocumento;
 import br.com.furin.access.config.FurinProperties;
 import br.com.furin.access.config.SegurancaConfig;
 
@@ -61,6 +75,20 @@ class PortariaTelaTests {
 	private static final Instant AGORA = LocalDateTime.of(2026, 10, 20, 7, 2)
 			.atZone(RelogioAjustavel.FUSO_DA_ESCOLA).toInstant();
 
+	/** Nunca a área privada de verdade: a foto deste teste é só uma imagem de 1 pixel. */
+	private static final Path AREA_PRIVADA = Path.of(System.getProperty("java.io.tmpdir"),
+			"furin-portaria-teste-" + UUID.randomUUID());
+
+	@DynamicPropertySource
+	static void areaPrivada(DynamicPropertyRegistry propriedades) {
+		propriedades.add("furin.arquivos.diretorio", AREA_PRIVADA::toString);
+	}
+
+	@AfterAll
+	static void apagarAAreaPrivada() throws IOException {
+		FileSystemUtils.deleteRecursively(AREA_PRIVADA);
+	}
+
 	@TestBean(name = "relogio")
 	private Clock relogio;
 
@@ -79,6 +107,9 @@ class PortariaTelaTests {
 
 	@Autowired
 	private PasswordEncoder encoder;
+
+	@Autowired
+	private AreaPrivada areaPrivada;
 
 	@BeforeEach
 	void preparar() {
@@ -173,9 +204,9 @@ class PortariaTelaTests {
 
 		simularLeituraDaAna(portaria);
 
-		// CA-RF10-01 e 03: nome, turma, tipo e situação em texto; foto indisponível (DEC-28, A9)
+		// CA-RF10-01 e 03: nome, turma, tipo e situação em texto
 		String painel = texto(portaria, "painel-funcionario");
-		assertThat(painel).contains("Foto indisponível", "Ana Teste", "6A-T30 — Manhã", "Entrada",
+		assertThat(painel).contains("Ana Teste", "6A-T30 — Manhã", "Entrada",
 				"Entrada liberada — aguardando passagem");
 		// CA-RF22-01 e 04: só o primeiro nome e o estado
 		assertThat(texto(portaria, "monitor-aluno")).isEqualTo("Ana, entrada liberada. Pode passar.");
@@ -184,6 +215,54 @@ class PortariaTelaTests {
 		assertThat(portaria.getFocusedElement().getId()).isEqualTo("campo-leitura");
 		assertThat(((HtmlButton) portaria.getElementById("botao-giro")).isDisabled()).isFalse();
 	}
+
+	// --- Foto (T-18; RF10; DEC-28, A9) ---
+
+	@Test
+	void fotoQueExisteApareceComTextoAlternativoSoNoPainelDoFuncionario() throws Exception {
+		String chave = areaPrivada.guardar(TipoDeDocumento.FOTO, new ByteArrayInputStream(imagemPng()));
+		jdbc.update("UPDATE aluno SET foto_chave = ? WHERE matricula = ?", chave, MATRICULA);
+		HtmlPage portaria = abrir();
+
+		simularLeituraDaAna(portaria);
+
+		// CA-RF10-02: a foto tem o nome no texto alternativo, e o nome também aparece em texto
+		DomElement foto = portaria.querySelector("#painel-funcionario img");
+		assertThat(foto).as("a foto está no painel").isNotNull();
+		assertThat(foto.getAttribute("src")).isEqualTo("/arquivos/" + chave);
+		assertThat(foto.getAttribute("alt")).isEqualTo("Foto de identificação de Ana Teste");
+		assertThat(texto(portaria, "painel-funcionario")).contains("Ana Teste").doesNotContain("Foto indisponível");
+		// CA-RF10-04: nada de foto no monitor do aluno
+		assertThat(portaria.querySelectorAll("#monitor-aluno img")).isEmpty();
+	}
+
+	@Test
+	void fotoContinuaNoPainelDepoisDoGiro() throws Exception {
+		String chave = areaPrivada.guardar(TipoDeDocumento.FOTO, new ByteArrayInputStream(imagemPng()));
+		jdbc.update("UPDATE aluno SET foto_chave = ? WHERE matricula = ?", chave, MATRICULA);
+		HtmlPage portaria = abrir();
+		simularLeituraDaAna(portaria);
+
+		((HtmlButton) portaria.getElementById("botao-giro")).click();
+		esperar(Duration.ofMillis(800));
+
+		DomElement foto = portaria.querySelector("#painel-funcionario img");
+		assertThat(foto.getAttribute("src")).isEqualTo("/arquivos/" + chave);
+	}
+
+	@Test
+	void fotoQueNaoCarregaMostraOAvisoESemBloquearALiberacao() throws Exception {
+		// A cena grava uma chave sem arquivo. DEC-28, A9: o giro continua disponível
+		HtmlPage portaria = abrir();
+
+		simularLeituraDaAna(portaria);
+
+		assertThat(portaria.querySelectorAll("#painel-funcionario img")).isEmpty();
+		assertThat(texto(portaria, "painel-funcionario")).contains("Foto indisponível", "Ana Teste");
+		confirmarOGiro(portaria);
+	}
+
+	// --- Giro ---
 
 	@Test
 	void simularPassagemRegistraAEntradaEOMonitorVoltaAEspera() throws Exception {
@@ -322,6 +401,12 @@ class PortariaTelaTests {
 	private void simularLeituraDaAna(HtmlPage portaria) throws Exception {
 		((HtmlButton) portaria.querySelector("[data-codigo='" + CODIGO_ANA + "']")).click();
 		esperar(Duration.ofMillis(800));
+	}
+
+	private static byte[] imagemPng() throws IOException {
+		ByteArrayOutputStream saida = new ByteArrayOutputStream();
+		ImageIO.write(new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB), "png", saida);
+		return saida.toByteArray();
 	}
 
 	private void esperar(Duration tempo) {

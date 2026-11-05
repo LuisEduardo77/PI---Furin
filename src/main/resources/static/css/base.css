@@ -314,6 +314,14 @@ td {
   margin-bottom: 0;
 }
 
+.portaria__foto-imagem {
+  display: block;
+  width: 100%;
+  max-width: 10rem;
+  height: auto;
+  border: 1px solid var(--cor-borda);
+}
+
 .portaria__foto {
   display: inline-block;
   padding: 1.5rem 1rem;

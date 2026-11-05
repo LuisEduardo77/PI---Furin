@@ -1,6 +1,10 @@
 package br.com.furin.access.carga;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -24,10 +28,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+
+import br.com.furin.access.config.SegurancaConfig;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
@@ -40,6 +49,7 @@ import org.springframework.test.context.DynamicPropertySource;
 		"spring.flyway.clean-disabled=false",
 		V2__CargaFicticia.VARIAVEL_SENHA_ATE + "=" + CargaFicticiaTests.SENHA_ATE,
 		V2__CargaFicticia.VARIAVEL_SENHA_GESTAO + "=" + CargaFicticiaTests.SENHA_GESTAO })
+@AutoConfigureMockMvc
 @ActiveProfiles({ "test", "prototipo" })
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExtendWith(OutputCaptureExtension.class)
@@ -79,6 +89,9 @@ class CargaFicticiaTests {
 	@Autowired
 	private DataSource dataSource;
 
+	@Autowired
+	private MockMvc mvc;
+
 	@AfterAll
 	void voltarSoParaOEsquema() throws IOException {
 		Flyway soEsquema = Flyway.configure().dataSource(dataSource).cleanDisabled(false).load();
@@ -87,6 +100,21 @@ class CargaFicticiaTests {
 		try (var arquivos = Files.walk(AREA_PRIVADA)) {
 			arquivos.sorted(java.util.Comparator.reverseOrder()).forEach(p -> p.toFile().delete());
 		}
+	}
+
+	@Test
+	void fotosETermoDaCargaSaoEntreguesPelaRotaAutorizada() throws Exception {
+		// T-18; DEC-08
+		for (String foto : jdbc.queryForList("SELECT foto_chave FROM aluno", String.class)) {
+			mvc.perform(get("/arquivos/" + foto).with(user("carga.teste").roles(SegurancaConfig.PERFIL_FUNCIONARIO)))
+					.andExpect(status().isOk())
+					.andExpect(content().contentType(MediaType.IMAGE_PNG));
+		}
+		String termo = jdbc.queryForObject("SELECT referencia_termo FROM consentimento "
+				+ "WHERE referencia_termo LIKE '%.pdf'", String.class);
+		mvc.perform(get("/arquivos/" + termo).with(user("carga.teste").roles(SegurancaConfig.PERFIL_FUNCIONARIO)))
+				.andExpect(status().isOk())
+				.andExpect(content().contentType(MediaType.APPLICATION_PDF));
 	}
 
 	@Test
