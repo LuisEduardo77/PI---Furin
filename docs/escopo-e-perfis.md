@@ -161,7 +161,8 @@ presentes do sistema não o inclui.
 O servidor confere todas as permissões em cada requisição (A10 §5.15; A13 p.3).
 Esconder um botão na tela não é controle de acesso. Com um único perfil, a regra é:
 **toda rota exige um funcionário autenticado e com conta ativa**. Sem login, o pedido
-leva à tela de login. Rotas não liberadas continuam negadas por padrão (403).
+leva à tela de login. Rotas existentes e não liberadas continuam negadas por padrão
+(403). Para um funcionário logado, uma rota que não existe responde 404 (DEC-42).
 
 **Legenda:**
 - ✅ permitido.

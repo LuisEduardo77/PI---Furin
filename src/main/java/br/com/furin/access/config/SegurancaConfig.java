@@ -3,6 +3,7 @@ package br.com.furin.access.config;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,6 +14,7 @@ import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import br.com.furin.access.auditoria.AcessoNegadoAuditado;
 import br.com.furin.access.auditoria.Auditoria;
@@ -33,7 +35,8 @@ import jakarta.servlet.DispatcherType;
  * <p>
  * Negar por padrão: só as rotas da tabela "Rotas principais" (arquitetura §4) ficam
  * liberadas, e só para o perfil FUNCIONARIO (DEC-37). Sem login, qualquer pedido leva
- * ao login. Com login, uma rota que não está na lista recebe 403 (escopo-e-perfis §6).
+ * ao login. Com login, uma rota com controller que não está na lista recebe 403
+ * (escopo-e-perfis §6), e uma rota que não existe recebe 404 (DEC-42).
  * CSRF fica ligado (padrão do Spring Security).
  */
 @Configuration
@@ -78,15 +81,16 @@ public class SegurancaConfig {
 
 	@Bean
 	SecurityFilterChain filtroDeSeguranca(HttpSecurity http, AcessoNegadoAuditado acessoNegado,
-			Auditoria auditoria, TentativasDeLogin tentativas, ContasDosFuncionarios contas) {
+			Auditoria auditoria, TentativasDeLogin tentativas, ContasDosFuncionarios contas,
+			@Qualifier("requestMappingHandlerMapping") RequestMappingHandlerMapping rotasDosControllers) {
 		http
 				.authorizeHttpRequests(rotas -> rotas
 						// O despacho de erro (404, 500) vem de um pedido que já passou pela autorização
 						.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
 						.requestMatchers(ROTAS_PUBLICAS).permitAll()
 						.requestMatchers(ROTAS_DO_FUNCIONARIO).hasRole(PERFIL_FUNCIONARIO)
-						// Negar por padrão (A10 §5.15; RF03, CA-RF03-04)
-						.anyRequest().denyAll())
+						// Negar por padrão (A10 §5.15; RF03, CA-RF03-04); rota inexistente dá 404 (DEC-42)
+						.anyRequest().access(new NegarRotaExistenteSemRegra(rotasDosControllers)))
 				// Tela própria em GET /login (autenticacao/LoginController); o POST /login é do
 				// Spring Security, com as contas do banco (autenticacao/ContasDosFuncionarios)
 				.formLogin(login -> login

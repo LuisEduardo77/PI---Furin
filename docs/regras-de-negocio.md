@@ -201,7 +201,8 @@ ou saída não registrada no dia anterior.
 - Toda operação sobre o mesmo aluno (leitura, giro, manual) roda numa transação que
   começa bloqueando o aluno (`SELECT … FOR UPDATE`).
 - Cada operação leva uma `chave_requisicao` (UUID). Um reenvio com a mesma chave
-  devolve o resultado original e **não** cria um registro novo.
+  devolve o resultado original e **não** cria um registro novo. O giro tem chave própria,
+  guardada em `chave_giro` quando confirma a liberação (DEC-41).
 - O banco também impede duas liberações pendentes para o mesmo aluno, com uma restrição
   UNIQUE (ver `docs/arquitetura-e-dados.md`).
 

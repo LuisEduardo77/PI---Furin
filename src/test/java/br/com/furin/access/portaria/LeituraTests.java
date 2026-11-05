@@ -1,7 +1,6 @@
 package br.com.furin.access.portaria;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -95,14 +94,14 @@ class LeituraTests {
 	void leituraValidaDevolveALiberacaoDeEntradaComNomeETurma() throws Exception {
 		UUID chave = UUID.randomUUID();
 		ler(CODIGO_ANA, chave)
-				.andExpect(status().isOk())
+				.andExpect(status().isCreated())
 				.andExpect(jsonPath("$.tipo").value("ENTRADA"))
-				.andExpect(jsonPath("$.situacao").value("AGUARDANDO_GIRO"))
 				.andExpect(jsonPath("$.nome").value("Ana Teste"))
 				.andExpect(jsonPath("$.primeiroNome").value("Ana"))
 				.andExpect(jsonPath("$.turma").value("6A-T26 — Manhã"))
 				.andExpect(jsonPath("$.idLiberacao").isNumber())
-				.andExpect(jsonPath("$.ocorridoEm").value(nullValue()));
+				// CA-RNF05-03; DEC-43: só estes campos. A referência da foto entra com a T-18
+				.andExpect(jsonPath("$.length()").value(5));
 
 		Map<String, Object> registro = unicoRegistroDaAna();
 		// Os IDs são BIGINT UNSIGNED e voltam do JDBC como BigInteger
@@ -125,7 +124,7 @@ class LeituraTests {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"codigo\":\"" + CODIGO_ANA + "\",\"chaveRequisicao\":\"" + UUID.randomUUID()
 						+ "\",\"tipo\":\"SAIDA\"}"))
-				.andExpect(status().isOk())
+				.andExpect(status().isCreated())
 				.andExpect(jsonPath("$.tipo").value("ENTRADA"));
 	}
 
@@ -134,7 +133,7 @@ class LeituraTests {
 		// CA-RF14-01: ENTRADA às 07:02 de hoje
 		cena.confirmada(vinculoAna, idFuncionario, carteirinhaAna, TipoMovimentacao.ENTRADA, hojeAs(7, 2));
 
-		ler(CODIGO_ANA, UUID.randomUUID()).andExpect(status().isOk()).andExpect(jsonPath("$.tipo").value("SAIDA"));
+		ler(CODIGO_ANA, UUID.randomUUID()).andExpect(status().isCreated()).andExpect(jsonPath("$.tipo").value("SAIDA"));
 	}
 
 	@Test
@@ -157,7 +156,7 @@ class LeituraTests {
 	@Test
 	void codigoEmMaiusculasEComEspacosEhAceito() throws Exception {
 		// Leitor ou colagem podem mandar o código em maiúsculas
-		ler("  " + CODIGO_ANA.toUpperCase() + " ", UUID.randomUUID()).andExpect(status().isOk());
+		ler("  " + CODIGO_ANA.toUpperCase() + " ", UUID.randomUUID()).andExpect(status().isCreated());
 	}
 
 	// --- Reenvio (RN08; CA-RF09-07) ---
@@ -165,8 +164,8 @@ class LeituraTests {
 	@Test
 	void reenvioComAMesmaChaveDevolveAMesmaLiberacaoSemCriarOutra() throws Exception {
 		UUID chave = UUID.randomUUID();
-		long primeira = idDaLiberacao(ler(CODIGO_ANA, chave).andExpect(status().isOk()));
-		long segunda = idDaLiberacao(ler(CODIGO_ANA, chave).andExpect(status().isOk()));
+		long primeira = idDaLiberacao(ler(CODIGO_ANA, chave).andExpect(status().isCreated()));
+		long segunda = idDaLiberacao(ler(CODIGO_ANA, chave).andExpect(status().isCreated()));
 
 		assertThat(segunda).isEqualTo(primeira);
 		assertThat(quantidadeDeRegistrosDaAna()).isEqualTo(1);
@@ -227,15 +226,14 @@ class LeituraTests {
 	@Test
 	void leituraRepetidaDevolveALiberacaoPendenteSemCriarOutra() throws Exception {
 		// RN04: mesmo depois de um tempo, não cria outra liberação nem renova o prazo
-		long primeira = idDaLiberacao(ler(CODIGO_ANA, UUID.randomUUID())
-				.andExpect(jsonPath("$.repetida").value(false)));
+		long primeira = idDaLiberacao(ler(CODIGO_ANA, UUID.randomUUID()).andExpect(status().isCreated()));
 		Object lancadoEm = unicoRegistroDaAna().get("lancado_em");
 		((RelogioAjustavel) relogio).avancar(Duration.ofSeconds(5));
 
+		// O 200, no lugar do 201, é o que diz à tela que a liberação já estava pendente
 		long repetida = idDaLiberacao(ler(CODIGO_ANA, UUID.randomUUID())
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.situacao").value("AGUARDANDO_GIRO"))
-				.andExpect(jsonPath("$.repetida").value(true)));
+				.andExpect(jsonPath("$.length()").value(5)));
 
 		assertThat(repetida).isEqualTo(primeira);
 		assertThat(unicoRegistroDaAna()).containsEntry("lancado_em", lancadoEm);
@@ -274,7 +272,7 @@ class LeituraTests {
 	@Test
 	void giroSimuladoNaoExisteForaDoPerfilPrototipo() throws Exception {
 		// CA-RF09-08: este teste roda só no perfil test
-		ler(CODIGO_ANA, UUID.randomUUID()).andExpect(status().isOk());
+		ler(CODIGO_ANA, UUID.randomUUID()).andExpect(status().isCreated());
 
 		mvc.perform(post("/portaria/giros").with(funcionario()).with(csrf())
 				.contentType(MediaType.APPLICATION_JSON).content("{\"idLiberacao\":1}"))

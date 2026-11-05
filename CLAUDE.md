@@ -25,7 +25,7 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
   rota nova entra em `ROTAS_DO_FUNCIONARIO`) e T-10 (log de auditoria: use
   `auditoria.Auditoria` e `DetalhesAuditoria`, nunca um logger comum para eventos) e T-11
   (carga fictícia: migração Java `carga/V2__CargaFicticia`, só no perfil `prototipo`; a
-  próxima migração de esquema é a V3) e T-12 (login pelas contas do banco no pacote
+  próxima migração de esquema é a V4) e T-12 (login pelas contas do banco no pacote
   `autenticacao`; tela inicial em `SegurancaConfig.TELA_INICIAL`; `/portaria` ainda é
   provisória) e T-13 (erros do login: `LoginComFalhaAuditado` com `LOGIN_FALHA`,
   `CamposDoLoginObrigatorios` e `RetornoAoLogin`) e T-14 (bloqueio em
@@ -42,7 +42,7 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
   em `Leituras`, SQL explícito em `RegistrosDaPortaria`) e T-28 (`POST /portaria/giros`,
   `@Profile("prototipo")`) e T-30 (tela `/portaria` com `static/js/portaria.js`; foto como
   "Foto indisponível" até a T-18) estão concluídas, antecipadas; teste que precisa do
-  `prototipo` usa `spring.flyway.target=1` para não rodar a carga V2, e teste com
+  `prototipo` usa `furin.carga.ativa=false` para não rodar a carga V2, e teste com
   JavaScript que faz pedidos não usa a transação do teste (grava e apaga a cena). RF02 e RF03 estão `Implementada`. RF01 e RNF03 estão
   `Planejada, em andamento`; os
   demais RF e RNF estão com `Implementação: Planejada`, menos **RF17, RF24 e RF25**, que
@@ -53,7 +53,7 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
 Em caso de conflito, vale a primeira fonte da lista:
 
 1. Decisões registradas em [`docs/rastreabilidade.md`](docs/rastreabilidade.md) §2
-   (ATU-01 a ATU-07, DEC-01 a DEC-40). Uma decisão marcada como "substituída" não vale
+   (ATU-01 a ATU-07, DEC-01 a DEC-43). Uma decisão marcada como "substituída" não vale
    mais; vale a que a substituiu.
 2. Os requisitos: [`requirements/rf/`](requirements/rf/) (RF01 a RF26) e
    [`requirements/rnf/`](requirements/rnf/) (RNF01 a RNF08).

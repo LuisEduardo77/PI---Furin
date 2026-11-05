@@ -41,13 +41,13 @@ class AuditoriaIntegracaoTests {
 	private MockMvc mvc;
 
 	@Test
-	@WithMockUser(username = EMAIL, roles = SegurancaConfig.PERFIL_FUNCIONARIO)
+	@WithMockUser(username = EMAIL, roles = "OUTRO")
 	void acessoNegadoVaiParaOLogComUsuarioMascarado(CapturedOutput saida) throws Exception {
-		mvc.perform(get("/rota-de-exemplo-sem-regra?nome=Ana")).andExpect(status().isForbidden());
+		mvc.perform(get("/exemplo/layout?nome=Ana")).andExpect(status().isForbidden());
 
 		assertThat(saida.getOut())
 				.contains("evento=ACESSO_NEGADO", "usuario=c***@example.com", "metodo=GET",
-						"rota=/rota-de-exemplo-sem-regra", "motivo=AUTORIZACAO")
+						"rota=/exemplo/layout", "motivo=AUTORIZACAO")
 				.doesNotContain(EMAIL, "nome=Ana");
 	}
 

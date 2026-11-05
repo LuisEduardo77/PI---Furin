@@ -33,7 +33,7 @@ import br.com.furin.access.config.SegurancaConfig;
 /**
  * Tela da portaria no perfil {@code prototipo} (T-30; RF09, RF10, RF14, RF22; RNF06;
  * DEC-25), lida como num navegador (HtmlUnit), com o JavaScript ligado. A carga V2 fica
- * desligada ({@code spring.flyway.target=1}).
+ * desligada ({@code furin.carga.ativa=false}).
  * <p>
  * Sem a transação do teste: os pedidos do JavaScript correm em outra thread, com outra
  * conexão, e só enxergam dados gravados de verdade. A cena é gravada antes de cada teste e
@@ -42,7 +42,7 @@ import br.com.furin.access.config.SegurancaConfig;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles({ "test", "prototipo" })
-@TestPropertySource(properties = "spring.flyway.target=1")
+@TestPropertySource(properties = "furin.carga.ativa=false")
 class PortariaTelaTests {
 
 	private static final String FUNCIONARIO = "portaria.tela";

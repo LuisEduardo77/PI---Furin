@@ -386,6 +386,7 @@ perfil `FUNCIONARIO` (DEC-37).
 | cancelado_em | DATETIME(6) | Cond. | Só em `CANCELADA` |
 | motivo_cancelamento | VARCHAR(15) | Cond. | `SEM_GIRO` ou `FUNCIONARIO` (PEND-03, DEC-37) |
 | chave_requisicao | CHAR(36) | Sim | UK. UUID da operação |
+| chave_giro | CHAR(36) | Cond. | UK. UUID do giro que confirmou a liberação (V3, DEC-41) |
 | motivo_manual | VARCHAR(200) | Cond. | Obrigatório em MANUAL |
 | pendente_vinculo | gerada | — | `id_vinculo` se `AGUARDANDO_GIRO`. UNIQUE |
 
@@ -547,11 +548,13 @@ CREATE TABLE registro_acesso (
   cancelado_em         DATETIME(6)     NULL,
   motivo_cancelamento  VARCHAR(15)     NULL,
   chave_requisicao     CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  chave_giro           CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NULL,  -- V3, DEC-41
   motivo_manual        VARCHAR(200)    NULL,
   pendente_vinculo     BIGINT UNSIGNED
       GENERATED ALWAYS AS (CASE WHEN situacao = 'AGUARDANDO_GIRO' THEN id_vinculo END) STORED,
   PRIMARY KEY (id_registro),
   UNIQUE KEY uk_registro_chave (chave_requisicao),
+  UNIQUE KEY uk_registro_chave_giro (chave_giro),  -- V3, DEC-41
   UNIQUE KEY uk_registro_pendente (pendente_vinculo),
   KEY ix_registro_vinculo (id_vinculo, situacao, ocorrido_em),
   KEY ix_registro_ocorrido (situacao, ocorrido_em),
@@ -786,17 +789,20 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   cabeçalho; um campo `tipo` é ignorado. `Leituras` roda numa transação
   `READ_COMMITTED`: encontra a carteirinha, **bloqueia o aluno**
   (`SELECT … FOR UPDATE`), devolve a liberação original num reenvio com a mesma chave,
-  valida (RN09, RN06), calcula o tipo e grava `AGUARDANDO_GIRO`. A resposta traz o ID da
-  liberação, tipo, situação, nome, primeiro nome e turma; a foto entra com a tela
-  (T-30). Uma recusa responde 422 com um motivo técnico (`MotivoDaRecusa`) e vai para o
+  valida (RN09, RN06), calcula o tipo e grava `AGUARDANDO_GIRO`. A resposta traz só o ID
+  da liberação, tipo, nome, primeiro nome e turma (CA-RNF05-03, DEC-43), com 201; a
+  referência da foto entra com a T-18. Uma recusa responde 422 com um motivo técnico (`MotivoDaRecusa`) e vai para o
   log como `LEITURA_RECUSADA`, com o código mascarado; os textos são da T-31. Uma
   leitura repetida com liberação pendente (RN04) não grava nada e devolve a mesma
-  liberação, com `repetida: true`, o que permite confirmar o giro mesmo depois de
+  liberação, com 200 no lugar do 201, o que permite confirmar o giro mesmo depois de
   recarregar a página. `POST /portaria/giros` (`GiroSimuladoController`, `@Profile("prototipo")`)
-  confirma uma liberação ainda pendente, com `ocorrido_em` do servidor. As consultas
+  recebe o ID da liberação e uma `chaveRequisicao` própria e confirma uma liberação ainda
+  pendente, com `ocorrido_em` do servidor; um reenvio com a mesma chave devolve o
+  resultado original (`chave_giro`, DEC-41). As consultas
   ficam em `RegistrosDaPortaria`, com SQL explícito e os horários em UTC como
   `LocalDateTime`, sem a conversão de fuso do Hibernate. Os testes que precisam do
-  perfil `prototipo` desligam a carga V2 com `spring.flyway.target=1`. Ainda não há:
+  perfil `prototipo` desligam a carga V2 com `furin.carga.ativa=false` (padrão: ligada).
+  Ainda não há:
   janela de 2 s (T-27), expiração de 15 s (T-29), mensagens (T-31) e notificações
   (Fase 6).
 - **Tela da portaria (T-30, 02/11/2026, antecipada):** `portaria/inicio.html` e
@@ -804,9 +810,10 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   CSP). O campo de leitura manda o código com Enter; o painel "Simular leitura
   (protótipo)" tem um botão por carteirinha válida de aluno ativo com turma vigente
   (`CarteirinhasFicticias`, `@Profile("prototipo")`). Os dois fazem
-  `POST /portaria/leituras` com uma `chaveRequisicao` nova. O painel do funcionário e o
+  `POST /portaria/leituras` com uma `chaveRequisicao` nova; depois de uma falha, o giro
+  repete a chave dele. O painel do funcionário e o
   monitor do aluno são regiões `role="status"` separadas; o foco volta sempre ao campo.
-  A resposta traz o horário do giro já no fuso da escola (`horarioNaEscola`), para a
+  A resposta do giro traz o horário já no fuso da escola (`horarioNaEscola`), para a
   tela não depender do fuso do navegador. A foto aparece como "Foto indisponível" até a
   área privada (T-18; DEC-28, A9). Os tempos do monitor e da limpeza do painel vêm de
   `furin.portaria.monitor-exibicao` e `painel-limpeza`. Cada pedido da portaria dispara
@@ -952,3 +959,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 02/11/2026 | T-30 antecipada: tela da portaria (§6, "Tela da portaria"), com "Foto indisponível" até a T-18 e os textos [PROP] |
 | 05/11/2026 | RN04 (parte da T-27): a leitura repetida devolve a liberação pendente, no lugar da recusa `LIBERACAO_PENDENTE` da T-26 (§6, "Portaria, leitura e giro") |
 | 05/11/2026 | Ajuste de requisitos: `furin.escola.fuso` e `furin.carteirinha.tamanho-codigo` (§4), no lugar de valores no código; turma com turno na resposta da leitura; página `error/404.html` e aviso "Leitor não está pronto" |
+| 05/11/2026 | DEC-41 a DEC-43: coluna `chave_giro` (§5, migração V3), `NegarRotaExistenteSemRegra` (404 para rota inexistente), resposta da leitura reduzida com status 201 ou 200 [PROP] e `furin.carga.ativa` para os testes |

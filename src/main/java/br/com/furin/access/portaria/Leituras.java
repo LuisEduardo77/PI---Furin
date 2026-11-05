@@ -39,6 +39,10 @@ import br.com.furin.access.portaria.TipoAutomatico.Decisao;
 @Service
 public class Leituras {
 
+	/** {@code repetida}: o aluno já tinha esta liberação pendente, e nada foi gravado (RN04). */
+	public record ResultadoDaLeitura(Liberacao liberacao, boolean repetida) {
+	}
+
 	/** RN15: {@code furin.carteirinha.tamanho-codigo} caracteres hexadecimais (A14 p.6). */
 	private final Pattern formatoDoCodigo;
 
@@ -65,7 +69,7 @@ public class Leituras {
 	 * @param login           o funcionário da sessão, gravado em {@code id_usuario}
 	 */
 	@Transactional(isolation = Isolation.READ_COMMITTED)
-	public Liberacao ler(String codigo, UUID chaveRequisicao, String login) {
+	public ResultadoDaLeitura ler(String codigo, UUID chaveRequisicao, String login) {
 		// DATETIME(6) guarda microssegundos: o instante gravado é o mesmo que volta
 		Instant agora = relogio.instant().truncatedTo(ChronoUnit.MICROS);
 		String normalizado = codigo.strip().toLowerCase(Locale.ROOT);
@@ -80,7 +84,7 @@ public class Leituras {
 		// RN08: reenvio com a mesma chave devolve a liberação original, sem criar outra
 		Optional<Long> jaRegistrada = registros.registroPorChave(chaveRequisicao);
 		if (jaRegistrada.isPresent()) {
-			return registros.liberacao(jaRegistrada.get()).orElseThrow();
+			return new ResultadoDaLeitura(registros.liberacao(jaRegistrada.get()).orElseThrow(), false);
 		}
 
 		if (carteirinha.revogadaEm() != null) {
@@ -98,7 +102,7 @@ public class Leituras {
 		// liberação permite confirmar o giro mesmo se a tela a perdeu (página recarregada)
 		Optional<Liberacao> pendente = registros.liberacaoPendente(aluno.id());
 		if (pendente.isPresent()) {
-			return pendente.get().comoLeituraRepetida();
+			return new ResultadoDaLeitura(pendente.get(), true);
 		}
 
 		Decisao decisao = tipoAutomatico.decidir(registros.ultimaConfirmada(aluno.id()));
@@ -108,7 +112,7 @@ public class Leituras {
 
 		long id = registros.gravarLiberacao(vinculo, registros.idDoUsuario(login), carteirinha.id(), decisao.tipo(),
 				agora, chaveRequisicao);
-		return registros.liberacao(id).orElseThrow();
+		return new ResultadoDaLeitura(registros.liberacao(id).orElseThrow(), false);
 	}
 
 	/** RN09: nada é gravado, e a recusa vai para o log só com os 4 primeiros caracteres do código. */

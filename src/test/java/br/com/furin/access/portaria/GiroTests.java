@@ -35,14 +35,14 @@ import br.com.furin.access.config.SegurancaConfig;
 /**
  * {@code POST /portaria/giros}, o giro simulado (T-28; RF09, RF14; RN02, passo 3;
  * CA-RF09-03 e 05). Roda com o perfil {@code prototipo}, onde a rota existe. A carga
- * fictícia (V2, só do {@code prototipo}) fica desligada com {@code spring.flyway.target=1},
+ * fictícia (V2, só do {@code prototipo}) fica desligada com {@code furin.carga.ativa=false},
  * para não gravar dados no banco de testes. A rota fora do {@code prototipo} está em
  * {@link LeituraTests}.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles({ "test", "prototipo" })
-@TestPropertySource(properties = "spring.flyway.target=1")
+@TestPropertySource(properties = "furin.carga.ativa=false")
 @Transactional
 class GiroTests {
 
@@ -116,8 +116,26 @@ class GiroTests {
 	}
 
 	@Test
-	void segundoGiroNaMesmaLiberacaoEhRecusadoSemAlterarNada() throws Exception {
-		// CA-RF09-05: liberação já confirmada
+	void reenvioDoGiroComAMesmaChaveDevolveOResultadoOriginal() throws Exception {
+		// RN08; DEC-41; CA-RF09-12: o instante continua o do primeiro giro
+		long liberacao = ler();
+		UUID chave = UUID.randomUUID();
+		String original = girar(liberacao, chave).andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
+		Object primeiroGiro = registro(liberacao).get("ocorrido_em");
+		avancar(Duration.ofSeconds(5));
+
+		String reenvio = girar(liberacao, chave).andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
+
+		assertThat(reenvio).isEqualTo(original);
+		assertThat(registro(liberacao)).containsEntry("ocorrido_em", primeiroGiro)
+				.containsEntry("chave_giro", chave.toString());
+	}
+
+	@Test
+	void giroComOutraChaveNaMesmaLiberacaoEhRecusadoSemAlterarNada() throws Exception {
+		// CA-RF09-05: giro novo em liberação já confirmada
 		long liberacao = ler();
 		girar(liberacao).andExpect(status().isOk());
 		Object primeiroGiro = registro(liberacao).get("ocorrido_em");
@@ -147,15 +165,18 @@ class GiroTests {
 
 	@Test
 	void cargaFicticiaNaoRodaNoBancoDeTestes() {
-		// O perfil prototipo traria a V2 (carga fictícia); spring.flyway.target=1 a deixa de fora
-		assertThat(jdbc.queryForObject("SELECT MAX(CAST(version AS UNSIGNED)) FROM flyway_schema_history "
-				+ "WHERE success = 1", Integer.class)).isEqualTo(1);
+		// O perfil prototipo traria a V2 (carga fictícia); furin.carga.ativa=false a deixa de fora
+		assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM flyway_schema_history WHERE version = '2'",
+				Integer.class)).isZero();
 	}
 
 	@Test
-	void giroSemIdOuSemTokenCsrfEhRecusado() throws Exception {
+	void giroSemIdSemChaveOuSemTokenCsrfEhRecusado() throws Exception {
 		mvc.perform(post("/portaria/giros").with(funcionario()).with(csrf())
-				.contentType(MediaType.APPLICATION_JSON).content("{}"))
+				.contentType(MediaType.APPLICATION_JSON).content("{\"chaveRequisicao\":\"" + UUID.randomUUID() + "\"}"))
+				.andExpect(status().isBadRequest());
+		mvc.perform(post("/portaria/giros").with(funcionario()).with(csrf())
+				.contentType(MediaType.APPLICATION_JSON).content("{\"idLiberacao\":1}"))
 				.andExpect(status().isBadRequest());
 		mvc.perform(post("/portaria/giros").with(funcionario())
 				.contentType(MediaType.APPLICATION_JSON).content("{\"idLiberacao\":1}"))
@@ -165,7 +186,7 @@ class GiroTests {
 	// --- Apoio ---
 
 	private long ler() throws Exception {
-		String json = leitura(UUID.randomUUID()).andExpect(status().isOk())
+		String json = leitura(UUID.randomUUID()).andExpect(status().isCreated())
 				.andReturn().getResponse().getContentAsString();
 		return Long.parseLong(json.replaceAll(".*\"idLiberacao\":(\\d+).*", "$1"));
 	}
@@ -177,8 +198,13 @@ class GiroTests {
 	}
 
 	private ResultActions girar(long liberacao) throws Exception {
+		return girar(liberacao, UUID.randomUUID());
+	}
+
+	private ResultActions girar(long liberacao, UUID chave) throws Exception {
 		return mvc.perform(post("/portaria/giros").with(funcionario()).with(csrf())
-				.contentType(MediaType.APPLICATION_JSON).content("{\"idLiberacao\":" + liberacao + "}"));
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"idLiberacao\":" + liberacao + ",\"chaveRequisicao\":\"" + chave + "\"}"));
 	}
 
 	private static RequestPostProcessor funcionario() {

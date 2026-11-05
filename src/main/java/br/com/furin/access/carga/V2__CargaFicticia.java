@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import org.flywaydb.core.api.migration.BaseJavaMigration;
 import org.flywaydb.core.api.migration.Context;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -42,9 +43,13 @@ import br.com.furin.access.config.SegurancaConfig;
  * Sem as variáveis {@value #VARIAVEL_SENHA_ATE} e {@value #VARIAVEL_SENHA_GESTAO}, ou
  * com uma senha menor que {@code furin.senha.tamanho-minimo}, a aplicação não sobe.
  * Só dados fictícios (A10 §8.33).
+ * <p>
+ * {@code furin.carga.ativa=false} deixa a carga de fora, para os testes que precisam do
+ * perfil {@code prototipo} e não podem gravar estes dados no banco de testes.
  */
 @Component
 @Profile("prototipo")
+@ConditionalOnProperty(name = "furin.carga.ativa", havingValue = "true", matchIfMissing = true)
 public class V2__CargaFicticia extends BaseJavaMigration {
 
 	static final String VARIAVEL_SENHA_ATE = "FURIN_SENHA_ATE_DEMO";

@@ -67,13 +67,13 @@ import jakarta.persistence.EntityManager;
  * <p>
  * Roda também com o perfil {@code prototipo}, onde existem todas as rotas, inclusive as
  * simuladas, como {@code POST /portaria/giros} (T-28). A carga fictícia desse perfil (V2)
- * fica desligada com {@code spring.flyway.target=1}, para não gravar dados no banco de
+ * fica desligada com {@code furin.carga.ativa=false}, para não gravar dados no banco de
  * testes.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles({ "test", "prototipo" })
-@TestPropertySource(properties = "spring.flyway.target=1")
+@TestPropertySource(properties = "furin.carga.ativa=false")
 @Transactional
 @ExtendWith(OutputCaptureExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -206,6 +206,12 @@ class AutorizacaoDeTodasAsRotasTests {
 	void rotaComControllerMasSemRegraEhNegada() throws Exception {
 		// O controller existe (RotaDeExemploSemRegra), mas a rota não está em ROTAS_DO_FUNCIONARIO
 		mvc.perform(get(ROTA_SEM_REGRA).session(entrar())).andExpect(status().isForbidden());
+	}
+
+	@Test
+	void rotaQueNaoExisteDa404AoFuncionario() throws Exception {
+		// RF03, exceções; DEC-42: só a rota com controller é negada
+		mvc.perform(get("/rota-que-nao-existe").session(entrar())).andExpect(status().isNotFound());
 	}
 
 	// --- CA-RF03-05: toda negação vai para o log ---

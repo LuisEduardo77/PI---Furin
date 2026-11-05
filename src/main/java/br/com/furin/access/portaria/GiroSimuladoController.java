@@ -1,5 +1,7 @@
 package br.com.furin.access.portaria;
 
+import java.util.UUID;
+
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,8 +26,8 @@ import jakarta.validation.constraints.Positive;
 @Profile("prototipo")
 public class GiroSimuladoController {
 
-	/** O ID da liberação devolvido pela leitura. */
-	public record PedidoDeGiro(@NotNull @Positive Long idLiberacao) {
+	/** O ID da liberação devolvido pela leitura e a chave deste giro (RN08; DEC-41). */
+	public record PedidoDeGiro(@NotNull @Positive Long idLiberacao, @NotNull UUID chaveRequisicao) {
 	}
 
 	/** A recusa do giro, com o motivo técnico. */
@@ -40,7 +42,7 @@ public class GiroSimuladoController {
 
 	@PostMapping("/portaria/giros")
 	public Liberacao girar(@Valid @RequestBody PedidoDeGiro pedido) {
-		return giros.confirmar(pedido.idLiberacao());
+		return giros.confirmar(pedido.idLiberacao(), pedido.chaveRequisicao());
 	}
 
 	@ExceptionHandler(GiroRecusado.class)
