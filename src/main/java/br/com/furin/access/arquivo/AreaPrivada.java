@@ -10,6 +10,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
@@ -43,6 +45,8 @@ public class AreaPrivada {
 	private static final Pattern FORMATO_DA_CHAVE = Pattern
 			.compile("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.(?:jpg|png|pdf)");
 
+	private static final Logger LOG = LoggerFactory.getLogger(AreaPrivada.class);
+
 	private final Arquivos arquivos;
 
 	private final Path diretorio;
@@ -64,16 +68,37 @@ public class AreaPrivada {
 	 * @throws ArquivoRecusado se o arquivo estiver fora das regras; nada é gravado
 	 */
 	public String guardar(TipoDeDocumento documento, InputStream entrada) throws IOException {
-		RegraArquivo regra = documento == TipoDeDocumento.FOTO ? arquivos.foto() : arquivos.termo();
+		RegraArquivo regra = regra(documento);
 		byte[] conteudo = lerAteOLimite(entrada, regra.tamanhoMax().toBytes());
-		FormatoDeArquivo formato = FormatoDeArquivo.doConteudo(conteudo)
-				.filter(reconhecido -> regra.tipos().contains(reconhecido.mime()))
-				.orElseThrow(() -> new ArquivoRecusado(Motivo.TIPO_NAO_ACEITO));
+		FormatoDeArquivo formato = formatoAceito(regra, conteudo);
 
 		String chave = UUID.randomUUID() + formato.extensao();
 		Files.createDirectories(diretorio);
 		Files.write(diretorio.resolve(chave), conteudo, StandardOpenOption.CREATE_NEW);
 		return chave;
+	}
+
+	/**
+	 * Confere o arquivo sem gravar, para o formulário mostrar todos os erros de uma vez.
+	 *
+	 * @throws ArquivoRecusado se o arquivo estiver fora das regras
+	 */
+	public void conferir(TipoDeDocumento documento, InputStream entrada) throws IOException {
+		RegraArquivo regra = regra(documento);
+		formatoAceito(regra, lerAteOLimite(entrada, regra.tamanhoMax().toBytes()));
+	}
+
+	/** Tira da área privada um arquivo de um cadastro que não foi salvo (CA-RF04-02). */
+	public void apagar(String chave) {
+		if (!chaveValida(chave)) {
+			return;
+		}
+		try {
+			Files.deleteIfExists(diretorio.resolve(chave));
+		} catch (IOException falha) {
+			// Quem chamou já está tratando a falha original, que é a que importa
+			LOG.warn("Arquivo órfão na área privada: {}", chave, falha);
+		}
 	}
 
 	/**
@@ -100,6 +125,16 @@ public class AreaPrivada {
 	/** {@code false} para qualquer coisa que o sistema não poderia ter gerado. */
 	public boolean chaveValida(String chave) {
 		return chave != null && FORMATO_DA_CHAVE.matcher(chave).matches();
+	}
+
+	private RegraArquivo regra(TipoDeDocumento documento) {
+		return documento == TipoDeDocumento.FOTO ? arquivos.foto() : arquivos.termo();
+	}
+
+	private static FormatoDeArquivo formatoAceito(RegraArquivo regra, byte[] conteudo) {
+		return FormatoDeArquivo.doConteudo(conteudo)
+				.filter(reconhecido -> regra.tipos().contains(reconhecido.mime()))
+				.orElseThrow(() -> new ArquivoRecusado(Motivo.TIPO_NAO_ACEITO));
 	}
 
 	/** Lê um byte além do limite, para recusar sem carregar um arquivo grande inteiro. */

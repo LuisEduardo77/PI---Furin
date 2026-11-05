@@ -43,8 +43,9 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
   `@Profile("prototipo")`) e T-30 (tela `/portaria` com `static/js/portaria.js`; foto como
   "Foto indisponível" quando não carrega) estão concluídas, antecipadas. T-18 (área
   privada em `arquivo/AreaPrivada`, entrega em `GET /arquivos/{chave}`) está concluída,
-  e teste que grava arquivo usa um diretório temporário em `furin.arquivos.diretorio`;
-  teste que precisa do
+  e teste que grava arquivo usa um diretório temporário em `furin.arquivos.diretorio`.
+  T-19 (formulário em `aluno/AlunoController`) está concluída, **sem salvar**: até a T-22,
+  `CadastroIncompleto` desfaz a transação (DEC-44). Teste que precisa do
   `prototipo` usa `furin.carga.ativa=false` para não rodar a carga V2, e teste com
   JavaScript que faz pedidos não usa a transação do teste (grava e apaga a cena). RF02 e RF03 estão `Implementada`. RF01 e RNF03 estão
   `Planejada, em andamento`; os
@@ -56,7 +57,7 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
 Em caso de conflito, vale a primeira fonte da lista:
 
 1. Decisões registradas em [`docs/rastreabilidade.md`](docs/rastreabilidade.md) §2
-   (ATU-01 a ATU-07, DEC-01 a DEC-43). Uma decisão marcada como "substituída" não vale
+   (ATU-01 a ATU-07, DEC-01 a DEC-44). Uma decisão marcada como "substituída" não vale
    mais; vale a que a substituiu.
 2. Os requisitos: [`requirements/rf/`](requirements/rf/) (RF01 a RF26) e
    [`requirements/rnf/`](requirements/rnf/) (RNF01 a RNF08).

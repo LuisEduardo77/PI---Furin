@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: pagina('Novo aluno', 'alunos', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Novo aluno | Furin Access</title>
+</head>
+<body>
+<th:block th:fragment="conteudo">
+  <h1>Novo aluno</h1>
+
+  <!--
+    RF04; RN16: o cadastro só é salvo com todos os blocos. O termo é da T-20 e a carteirinha,
+    da T-22: até lá, a tela confere os dados e avisa que nada foi salvo. Textos [PROP]
+  -->
+  <p class="aviso">
+    <strong>Atenção:</strong> nesta versão o aluno ainda não é salvo. O cadastro só é salvo
+    com o termo de consentimento e a carteirinha, que ainda não estão disponíveis. Por
+    enquanto, esta tela só confere os dados.
+  </p>
+
+  <!-- A11 §5.13.8: role="status" sem mover o foco -->
+  <div role="status">
+    <div class="aviso aviso--sucesso" th:if="${cadastroIncompleto}">
+      <p>
+        <strong>Dados conferidos:</strong> nenhum erro encontrado, mas <strong>o aluno não
+        foi salvo</strong>, porque ainda faltam o termo de consentimento e a carteirinha.
+      </p>
+    </div>
+  </div>
+
+  <!-- novalidate: o erro descritivo vem do servidor (Bean Validation, A11 §5.9.9) -->
+  <form th:action="@{/alunos}" th:object="${aluno}" method="post" enctype="multipart/form-data" novalidate>
+
+    <!-- RF04, exceções: resumo no topo, com links para os campos. O foco vai para cá -->
+    <div id="resumo-erros" class="aviso aviso--erro" tabindex="-1" aria-labelledby="resumo-erros-titulo"
+         th:if="${#fields.hasAnyErrors()}">
+      <h2 id="resumo-erros-titulo">Corrija os erros abaixo. Nada foi salvo.</h2>
+      <p>A foto precisa ser selecionada de novo, porque o navegador não a mantém.</p>
+      <ul>
+        <li th:each="erro : ${#fields.globalErrors()}" th:text="${erro}">Não foi possível salvar o cadastro.</li>
+        <li th:if="${#fields.hasErrors('nome')}"><a href="#nome" th:errors="*{nome}">Informe o nome do aluno.</a></li>
+        <li th:if="${#fields.hasErrors('matricula')}"><a href="#matricula" th:errors="*{matricula}">Informe a matrícula do aluno.</a></li>
+        <li th:if="${#fields.hasErrors('idTurma')}"><a href="#idTurma" th:errors="*{idTurma}">Selecione uma turma ativa.</a></li>
+        <li th:if="${#fields.hasErrors('foto')}"><a href="#foto" th:errors="*{foto}">Envie a foto do aluno.</a></li>
+        <li th:if="${#fields.hasErrors('contatoNome')}"><a href="#contatoNome" th:errors="*{contatoNome}">Informe o nome do responsável.</a></li>
+        <li th:if="${#fields.hasErrors('contatoTelefone')}"><a href="#contatoTelefone" th:errors="*{contatoTelefone}">Informe o telefone com DDD.</a></li>
+        <li th:if="${#fields.hasErrors('contatoEmail')}"><a href="#contatoEmail" th:errors="*{contatoEmail}">Informe um e-mail válido.</a></li>
+      </ul>
+    </div>
+
+    <fieldset class="grupo-de-campos">
+      <legend><h2>Aluno</h2></legend>
+
+      <div class="campo">
+        <label for="nome">Nome do aluno (obrigatório)</label>
+        <p id="nome-erro" class="campo__erro" th:if="${#fields.hasErrors('nome')}">
+          <span>Erro:</span> <span th:errors="*{nome}">Informe o nome do aluno.</span>
+        </p>
+        <input id="nome" type="text" maxlength="150" required autocomplete="off" th:field="*{nome}"
+               th:attr="aria-invalid=${#fields.hasErrors('nome')} ? 'true',
+                        aria-describedby=${#fields.hasErrors('nome')} ? 'nome-erro'">
+      </div>
+
+      <div class="campo">
+        <label for="matricula">Matrícula (obrigatório)</label>
+        <p id="matricula-erro" class="campo__erro" th:if="${#fields.hasErrors('matricula')}">
+          <span>Erro:</span> <span th:errors="*{matricula}">Informe a matrícula do aluno.</span>
+        </p>
+        <input id="matricula" type="text" maxlength="30" required autocomplete="off" th:field="*{matricula}"
+               th:attr="aria-invalid=${#fields.hasErrors('matricula')} ? 'true',
+                        aria-describedby=${#fields.hasErrors('matricula')} ? 'matricula-erro'">
+      </div>
+
+      <div class="campo">
+        <label for="idTurma">Turma (obrigatório)</label>
+        <p id="idTurma-erro" class="campo__erro" th:if="${#fields.hasErrors('idTurma')}">
+          <span>Erro:</span> <span th:errors="*{idTurma}">Selecione uma turma ativa.</span>
+        </p>
+        <select id="idTurma" required th:field="*{idTurma}"
+                th:attr="aria-invalid=${#fields.hasErrors('idTurma')} ? 'true',
+                         aria-describedby=${#fields.hasErrors('idTurma')} ? 'idTurma-erro'">
+          <option value="">Escolha a turma</option>
+          <option th:each="turma : ${turmas}" th:value="${turma.id()}" th:text="${turma.nome()}">6A — Manhã</option>
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="foto">Foto do aluno (obrigatório)</label>
+        <p id="foto-dica" class="campo__dica">Formatos aceitos: <span th:text="${regraDaFoto}">JPEG ou PNG, até 2 MB</span>.</p>
+        <p id="foto-erro" class="campo__erro" th:if="${#fields.hasErrors('foto')}">
+          <span>Erro:</span> <span th:errors="*{foto}">Envie a foto do aluno.</span>
+        </p>
+        <input id="foto" name="foto" type="file" accept="image/jpeg,image/png" required
+               th:attr="aria-invalid=${#fields.hasErrors('foto')} ? 'true',
+                        aria-describedby=${#fields.hasErrors('foto')} ? 'foto-erro foto-dica' : 'foto-dica'">
+      </div>
+    </fieldset>
+
+    <fieldset class="grupo-de-campos">
+      <legend><h2>Contato principal</h2></legend>
+
+      <div class="campo">
+        <label for="contatoNome">Nome do responsável (obrigatório)</label>
+        <p id="contatoNome-erro" class="campo__erro" th:if="${#fields.hasErrors('contatoNome')}">
+          <span>Erro:</span> <span th:errors="*{contatoNome}">Informe o nome do responsável.</span>
+        </p>
+        <input id="contatoNome" type="text" maxlength="150" required autocomplete="off" th:field="*{contatoNome}"
+               th:attr="aria-invalid=${#fields.hasErrors('contatoNome')} ? 'true',
+                        aria-describedby=${#fields.hasErrors('contatoNome')} ? 'contatoNome-erro'">
+      </div>
+
+      <div class="campo">
+        <label for="contatoTelefone">Telefone com DDD (obrigatório)</label>
+        <p id="contatoTelefone-dica" class="campo__dica">Exemplo: (11) 90000-0000.</p>
+        <p id="contatoTelefone-erro" class="campo__erro" th:if="${#fields.hasErrors('contatoTelefone')}">
+          <span>Erro:</span> <span th:errors="*{contatoTelefone}">Informe o telefone com DDD.</span>
+        </p>
+        <input id="contatoTelefone" type="tel" maxlength="25" required autocomplete="off" th:field="*{contatoTelefone}"
+               th:attr="aria-invalid=${#fields.hasErrors('contatoTelefone')} ? 'true',
+                        aria-describedby=${#fields.hasErrors('contatoTelefone')} ? 'contatoTelefone-erro contatoTelefone-dica' : 'contatoTelefone-dica'">
+      </div>
+
+      <div class="campo">
+        <label for="contatoEmail">E-mail (obrigatório)</label>
+        <p id="contatoEmail-dica" class="campo__dica">Exemplo: nome@example.com.</p>
+        <p id="contatoEmail-erro" class="campo__erro" th:if="${#fields.hasErrors('contatoEmail')}">
+          <span>Erro:</span> <span th:errors="*{contatoEmail}">Informe um e-mail válido.</span>
+        </p>
+        <input id="contatoEmail" type="email" maxlength="254" required autocomplete="off" th:field="*{contatoEmail}"
+               th:attr="aria-invalid=${#fields.hasErrors('contatoEmail')} ? 'true',
+                        aria-describedby=${#fields.hasErrors('contatoEmail')} ? 'contatoEmail-erro contatoEmail-dica' : 'contatoEmail-dica'">
+      </div>
+    </fieldset>
+
+    <div class="acoes">
+      <button type="submit" class="botao">Salvar</button>
+      <a class="botao botao--secundario" th:href="@{/alunos}">Cancelar</a>
+    </div>
+  </form>
+
+  <script th:src="@{/js/resumo-de-erros.js}" defer></script>
+</th:block>
+</body>
+</html>

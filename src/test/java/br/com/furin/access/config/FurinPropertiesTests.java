@@ -67,6 +67,7 @@ class FurinPropertiesTests {
 		assertThat(furin.notificacao().maxTentativas()).isEqualTo(3);
 		assertThat(furin.termo().versaoAtual()).isEqualTo("v1-2026");
 		assertThat(furin.retencao().anos()).isEqualTo(5);
+		assertThat(furin.contato().ddi()).isEqualTo("55");
 	}
 
 	@Test

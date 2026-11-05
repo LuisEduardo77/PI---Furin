@@ -16,6 +16,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -40,6 +41,7 @@ public record FurinProperties(
 		@NotNull @Valid Sessao sessao,
 		@NotNull @Valid Notificacao notificacao,
 		@NotNull @Valid Termo termo,
+		@NotNull @Valid Contato contato,
 		@NotNull @Valid Arquivos arquivos,
 		@NotNull @Valid Retencao retencao) {
 
@@ -110,6 +112,10 @@ public record FurinProperties(
 
 	/** RF05; DEC-26. O tamanho segue consentimento.versao_termo (VARCHAR(30)). */
 	public record Termo(@NotBlank @Size(max = 30) String versaoAtual) {
+	}
+
+	/** RF04: o telefone do contato é gravado com DDI e DDD. [PROP: nome] */
+	public record Contato(@NotBlank @Pattern(regexp = "\\d{1,3}") String ddi) {
 	}
 
 	/** DEC-08; DEC-28 (D1, D2). */

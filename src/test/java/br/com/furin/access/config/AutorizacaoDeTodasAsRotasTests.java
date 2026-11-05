@@ -153,7 +153,11 @@ class AutorizacaoDeTodasAsRotasTests {
 				new Rota(HttpMethod.POST, "/portaria/leituras"),
 				new Rota(HttpMethod.POST, "/portaria/giros"),
 				// Área privada (T-18): a chave vira o valor qualquer da descoberta
-				new Rota(HttpMethod.GET, "/arquivos/1"))
+				new Rota(HttpMethod.GET, "/arquivos/1"),
+				// Cadastro de alunos (T-19)
+				new Rota(HttpMethod.GET, "/alunos"),
+				new Rota(HttpMethod.GET, "/alunos/novo"),
+				new Rota(HttpMethod.POST, "/alunos"))
 				.doesNotContain(new Rota(HttpMethod.GET, ROTA_SEM_REGRA));
 	}
 
