@@ -52,6 +52,7 @@ public class AlunoController {
 	private static final String CAMPO_FOTO = "foto";
 	private static final String CAMPO_TURMA = "idTurma";
 	private static final String CAMPO_MATRICULA = "matricula";
+	private static final String CAMPO_EMAIL = "contatoEmail";
 	private static final String MATRICULA_REPETIDA = "Esta matrícula já está cadastrada. Confira a matrícula ou "
 			+ "localize o cadastro existente para editá-lo.";
 
@@ -103,6 +104,7 @@ public class AlunoController {
 		model.addAttribute("turmas", turmas);
 		Optional<TurmaAtiva> turma = conferirTurma(form, turmas, erros);
 		Optional<String> telefone = conferirTelefone(form, erros);
+		conferirDominioDoEmail(form, erros);
 		conferirMatricula(form, erros);
 		conferirFoto(form.getFoto(), erros);
 		if (erros.hasErrors()) {
@@ -139,6 +141,14 @@ public class AlunoController {
 			erros.rejectValue("contatoTelefone", "invalido", "Informe o telefone com DDD. Exemplo: (11) 90000-0000.");
 		}
 		return telefone;
+	}
+
+	/** {@code @Email} aceita "carla@escola"; o aviso ao responsável precisa de um domínio completo. */
+	private static void conferirDominioDoEmail(AlunoForm form, BindingResult erros) {
+		String email = form.getContatoEmail();
+		if (!erros.hasFieldErrors(CAMPO_EMAIL) && !email.substring(email.lastIndexOf('@')).contains(".")) {
+			erros.rejectValue(CAMPO_EMAIL, "dominio", AlunoForm.EMAIL_INVALIDO);
+		}
 	}
 
 	private void conferirMatricula(AlunoForm form, BindingResult erros) {

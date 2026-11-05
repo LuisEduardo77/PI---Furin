@@ -2,8 +2,8 @@ package br.com.furin.access.aluno;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -14,7 +14,7 @@ import jakarta.validation.constraints.Size;
  */
 public class AlunoForm {
 
-	private static final String EMAIL_INVALIDO = "Informe um e-mail válido. Exemplo: nome@example.com.";
+	static final String EMAIL_INVALIDO = "Informe um e-mail válido. Exemplo: nome@example.com.";
 
 	@NotBlank(message = "Informe o nome do aluno.")
 	@Size(max = 150, message = "O nome do aluno pode ter até 150 caracteres.")
@@ -36,7 +36,7 @@ public class AlunoForm {
 	private String contatoTelefone;
 
 	@NotBlank(message = EMAIL_INVALIDO)
-	@Pattern(regexp = "^$|^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", message = EMAIL_INVALIDO)
+	@Email(message = EMAIL_INVALIDO)
 	@Size(max = 254, message = EMAIL_INVALIDO)
 	private String contatoEmail;
 

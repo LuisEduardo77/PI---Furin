@@ -843,7 +843,7 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   `TransactionTemplate`, aluno, vínculo e contato. Pelo RF04, o cadastro só é salvo com
   todos os blocos: `CadastroIncompleto` desfaz a transação e a foto sai da área privada,
   como em qualquer falha (CA-RF04-02). A UNIQUE da matrícula continua sendo a garantia
-  contra dois envios ao mesmo tempo. `spring.servlet.multipart` (20 MB por arquivo) só
+  contra dois envios ao mesmo tempo. `spring.servlet.multipart` (8 MB) só
   barra pedidos enormes e fica acima das regras de `furin.arquivos.*`, para o erro
   aparecer no campo: acima desse limite, o Tomcat não lê o token CSRF, e a resposta tende
   a ser a página 403 (não testado). O foco vai para o resumo pelo `static/js/resumo-de-erros.js`.

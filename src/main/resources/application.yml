@@ -12,9 +12,10 @@ spring:
   servlet:
     multipart:
       # Só evitam que um pedido enorme ocupe o servidor. As regras são as de furin.arquivos.*:
-      # estes limites ficam bem acima delas, para o erro aparecer no campo do formulário (T-19)
-      max-file-size: 20MB
-      max-request-size: 25MB
+      # estes limites ficam acima delas, para o erro aparecer no campo do formulário, e
+      # comportam a foto e o termo no mesmo envio (T-19, T-20)
+      max-file-size: 8MB
+      max-request-size: 8MB
   datasource:
     url: jdbc:mysql://localhost:3306/furin
     username: furin

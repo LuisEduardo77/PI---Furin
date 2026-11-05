@@ -168,8 +168,9 @@ class CadastroDeAlunoTests {
 		// demais para a coluna). Nada fica no banco nem na área privada
 		NovoAluno comContatoInvalido = new NovoAluno("Ana Teste", MATRICULA_NOVA, idTurma, "Carla Teste",
 				"+55 11 900000001", "a".repeat(300) + "@example.com");
+		ByteArrayInputStream foto = new ByteArrayInputStream(PNG);
 
-		assertThatThrownBy(() -> cadastro.cadastrar(comContatoInvalido, new ByteArrayInputStream(PNG)))
+		assertThatThrownBy(() -> cadastro.cadastrar(comContatoInvalido, foto))
 				.isInstanceOf(DataAccessException.class);
 
 		assertThat(alunosNovos()).isZero();
@@ -180,8 +181,9 @@ class CadastroDeAlunoTests {
 	void comTudoValidoATransacaoTerminaFaltandoOTermoEACarteirinha() throws IOException {
 		NovoAluno novo = new NovoAluno("Ana Teste", MATRICULA_NOVA, idTurma, "Carla Teste", "+55 11 900000001",
 				"carla.teste@example.com");
+		ByteArrayInputStream foto = new ByteArrayInputStream(PNG);
 
-		assertThatThrownBy(() -> cadastro.cadastrar(novo, new ByteArrayInputStream(PNG)))
+		assertThatThrownBy(() -> cadastro.cadastrar(novo, foto))
 				.isInstanceOf(CadastroIncompleto.class);
 
 		assertThat(alunosNovos()).isZero();
@@ -267,6 +269,8 @@ class CadastroDeAlunoTests {
 		enviar(comValor("contatoTelefone", "90000-0000").file(foto(PNG)))
 				.andExpect(content().string(containsString("id=\"contatoTelefone-erro\"")));
 		enviar(comValor("contatoEmail", "carla.teste").file(foto(PNG)))
+				.andExpect(content().string(containsString("id=\"contatoEmail-erro\"")));
+		enviar(comValor("contatoEmail", "carla@escola").file(foto(PNG)))
 				.andExpect(content().string(containsString("id=\"contatoEmail-erro\"")));
 	}
 

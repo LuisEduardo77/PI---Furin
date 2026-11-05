@@ -124,8 +124,8 @@ class AreaPrivadaTests {
 	void conferirAplicaAsMesmasRegrasSemGravar() throws IOException {
 		area.conferir(TipoDeDocumento.FOTO, new ByteArrayInputStream(PNG));
 
-		assertThatThrownBy(() -> area.conferir(TipoDeDocumento.FOTO, new ByteArrayInputStream(PDF)))
-				.isInstanceOf(ArquivoRecusado.class);
+		ByteArrayInputStream pdf = new ByteArrayInputStream(PDF);
+		assertThatThrownBy(() -> area.conferir(TipoDeDocumento.FOTO, pdf)).isInstanceOf(ArquivoRecusado.class);
 		try (var arquivos = Files.list(diretorio)) {
 			assertThat(arquivos).isEmpty();
 		}
