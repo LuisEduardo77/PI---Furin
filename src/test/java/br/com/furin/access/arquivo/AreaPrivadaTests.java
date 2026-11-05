@@ -66,7 +66,7 @@ class AreaPrivadaTests {
 
 		assertThat(area.abrir(chave)).hasValueSatisfying(arquivo -> {
 			assertThat(arquivo.mime()).isEqualTo("application/pdf");
-			assertThat(arquivo.conteudo()).isEqualTo(PDF);
+			assertThat(arquivo.conteudo().getByteArray()).isEqualTo(PDF);
 		});
 	}
 

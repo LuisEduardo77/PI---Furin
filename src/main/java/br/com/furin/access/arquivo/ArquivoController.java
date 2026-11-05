@@ -2,6 +2,7 @@ package br.com.furin.access.arquivo;
 
 import static br.com.furin.access.auditoria.DetalhesAuditoria.detalhes;
 
+import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -39,7 +40,7 @@ public class ArquivoController {
 	}
 
 	@GetMapping("/arquivos/{chave}")
-	public ResponseEntity<byte[]> entregar(@PathVariable String chave) {
+	public ResponseEntity<Resource> entregar(@PathVariable String chave) {
 		if (!areaPrivada.chaveValida(chave)) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 		}

@@ -11,6 +11,7 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 
 import br.com.furin.access.arquivo.ArquivoRecusado.Motivo;
@@ -35,10 +36,10 @@ public class AreaPrivada {
 	}
 
 	/** Um arquivo pronto para a entrega, com o tipo reconhecido pelo conteúdo. */
-	public record ArquivoPrivado(byte[] conteudo, String mime) {
+	public record ArquivoPrivado(ByteArrayResource conteudo, String mime) {
 	}
 
-	/** O nome de todo arquivo da área privada. Só isto chega ao sistema de arquivos. */
+	/** O formato dos nomes da área privada. Só isto chega ao sistema de arquivos. */
 	private static final Pattern FORMATO_DA_CHAVE = Pattern
 			.compile("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.(?:jpg|png|pdf)");
 
@@ -89,7 +90,8 @@ public class AreaPrivada {
 		}
 		try {
 			byte[] conteudo = Files.readAllBytes(arquivo);
-			return FormatoDeArquivo.doConteudo(conteudo).map(formato -> new ArquivoPrivado(conteudo, formato.mime()));
+			return FormatoDeArquivo.doConteudo(conteudo)
+					.map(formato -> new ArquivoPrivado(new ByteArrayResource(conteudo), formato.mime()));
 		} catch (IOException | UncheckedIOException semArquivo) {
 			return Optional.empty();
 		}
