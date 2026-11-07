@@ -157,7 +157,10 @@ class AutorizacaoDeTodasAsRotasTests {
 				// Cadastro de alunos (T-19)
 				new Rota(HttpMethod.GET, "/alunos"),
 				new Rota(HttpMethod.GET, "/alunos/novo"),
-				new Rota(HttpMethod.POST, "/alunos"))
+				new Rota(HttpMethod.POST, "/alunos"),
+				// Revogação do termo (T-20)
+				new Rota(HttpMethod.GET, "/alunos/1/consentimentos/1/revogacao"),
+				new Rota(HttpMethod.POST, "/alunos/1/consentimentos/1/revogacao"))
 				.doesNotContain(new Rota(HttpMethod.GET, ROTA_SEM_REGRA));
 	}
 

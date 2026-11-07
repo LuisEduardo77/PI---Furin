@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
@@ -16,6 +17,8 @@ import java.util.UUID;
 import org.htmlunit.WebClient;
 import org.htmlunit.html.DomElement;
 import org.htmlunit.html.HtmlButton;
+import org.htmlunit.html.HtmlCheckBoxInput;
+import org.htmlunit.html.HtmlLabel;
 import org.htmlunit.html.HtmlElement;
 import org.htmlunit.html.HtmlFileInput;
 import org.htmlunit.html.HtmlInput;
@@ -36,6 +39,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.util.FileSystemUtils;
 
+import br.com.furin.access.RelogioAjustavel;
 import br.com.furin.access.config.SegurancaConfig;
 
 /**
@@ -103,16 +107,17 @@ class FormularioDeAlunoTests {
 	void ordemDeFocoSegueOCriterioDoRf04() throws Exception {
 		HtmlPage pagina = abrirOFormulario();
 
-		// CA-RF04-08: Nome → Matrícula → Turma → Foto → Contato → Salvar → Cancelar. O termo é da T-20
+		// CA-RF04-08: Nome → Matrícula → Turma → Foto → Contato → Termo → Salvar → Cancelar
 		List<String> formulario = pagina.getTabbableElements().stream()
 				.filter(elemento -> elemento.getEnclosingForm() != null || "Cancelar".equals(elemento.getTextContent()))
 				.map(FormularioDeAlunoTests::nomeNaOrdem)
-				// Sem o "Sair" do menu e sem os campos ocultos do token CSRF
+				// Sem o "Sair" do menu e sem os campos ocultos do token CSRF e da caixa de seleção
 				.filter(nome -> !nome.isEmpty() && !nome.equals("Sair"))
 				.toList();
 
 		assertThat(formulario).containsExactly("nome", "matricula", "idTurma", "foto", "contatoNome",
-				"contatoTelefone", "contatoEmail", "Salvar", "Cancelar");
+				"contatoTelefone", "contatoEmail", "termoSignatario", "termoVersao", "termoAssinadoEm",
+				"termoProtocolo", "termoArquivo", "termoConferido", "Salvar", "Cancelar");
 	}
 
 	@Test
@@ -120,9 +125,24 @@ class FormularioDeAlunoTests {
 		HtmlPage pagina = abrirOFormulario();
 
 		for (String campo : List.of("nome", "matricula", "idTurma", "foto", "contatoNome", "contatoTelefone",
-				"contatoEmail")) {
+				"contatoEmail", "termoSignatario", "termoVersao", "termoAssinadoEm", "termoProtocolo", "termoArquivo",
+				"termoConferido")) {
 			assertThat(pagina.querySelectorAll("label[for='" + campo + "']")).as("label de " + campo).hasSize(1);
 		}
+	}
+
+	@Test
+	void clicarNoTextoMarcaACaixaDoTermo() throws Exception {
+		// CA-RF05-07: o texto é o label da caixa, e diz que ela é obrigatória
+		HtmlPage pagina = abrirOFormulario();
+		HtmlCheckBoxInput caixa = (HtmlCheckBoxInput) pagina.getElementById("termoConferido");
+		HtmlLabel texto = (HtmlLabel) pagina.querySelector("label[for='termoConferido']");
+		assertThat(caixa.isChecked()).isFalse();
+
+		texto.click();
+
+		assertThat(caixa.isChecked()).isTrue();
+		assertThat(texto.getTextContent()).contains("(obrigatório)");
 	}
 
 	@Test
@@ -173,6 +193,9 @@ class FormularioDeAlunoTests {
 		campo(pagina, "contatoNome").setValue("Carla Teste");
 		campo(pagina, "contatoTelefone").setValue("(11) 90000-0001");
 		campo(pagina, "contatoEmail").setValue("carla.teste@example.com");
+		campo(pagina, "termoAssinadoEm").setValue(LocalDate.now(RelogioAjustavel.FUSO_DA_ESCOLA).minusDays(1).toString());
+		campo(pagina, "termoProtocolo").setValue("TERMO-0001");
+		((HtmlCheckBoxInput) pagina.getElementById("termoConferido")).setChecked(true);
 		return pagina;
 	}
 

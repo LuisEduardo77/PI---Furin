@@ -10,13 +10,13 @@
   <h1>Novo aluno</h1>
 
   <!--
-    RF04; RN16; DEC-44: o cadastro só é salvo com os blocos completos. O termo é da T-20 e a
-    carteirinha, da T-22: até lá, a tela confere os dados e avisa que nada foi salvo. Textos [PROP]
+    RF04; RN16; DEC-44: o cadastro só é salvo com os blocos completos. A carteirinha é da
+    T-22: até lá, a tela confere os dados e avisa que nada foi salvo. Textos [PROP]
   -->
   <p class="aviso">
     <strong>Atenção:</strong> nesta versão o aluno ainda não é salvo. O cadastro só é salvo
-    com o termo de consentimento e a carteirinha, que ainda não estão disponíveis. Por
-    enquanto, esta tela só confere os dados.
+    com a carteirinha, que ainda não está disponível. Por enquanto, esta tela só confere os
+    dados.
   </p>
 
   <!-- A11 §5.13.8: role="status" sem mover o foco -->
@@ -24,7 +24,7 @@
     <div class="aviso aviso--sucesso" th:if="${cadastroIncompleto}">
       <p>
         <strong>Dados conferidos:</strong> nenhum erro encontrado, mas <strong>o aluno não
-        foi salvo</strong>, porque ainda faltam o termo de consentimento e a carteirinha.
+        foi salvo</strong>, porque ainda falta a emissão da carteirinha.
       </p>
     </div>
   </div>
@@ -36,7 +36,7 @@
     <div id="resumo-erros" class="aviso aviso--erro" tabindex="-1" aria-labelledby="resumo-erros-titulo"
          th:if="${#fields.hasAnyErrors()}">
       <h2 id="resumo-erros-titulo">Corrija os erros abaixo. Nada foi salvo.</h2>
-      <p>A foto precisa ser selecionada de novo, porque o navegador não a mantém.</p>
+      <p>A foto e a cópia do termo precisam ser selecionadas de novo, porque o navegador não as mantém.</p>
       <ul>
         <li th:each="erro : ${#fields.globalErrors()}" th:text="${erro}">Não foi possível salvar o cadastro.</li>
         <li th:if="${#fields.hasErrors('nome')}"><a href="#nome" th:errors="*{nome}">Informe o nome do aluno.</a></li>
@@ -46,6 +46,11 @@
         <li th:if="${#fields.hasErrors('contatoNome')}"><a href="#contatoNome" th:errors="*{contatoNome}">Informe o nome do responsável.</a></li>
         <li th:if="${#fields.hasErrors('contatoTelefone')}"><a href="#contatoTelefone" th:errors="*{contatoTelefone}">Informe o telefone com DDD.</a></li>
         <li th:if="${#fields.hasErrors('contatoEmail')}"><a href="#contatoEmail" th:errors="*{contatoEmail}">Informe um e-mail válido.</a></li>
+        <li th:if="${#fields.hasErrors('termoVersao')}"><a href="#termoVersao" th:errors="*{termoVersao}">Informe a versão do termo.</a></li>
+        <li th:if="${#fields.hasErrors('termoAssinadoEm')}"><a href="#termoAssinadoEm" th:errors="*{termoAssinadoEm}">Informe a data da assinatura do termo.</a></li>
+        <li th:if="${#fields.hasErrors('termoProtocolo')}"><a href="#termoProtocolo" th:errors="*{termoProtocolo}">Informe o protocolo.</a></li>
+        <li th:if="${#fields.hasErrors('termoArquivo')}"><a href="#termoArquivo" th:errors="*{termoArquivo}">O termo digitalizado precisa ser PDF.</a></li>
+        <li th:if="${#fields.hasErrors('termoConferido')}"><a href="#termoConferido" th:errors="*{termoConferido}">Confirme que o termo foi conferido.</a></li>
       </ul>
     </div>
 
@@ -130,6 +135,75 @@
         <input id="contatoEmail" type="email" maxlength="254" required autocomplete="off" th:field="*{contatoEmail}"
                th:attr="aria-invalid=${#fields.hasErrors('contatoEmail')} ? 'true',
                         aria-describedby=${#fields.hasErrors('contatoEmail')} ? 'contatoEmail-erro contatoEmail-dica' : 'contatoEmail-dica'">
+      </div>
+    </fieldset>
+
+    <!-- RF05 (T-20). O conferente e o instante da conferência vêm do servidor (CA-RF05-04) -->
+    <fieldset class="grupo-de-campos">
+      <legend><h2>Termo de consentimento</h2></legend>
+
+      <div class="campo">
+        <label for="termoSignatario">Signatário (obrigatório)</label>
+        <select id="termoSignatario" required th:field="*{termoSignatario}">
+          <option value="principal">Contato principal informado acima</option>
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="termoVersao">Versão do termo (obrigatório)</label>
+        <p id="termoVersao-erro" class="campo__erro" th:if="${#fields.hasErrors('termoVersao')}">
+          <span>Erro:</span> <span th:errors="*{termoVersao}">Informe a versão do termo.</span>
+        </p>
+        <input id="termoVersao" type="text" maxlength="30" required autocomplete="off" th:field="*{termoVersao}"
+               th:attr="aria-invalid=${#fields.hasErrors('termoVersao')} ? 'true',
+                        aria-describedby=${#fields.hasErrors('termoVersao')} ? 'termoVersao-erro'">
+      </div>
+
+      <div class="campo">
+        <label for="termoAssinadoEm">Data da assinatura (obrigatório)</label>
+        <p id="termoAssinadoEm-erro" class="campo__erro" th:if="${#fields.hasErrors('termoAssinadoEm')}">
+          <span>Erro:</span> <span th:errors="*{termoAssinadoEm}">Informe a data da assinatura do termo.</span>
+        </p>
+        <input id="termoAssinadoEm" type="date" required th:field="*{termoAssinadoEm}"
+               th:attr="aria-invalid=${#fields.hasErrors('termoAssinadoEm')} ? 'true',
+                        aria-describedby=${#fields.hasErrors('termoAssinadoEm')} ? 'termoAssinadoEm-erro'">
+      </div>
+
+      <p id="referencia-dica" class="campo__dica">
+        Referência do documento (obrigatório): informe o protocolo do termo físico <strong>ou</strong>
+        envie a cópia digitalizada.
+      </p>
+
+      <div class="campo">
+        <label for="termoProtocolo">Protocolo ou localização do termo físico</label>
+        <p id="termoProtocolo-erro" class="campo__erro" th:if="${#fields.hasErrors('termoProtocolo')}">
+          <span>Erro:</span> <span th:errors="*{termoProtocolo}">Informe o protocolo do termo físico ou envie a cópia digitalizada.</span>
+        </p>
+        <input id="termoProtocolo" type="text" maxlength="255" autocomplete="off" th:field="*{termoProtocolo}"
+               th:attr="aria-invalid=${#fields.hasErrors('termoProtocolo')} ? 'true',
+                        aria-describedby=${#fields.hasErrors('termoProtocolo')} ? 'termoProtocolo-erro referencia-dica' : 'referencia-dica'">
+      </div>
+
+      <div class="campo">
+        <label for="termoArquivo">Cópia digitalizada do termo</label>
+        <p id="termoArquivo-dica" class="campo__dica">Formatos aceitos: <span th:text="${regraDoTermo}">PDF ou JPEG ou PNG, até 5 MB</span>.</p>
+        <p id="termoArquivo-erro" class="campo__erro" th:if="${#fields.hasErrors('termoArquivo')}">
+          <span>Erro:</span> <span th:errors="*{termoArquivo}">O termo digitalizado precisa ser PDF, JPEG ou PNG.</span>
+        </p>
+        <input id="termoArquivo" name="termoArquivo" type="file" accept="application/pdf,image/jpeg,image/png"
+               th:attr="aria-invalid=${#fields.hasErrors('termoArquivo')} ? 'true',
+                        aria-describedby=${#fields.hasErrors('termoArquivo')} ? 'termoArquivo-erro termoArquivo-dica referencia-dica' : 'termoArquivo-dica referencia-dica'">
+      </div>
+
+      <!-- CA-RF05-07: o texto é o label da caixa (clicar nele marca a caixa) e diz que é obrigatória -->
+      <div class="campo campo--caixa">
+        <p id="termoConferido-erro" class="campo__erro" th:if="${#fields.hasErrors('termoConferido')}">
+          <span>Erro:</span> <span th:errors="*{termoConferido}">Confirme que o termo foi conferido.</span>
+        </p>
+        <input id="termoConferido" type="checkbox" required th:field="*{termoConferido}"
+               th:attr="aria-invalid=${#fields.hasErrors('termoConferido')} ? 'true',
+                        aria-describedby=${#fields.hasErrors('termoConferido')} ? 'termoConferido-erro'">
+        <label for="termoConferido">Confirmo que conferi o termo de consentimento assinado pelo responsável (obrigatório)</label>
       </div>
     </fieldset>
 

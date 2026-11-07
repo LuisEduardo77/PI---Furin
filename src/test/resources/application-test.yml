@@ -4,3 +4,8 @@
 spring:
   datasource:
     url: jdbc:mysql://localhost:3306/furin_test
+    # O Spring guarda vários contextos de teste abertos, cada um com o seu pool. Com o
+    # padrão (10 conexões por pool), a soma passa do limite do MySQL ("Too many connections")
+    hikari:
+      maximum-pool-size: 4
+      minimum-idle: 1
