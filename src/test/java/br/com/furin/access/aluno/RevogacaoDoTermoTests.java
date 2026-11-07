@@ -154,7 +154,9 @@ class RevogacaoDoTermoTests {
 		// CA-RF05-09: a falha ao inativar os contatos, o último passo, desfaz os anteriores
 		doThrow(new DataAccessResourceFailureException("falha simulada")).when(registros).inativarContatos(anyLong());
 
-		assertThatThrownBy(() -> revogacao.registrar(aluno, consentimento, hoje()))
+		LocalDate hoje = hoje();
+
+		assertThatThrownBy(() -> revogacao.registrar(aluno, consentimento, hoje))
 				.isInstanceOf(DataAccessResourceFailureException.class);
 
 		assertThat(jdbc.queryForObject("SELECT revogado_em FROM consentimento WHERE id_consentimento = ?",
