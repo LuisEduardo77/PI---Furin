@@ -63,6 +63,7 @@ public class AlunoController {
 
 	/** O único signatário possível no cadastro novo: o contato principal [PROP]. */
 	static final String SIGNATARIO_PRINCIPAL = "principal";
+	/** RF06; A11 §5.9.10. O link "Abrir cadastro existente" entra com a edição do aluno (T-23). */
 	private static final String MATRICULA_REPETIDA = "Esta matrícula já está cadastrada. Confira a matrícula ou "
 			+ "localize o cadastro existente para editá-lo.";
 
@@ -187,7 +188,8 @@ public class AlunoController {
 	}
 
 	private void conferirMatricula(AlunoForm form, BindingResult erros) {
-		if (!erros.hasFieldErrors(CAMPO_MATRICULA) && registros.matriculaCadastrada(form.getMatricula())) {
+		// RF06: espaços das pontas já saíram (StringTrimmerEditor); os zeros à esquerda ficam
+		if (!erros.hasFieldErrors(CAMPO_MATRICULA) && registros.alunoComMatricula(form.getMatricula(), null).isPresent()) {
 			erros.rejectValue(CAMPO_MATRICULA, "repetida", MATRICULA_REPETIDA);
 		}
 	}

@@ -860,6 +860,17 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   `CONSENTIMENTO_REVOGADO` só com o ID. `revogado_em` recebe o fim do dia informado, ou o
   instante atual quando o dia é hoje [PROP]. O perfil `test` usa pools de 4 conexões, porque
   os contextos de teste abertos juntos passavam do limite do MySQL.
+- **Duplicidade (T-21, 07/11/2026; RF06; DEC-45):** `RegistrosDeAlunos.alunoComMatricula`
+  procura a matrícula em todos os alunos, ativos e inativos, na collation da tabela, e deixa
+  de fora o próprio aluno na edição (T-23). A UNIQUE `uk_aluno_matricula` barra a corrida
+  entre dois cadastros, e `CadastroDeAlunos` traduz o erro para a mesma mensagem. O link
+  "Abrir cadastro existente" entra com a T-23. `carteirinha/EmissaoDeCarteirinha` grava a
+  carteirinha na transação de quem chama, com o código de `GeradorDeCodigo`
+  (`GeradorAleatorioDeCodigo`: `SecureRandom`, `furin.carteirinha.tamanho-codigo`): confere
+  o código em todas as carteirinhas, inclusive as revogadas, e tenta de novo até
+  `furin.carteirinha.tentativas-colisao` vezes, contando também a colisão barrada pela
+  UNIQUE. Sem sucesso, registra `CARTEIRINHA_NAO_EMITIDA` [PROP: nome], só com o ID do
+  aluno. A T-22 é quem chama a emissão no cadastro.
 
 **Log de auditoria (T-10, 01/11/2026):** pacote `br.com.furin.access.auditoria`.
 
@@ -1001,3 +1012,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 05/11/2026 | T-18: área privada e `GET /arquivos/{chave}` (§6, "Área privada"), com `fotoChave` na resposta da leitura e do giro e o evento `ARQUIVO_INDISPONIVEL` [PROP] |
 | 05/11/2026 | T-19: formulário de aluno sem salvar (§6, "Cadastro de aluno"; DEC-44), com `GET /alunos/novo` e `furin.contato.ddi` [PROP] |
 | 07/11/2026 | T-20: termo no cadastro e revogação (§6, "Termo e revogação"), com a tela própria da revogação e as regras [PROP] de signatário, referência e `revogado_em` |
+| 07/11/2026 | T-21: duplicidade de matrícula e de código (§6, "Duplicidade"; DEC-45), com o evento `CARTEIRINHA_NAO_EMITIDA` [PROP] |

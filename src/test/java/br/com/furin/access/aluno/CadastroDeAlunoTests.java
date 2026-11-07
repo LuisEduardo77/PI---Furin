@@ -204,8 +204,9 @@ class CadastroDeAlunoTests {
 		// RN16; DEC-44: com o termo, só falta a carteirinha (T-22). Nada fica, nem o termo digitalizado
 		ByteArrayInputStream foto = new ByteArrayInputStream(PNG);
 		ByteArrayInputStream termo = new ByteArrayInputStream(PDF);
+		NovoAluno novo = novo();
 
-		assertThatThrownBy(() -> cadastro.cadastrar(novo(), TERMO_DIGITALIZADO, foto, termo, FUNCIONARIO))
+		assertThatThrownBy(() -> cadastro.cadastrar(novo, TERMO_DIGITALIZADO, foto, termo, FUNCIONARIO))
 				.isInstanceOf(CadastroIncompleto.class);
 
 		assertThat(alunosNovos()).isZero();

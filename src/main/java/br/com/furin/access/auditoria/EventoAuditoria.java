@@ -36,6 +36,8 @@ public enum EventoAuditoria {
 	CONSENTIMENTO_REVOGADO,
 	/** RF07. */
 	CARTEIRINHA_SEGUNDA_VIA,
+	/** RF06: todas as tentativas de código colidiram. Só o ID do aluno. [PROP: nome] */
+	CARTEIRINHA_NAO_EMITIDA,
 
 	/** RF12. */
 	REGISTRO_MANUAL,

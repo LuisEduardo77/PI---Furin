@@ -45,10 +45,16 @@ public class RegistrosDeAlunos {
 						Liberacao.turmaComTurno(rs.getString("nome"), rs.getString("turno"))));
 	}
 
-	boolean matriculaCadastrada(String matricula) {
-		Integer quantidade = jdbc.queryForObject("SELECT COUNT(*) FROM aluno WHERE matricula = ?", Integer.class,
-				matricula);
-		return quantidade != null && quantidade > 0;
+	/**
+	 * RF06, matrícula, passo 2: procura entre <b>todos</b> os alunos, ativos e inativos, na
+	 * collation da tabela (os zeros à esquerda contam). Na edição (T-23), o próprio aluno
+	 * fica de fora: {@code idIgnorado} é ele; no cadastro, é nulo.
+	 *
+	 * @return o ID do aluno que já usa a matrícula, para o link "Abrir cadastro existente" (T-23)
+	 */
+	Optional<Long> alunoComMatricula(String matricula, Long idIgnorado) {
+		return jdbc.queryForList("SELECT id_aluno FROM aluno WHERE matricula = ? AND (? IS NULL OR id_aluno <> ?)",
+				Long.class, matricula, idIgnorado, idIgnorado).stream().findFirst();
 	}
 
 	long inserirAluno(String matricula, String nome, String fotoChave, Instant agora) {
