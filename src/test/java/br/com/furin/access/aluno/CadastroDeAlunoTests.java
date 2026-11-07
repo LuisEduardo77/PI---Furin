@@ -2,6 +2,7 @@ package br.com.furin.access.aluno;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.within;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -18,6 +19,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
@@ -41,10 +46,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.FileSystemUtils;
 
+import br.com.furin.access.RelogioAjustavel;
+import br.com.furin.access.aluno.CadastroDeAlunos.BlocosGravados;
 import br.com.furin.access.aluno.CadastroDeAlunos.CadastroIncompleto;
 import br.com.furin.access.aluno.CadastroDeAlunos.NovoAluno;
+import br.com.furin.access.aluno.CadastroDeAlunos.TermoConferido;
 import br.com.furin.access.config.SegurancaConfig;
 
 /**
@@ -64,6 +73,10 @@ class CadastroDeAlunoTests {
 	private static final String TURMA_INATIVA = "9Z-T19";
 	private static final String MATRICULA_NOVA = "T19-000123";
 	private static final String MATRICULA_EXISTENTE = "T19-000999";
+	private static final String FUNCIONARIO = "cadastro.teste";
+
+	private static final TermoConferido TERMO_DIGITALIZADO = new TermoConferido("v1-2026",
+			LocalDate.now().minusDays(1), null);
 
 	private static final Path AREA_PRIVADA = Path.of(System.getProperty("java.io.tmpdir"),
 			"furin-alunos-teste-" + UUID.randomUUID());
@@ -87,6 +100,9 @@ class CadastroDeAlunoTests {
 	@Autowired
 	private CadastroDeAlunos cadastro;
 
+	@Autowired
+	private TransactionTemplate transacao;
+
 	private long idTurma;
 
 	private long idTurmaInativa;
@@ -100,12 +116,17 @@ class CadastroDeAlunoTests {
 		idTurmaInativa = jdbc.queryForObject("SELECT id_turma FROM turma WHERE nome = ?", Long.class, TURMA_INATIVA);
 		jdbc.update("INSERT INTO aluno (matricula, nome, foto_chave, ativo, criado_em) VALUES (?, 'Bia Exemplo', "
 				+ "'sem-arquivo.png', 1, UTC_TIMESTAMP(6))", MATRICULA_EXISTENTE);
+		// O conferente do termo é o funcionário da sessão (CA-RF05-04)
+		jdbc.update("INSERT INTO usuario (nome, login, senha_hash, perfil, ativo, troca_senha_obrigatoria, "
+				+ "senha_temporaria_expira_em, criado_em) VALUES ('Funcionário Teste', ?, '{noop}nao-usada', ?, 1, 0, "
+				+ "NULL, UTC_TIMESTAMP(6))", FUNCIONARIO, SegurancaConfig.PERFIL_FUNCIONARIO);
 	}
 
 	@AfterEach
 	void apagarACena() {
 		jdbc.update("DELETE FROM aluno WHERE matricula LIKE 'T19-%'");
 		jdbc.update("DELETE FROM turma WHERE nome IN (?, ?)", TURMA, TURMA_INATIVA);
+		jdbc.update("DELETE FROM usuario WHERE login = ?", FUNCIONARIO);
 	}
 
 	// --- Formulário ---
@@ -169,8 +190,9 @@ class CadastroDeAlunoTests {
 		NovoAluno comContatoInvalido = new NovoAluno("Ana Teste", MATRICULA_NOVA, idTurma, "Carla Teste",
 				"+55 11 900000001", "a".repeat(300) + "@example.com");
 		ByteArrayInputStream foto = new ByteArrayInputStream(PNG);
+		ByteArrayInputStream termo = new ByteArrayInputStream(PDF);
 
-		assertThatThrownBy(() -> cadastro.cadastrar(comContatoInvalido, foto))
+		assertThatThrownBy(() -> cadastro.cadastrar(comContatoInvalido, TERMO_DIGITALIZADO, foto, termo, FUNCIONARIO))
 				.isInstanceOf(DataAccessException.class);
 
 		assertThat(alunosNovos()).isZero();
@@ -178,16 +200,46 @@ class CadastroDeAlunoTests {
 	}
 
 	@Test
-	void comTudoValidoATransacaoTerminaFaltandoOTermoEACarteirinha() throws IOException {
-		NovoAluno novo = new NovoAluno("Ana Teste", MATRICULA_NOVA, idTurma, "Carla Teste", "+55 11 900000001",
-				"carla.teste@example.com");
+	void comTudoValidoATransacaoTerminaFaltandoACarteirinha() throws IOException {
+		// RN16; DEC-44: com o termo, só falta a carteirinha (T-22). Nada fica, nem o termo digitalizado
 		ByteArrayInputStream foto = new ByteArrayInputStream(PNG);
+		ByteArrayInputStream termo = new ByteArrayInputStream(PDF);
 
-		assertThatThrownBy(() -> cadastro.cadastrar(novo, foto))
+		assertThatThrownBy(() -> cadastro.cadastrar(novo(), TERMO_DIGITALIZADO, foto, termo, FUNCIONARIO))
 				.isInstanceOf(CadastroIncompleto.class);
 
 		assertThat(alunosNovos()).isZero();
+		assertThat(consentimentos()).isZero();
 		assertThat(arquivosNaAreaPrivada()).isZero();
+	}
+
+	@Test
+	void conferenteEInstanteDaConferenciaVemDoServidor() {
+		// CA-RF05-04: os blocos gravados dentro de uma transação, vistos antes de ela ser desfeita
+		transacao.executeWithoutResult(status -> {
+			status.setRollbackOnly();
+			BlocosGravados blocos = cadastro.gravarBlocos(novo(), new TermoConferido("v1-2026",
+					LocalDate.now().minusDays(1), "TERMO-0001"), "sem-arquivo.png", "TERMO-0001", FUNCIONARIO);
+
+			Map<String, Object> consentimento = jdbc.queryForMap("SELECT * FROM consentimento WHERE id_consentimento = ?",
+					blocos.idConsentimento());
+			long idFuncionario = jdbc.queryForObject("SELECT id_usuario FROM usuario WHERE login = ?", Long.class,
+					FUNCIONARIO);
+			assertThat(((Number) consentimento.get("id_usuario_conferente")).longValue()).isEqualTo(idFuncionario);
+			assertThat(((Number) consentimento.get("id_contato")).longValue()).isEqualTo(blocos.idContato());
+			assertThat(consentimento).containsEntry("versao_termo", "v1-2026")
+					.containsEntry("referencia_termo", "TERMO-0001")
+					.containsEntry("revogado_em", null);
+			assertThat((LocalDateTime) consentimento.get("conferido_em"))
+					.isCloseTo(LocalDateTime.now(ZoneOffset.UTC), within(1, ChronoUnit.MINUTES));
+		});
+	}
+
+	@Test
+	void valoresDeConferenteEnviadosPelaTelaSaoIgnorados() throws Exception {
+		// CA-RF05-04: o formulário não tem esses campos; enviados à força, não mudam nada
+		enviar(valido().file(foto(PNG)).param("idUsuarioConferente", "999999").param("conferidoEm", "2020-01-01"))
+				.andExpect(content().string(containsString("Dados conferidos")));
 	}
 
 	// --- Erros (CA-RF04-03, 04 e 09) ---
@@ -282,6 +334,83 @@ class CadastroDeAlunoTests {
 				.andExpect(content().string(not(containsString("<b>Ana</b>"))));
 	}
 
+	// --- Termo de consentimento (RF05; CA-RF05-01 a 03, 05, 07 e 10) ---
+
+	@Test
+	void formularioTrazAVersaoVigenteEACaixaComTextoAssociado() throws Exception {
+		// CA-RF05-10 e CA-RF05-07
+		mvc.perform(get("/alunos/novo").with(funcionario()))
+				.andExpect(content().string(containsString("value=\"v1-2026\"")))
+				.andExpect(content().string(containsString("<label for=\"termoConferido\">Confirmo que conferi o termo "
+						+ "de consentimento assinado pelo responsável (obrigatório)</label>")))
+				.andExpect(content().string(containsString("PDF, JPEG ou PNG, até 5 MB")));
+	}
+
+	@Test
+	void semACaixaMarcadaOAlunoNaoECadastrado() throws Exception {
+		// CA-RF05-01
+		enviar(comValor("termoConferido", "false").file(foto(PNG)))
+				.andExpect(content().string(containsString("Confirme que o termo de consentimento assinado foi conferido.")))
+				.andExpect(content().string(containsString("aria-describedby=\"termoConferido-erro\"")))
+				.andExpect(content().string(not(containsString("Dados conferidos"))));
+		assertThat(alunosNovos()).isZero();
+	}
+
+	@Test
+	void caixaMarcadaSemDataOuSemReferenciaNaoBasta() throws Exception {
+		// CA-RF05-02: o checkbox sozinho não basta (A14 p.7)
+		enviar(comValor("termoAssinadoEm", "").file(foto(PNG)))
+				.andExpect(content().string(containsString("Informe a data da assinatura do termo.")));
+		enviar(comValor("termoProtocolo", "").file(foto(PNG)))
+				.andExpect(content().string(containsString("Informe o protocolo do termo físico ou envie a cópia "
+						+ "digitalizada.")));
+		assertThat(alunosNovos()).isZero();
+	}
+
+	@Test
+	void dataDaAssinaturaFuturaEhRecusada() throws Exception {
+		// CA-RF05-03: depois da data local da conferência (fuso da escola)
+		String amanha = LocalDate.now(RelogioAjustavel.FUSO_DA_ESCOLA).plusDays(1).toString();
+		enviar(comValor("termoAssinadoEm", amanha).file(foto(PNG)))
+				.andExpect(content().string(containsString("A data da assinatura não pode ser posterior a hoje.")));
+		// Hoje vale
+		String hoje = LocalDate.now(RelogioAjustavel.FUSO_DA_ESCOLA).toString();
+		enviar(comValor("termoAssinadoEm", hoje).file(foto(PNG)))
+				.andExpect(content().string(containsString("Dados conferidos")));
+	}
+
+	@Test
+	void signatarioForcadoNaRequisicaoEhRecusado() throws Exception {
+		// CA-RF05-05: um contato de outro aluno não pode ser o signatário
+		long contatoDeOutroAluno = jdbc.queryForObject("SELECT MAX(id_aluno) FROM aluno", Long.class);
+		enviar(comValor("termoSignatario", String.valueOf(contatoDeOutroAluno)).file(foto(PNG)))
+				.andExpect(content().string(containsString("Não foi possível conferir o signatário do termo.")))
+				.andExpect(content().string(not(containsString("Dados conferidos"))));
+		assertThat(alunosNovos()).isZero();
+	}
+
+	@Test
+	void termoDigitalizadoPassaPelaAreaPrivadaENaoFicaOrfao() throws Exception {
+		// RF05, passo 4; CA-RF05-06 (a entrega autorizada está em ArquivoControllerTests)
+		enviar(comValor("termoProtocolo", "").file(foto(PNG)).file(termo(PDF)))
+				.andExpect(content().string(containsString("Dados conferidos")));
+		assertThat(arquivosNaAreaPrivada()).isZero();
+	}
+
+	@Test
+	void termoDigitalizadoForaDaRegraEhRecusado() throws Exception {
+		enviar(comValor("termoProtocolo", "").file(foto(PNG))
+				.file(termo("<html>".getBytes(StandardCharsets.UTF_8))))
+				.andExpect(content().string(containsString("O termo digitalizado precisa ser PDF, JPEG ou PNG, até 5 MB.")));
+		assertThat(arquivosNaAreaPrivada()).isZero();
+	}
+
+	@Test
+	void protocoloEArquivoJuntosSaoRecusados() throws Exception {
+		enviar(valido().file(foto(PNG)).file(termo(PDF)))
+				.andExpect(content().string(containsString("Informe o protocolo ou envie a cópia digitalizada, não os dois.")));
+	}
+
 	// --- Acesso (CA-RF04-10) ---
 
 	@Test
@@ -317,12 +446,32 @@ class CadastroDeAlunoTests {
 	}
 
 	private Map<String, String> camposValidos() {
-		return Map.of("nome", "Ana Teste",
-				"matricula", MATRICULA_NOVA,
-				"idTurma", String.valueOf(idTurma),
-				"contatoNome", "Carla Teste",
-				"contatoTelefone", "(11) 90000-0001",
-				"contatoEmail", "carla.teste@example.com");
+		return Map.ofEntries(Map.entry("nome", "Ana Teste"),
+				Map.entry("matricula", MATRICULA_NOVA),
+				Map.entry("idTurma", String.valueOf(idTurma)),
+				Map.entry("contatoNome", "Carla Teste"),
+				Map.entry("contatoTelefone", "(11) 90000-0001"),
+				Map.entry("contatoEmail", "carla.teste@example.com"),
+				Map.entry("termoSignatario", "principal"),
+				Map.entry("termoVersao", "v1-2026"),
+				Map.entry("termoAssinadoEm", ontem().toString()),
+				Map.entry("termoProtocolo", "TERMO-0001"),
+				Map.entry("termoConferido", "true"));
+	}
+
+	private NovoAluno novo() {
+		return new NovoAluno("Ana Teste", MATRICULA_NOVA, idTurma, "Carla Teste", "+55 11 900000001",
+				"carla.teste@example.com");
+	}
+
+	/** Ontem no fuso da escola (RN10). */
+	private static LocalDate ontem() {
+		return LocalDate.now(RelogioAjustavel.FUSO_DA_ESCOLA).minusDays(1);
+	}
+
+	private int consentimentos() {
+		return jdbc.queryForObject("SELECT COUNT(*) FROM consentimento c JOIN contato_responsavel r "
+				+ "ON r.id_contato = c.id_contato WHERE r.email = 'carla.teste@example.com'", Integer.class);
 	}
 
 	private ResultActions enviar(MockMultipartHttpServletRequestBuilder pedido) throws Exception {
@@ -333,8 +482,12 @@ class CadastroDeAlunoTests {
 		return new MockMultipartFile("foto", "ana.png", "image/png", conteudo);
 	}
 
+	private static MockMultipartFile termo(byte[] conteudo) {
+		return new MockMultipartFile("termoArquivo", "termo.pdf", "application/pdf", conteudo);
+	}
+
 	private static RequestPostProcessor funcionario() {
-		return user("cadastro.teste").roles(SegurancaConfig.PERFIL_FUNCIONARIO);
+		return user(FUNCIONARIO).roles(SegurancaConfig.PERFIL_FUNCIONARIO);
 	}
 
 	private int alunosNovos() {

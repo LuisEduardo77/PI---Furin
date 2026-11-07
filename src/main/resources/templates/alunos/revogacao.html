@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: pagina('Registrar revogação do termo', 'alunos', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Registrar revogação do termo | Furin Access</title>
+</head>
+<body>
+<th:block th:fragment="conteudo">
+  <h1>Registrar revogação do termo</h1>
+
+  <!-- A11 §5.13.8: role="status" sem mover o foco. Textos [PROP] -->
+  <div role="status">
+    <div class="aviso aviso--sucesso" th:if="${revogacaoRegistrada}">
+      <p>
+        <strong>Sucesso:</strong> revogação registrada. O aluno foi inativado, a carteirinha foi
+        revogada e os avisos por e-mail foram encerrados. Ele continua estudando: a entrada e a
+        saída passam a ser controladas fora do sistema.
+      </p>
+    </div>
+  </div>
+
+  <!-- RF05, fluxo A2; DEC-34 -->
+  <dl class="dados">
+    <dt>Aluno</dt>
+    <dd th:text="${consentimento.nomeDoAluno()}">Ana Teste</dd>
+    <dt>Versão do termo</dt>
+    <dd th:text="${consentimento.versao()}">v1-2026</dd>
+    <dt>Data da assinatura</dt>
+    <dd th:text="${#temporals.format(consentimento.assinadoEm(), 'dd/MM/yyyy')}">01/11/2026</dd>
+  </dl>
+
+  <p th:if="${consentimento.revogadoEm() != null and revogacaoRegistrada == null}">
+    <strong>Este termo já foi revogado.</strong>
+  </p>
+
+  <form th:action="@{/alunos/{idAluno}/consentimentos/{id}/revogacao(idAluno=${consentimento.idAluno()},id=${consentimento.id()})}"
+        th:object="${revogacao}" method="post" novalidate
+        th:unless="${consentimento.revogadoEm() != null or revogacaoRegistrada != null}">
+    <div id="resumo-erros" class="aviso aviso--erro" tabindex="-1" aria-labelledby="resumo-erros-titulo"
+         th:if="${#fields.hasAnyErrors()}">
+      <h2 id="resumo-erros-titulo">A revogação não foi registrada.</h2>
+      <ul>
+        <li th:each="erro : ${#fields.globalErrors()}" th:text="${erro}">O aluno está na escola.</li>
+        <li th:if="${#fields.hasErrors('data')}"><a href="#data" th:errors="*{data}">Informe a data.</a></li>
+      </ul>
+    </div>
+
+    <p>
+      Ao registrar, o aluno é inativado, a carteirinha é revogada e os contatos são
+      inativados, o que encerra os avisos por e-mail. As entradas e saídas já registradas
+      continuam guardadas.
+    </p>
+
+    <div class="campo">
+      <label for="data">Data em que o responsável revogou o termo (obrigatório)</label>
+      <p id="data-erro" class="campo__erro" th:if="${#fields.hasErrors('data')}">
+        <span>Erro:</span> <span th:errors="*{data}">Informe a data.</span>
+      </p>
+      <input id="data" type="date" required th:field="*{data}"
+             th:attr="aria-invalid=${#fields.hasErrors('data')} ? 'true',
+                      aria-describedby=${#fields.hasErrors('data')} ? 'data-erro'">
+    </div>
+
+    <div class="acoes">
+      <button type="submit" class="botao">Registrar revogação</button>
+      <a class="botao botao--secundario" th:href="@{/alunos}">Cancelar</a>
+    </div>
+  </form>
+
+  <script th:src="@{/js/resumo-de-erros.js}" defer></script>
+</th:block>
+</body>
+</html>

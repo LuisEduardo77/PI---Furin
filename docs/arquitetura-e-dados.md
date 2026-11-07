@@ -272,7 +272,7 @@ inválido (Bean Validation). Qualquer valor pode ser trocado pelo ambiente, por 
 | `GET/POST /portaria/manual` | FUNCIONARIO | RF11, RF12 |
 | `GET/POST /alunos`, `GET /alunos/novo` [PROP], `/alunos/{id}/editar` (inclui o aviso por e-mail, DEC-38) | FUNCIONARIO | RF04–RF06, RF08 |
 | `POST /alunos/{id}/carteirinhas`, `GET /carteirinhas/{id}/imprimir` | FUNCIONARIO | RF07 |
-| `POST /alunos/{id}/consentimentos/{idConsentimento}/revogacao` | FUNCIONARIO | RF05 (DEC-34) |
+| `GET/POST /alunos/{id}/consentimentos/{idConsentimento}/revogacao` (o GET é a tela própria até a T-23 [PROP]) | FUNCIONARIO | RF05 (DEC-34) |
 | `GET /arquivos/{chave}` | FUNCIONARIO | DEC-08 |
 | `GET /presentes` | FUNCIONARIO | RF16 |
 | `GET /historico` | FUNCIONARIO | RF18–RF20 |
@@ -847,6 +847,19 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   barra pedidos enormes e fica acima das regras de `furin.arquivos.*`, para o erro
   aparecer no campo: acima desse limite, o Tomcat não lê o token CSRF, e a resposta tende
   a ser a página 403 (não testado). O foco vai para o resumo pelo `static/js/resumo-de-erros.js`.
+- **Termo e revogação (T-20, 07/11/2026; RF05; DEC-34):** o bloco "Termo de consentimento"
+  fica no mesmo formulário. O signatário é o contato principal (único contato no cadastro
+  novo; outro valor é recusado com mensagem genérica, CA-RF05-05) [PROP]. A referência é o
+  protocolo do termo físico **ou** a cópia digitalizada, que vai para a área privada e tem a
+  chave em `referencia_termo`; os dois juntos são recusados [PROP]. A data da assinatura não
+  pode passar de hoje no fuso da escola. `CadastroDeAlunos.gravarBlocos` grava o
+  consentimento com o conferente da sessão e `conferido_em` do servidor (CA-RF05-04).
+  `RevogacaoDoTermo` bloqueia o aluno (RN08), recusa se ele estiver na escola ou com
+  liberação pendente (RF05, A2, passo 4), grava `revogado_em`, inativa o aluno, revoga as
+  carteirinhas e inativa todos os contatos, numa transação só, e registra
+  `CONSENTIMENTO_REVOGADO` só com o ID. `revogado_em` recebe o fim do dia informado, ou o
+  instante atual quando o dia é hoje [PROP]. O perfil `test` usa pools de 4 conexões, porque
+  os contextos de teste abertos juntos passavam do limite do MySQL.
 
 **Log de auditoria (T-10, 01/11/2026):** pacote `br.com.furin.access.auditoria`.
 
@@ -987,3 +1000,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 05/11/2026 | DEC-41 a DEC-43: coluna `chave_giro` (§5, migração V3), `NegarRotaExistenteSemRegra` (404 para rota inexistente), resposta da leitura reduzida com status 201 ou 200 [PROP] e `furin.carga.ativa` para os testes |
 | 05/11/2026 | T-18: área privada e `GET /arquivos/{chave}` (§6, "Área privada"), com `fotoChave` na resposta da leitura e do giro e o evento `ARQUIVO_INDISPONIVEL` [PROP] |
 | 05/11/2026 | T-19: formulário de aluno sem salvar (§6, "Cadastro de aluno"; DEC-44), com `GET /alunos/novo` e `furin.contato.ddi` [PROP] |
+| 07/11/2026 | T-20: termo no cadastro e revogação (§6, "Termo e revogação"), com a tela própria da revogação e as regras [PROP] de signatário, referência e `revogado_em` |

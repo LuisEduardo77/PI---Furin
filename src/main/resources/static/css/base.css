@@ -225,6 +225,20 @@ button {
 }
 
 /* Mensagens de status: o texto sempre diz o estado ("Sucesso:", "Erro:") (A11 §5.11.1, §5.13.8) */
+/* Caixa de seleção com o texto ao lado; a área clicável inclui o label (A11 §5.9.3) */
+.campo--caixa input[type="checkbox"] {
+  display: inline-block;
+  width: 1.5rem;
+  min-height: 1.5rem;
+  height: 1.5rem;
+  margin: 0 0.5rem 0 0;
+  vertical-align: middle;
+}
+
+.campo--caixa label {
+  display: inline;
+}
+
 .grupo-de-campos {
   min-width: 0;
   margin: 0 0 1.5rem;
