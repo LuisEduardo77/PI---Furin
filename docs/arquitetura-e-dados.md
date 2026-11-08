@@ -270,7 +270,7 @@ inválido (Bean Validation). Qualquer valor pode ser trocado pelo ambiente, por 
 | `POST /portaria/giros` (só no perfil `prototipo`) | FUNCIONARIO | RF09, RF14 |
 | `POST /portaria/liberacoes/{id}/cancelar` | FUNCIONARIO | RN02 (DEC-28, A2) |
 | `GET/POST /portaria/manual` | FUNCIONARIO | RF11, RF12 |
-| `GET/POST /alunos`, `GET /alunos/novo` [PROP], `GET/POST /alunos/{id}/editar` e `POST /alunos/{id}/editar/revisar` [PROP] (inclui o aviso por e-mail, DEC-38), `GET/POST /alunos/{id}/inativacao` [PROP] | FUNCIONARIO | RF04–RF06, RF08 |
+| `GET /alunos` (busca, com `termo` e `inativos`), `POST /alunos`, `GET /alunos/novo` [PROP], `GET/POST /alunos/{id}/editar` e `POST /alunos/{id}/editar/revisar` [PROP] (inclui o aviso por e-mail, DEC-38), `GET/POST /alunos/{id}/inativacao` [PROP] | FUNCIONARIO | RF04–RF06, RF08 |
 | `POST /alunos/{id}/carteirinhas`, `GET /carteirinhas/{id}/imprimir`, `GET /carteirinhas/{id}/qr-code` [PROP] e `GET /alunos/{id}/carteirinhas/segunda-via` (confirmação, até a página do aluno) [PROP] | FUNCIONARIO | RF07 |
 | `GET/POST /alunos/{id}/consentimentos/{idConsentimento}/revogacao` (o GET é a tela própria até a T-23 [PROP]) | FUNCIONARIO | RF05 (DEC-34) |
 | `GET /arquivos/{chave}` | FUNCIONARIO | DEC-08 |
@@ -900,6 +900,14 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   outras ações do aluno: imprimir, segunda via, revogação do termo e inativação. Os campos
   comuns do cadastro e da edição ficam em `DadosDoAlunoForm` (serializável, porque a revisão
   vai para a sessão) e nos fragmentos `templates/alunos/campos.html`.
+- **Busca (T-24, 07/11/2026; RF11; DEC-28, C4):** `aluno/BuscaDeAlunos` tem duas consultas
+  constantes, uma por matrícula (só dígitos: prefixo, com os zeros à esquerda) e uma por
+  nome (contém o termo, na collation `utf8mb4_0900_ai_ci`, sem caixa nem acento). O termo
+  vai como parâmetro do `LIKE`, com `%`, `_` e o próprio `!` escapados por `!` (A10 §8.28).
+  Busca `max-resultados` + 1 para saber se passou do limite. A situação sai da última
+  movimentação confirmada, por `LATERAL` (RN12; entrada de dia anterior é "Saída pendente"
+  [PROP]). `Escopo.SO_ATIVOS` é o da portaria (T-32); `COM_INATIVOS`, o do filtro da tela
+  Alunos. A tela é um `GET`, sem estado, e anuncia a quantidade em `role="status"`.
 
 **Log de auditoria (T-10, 01/11/2026):** pacote `br.com.furin.access.auditoria`.
 
@@ -1044,3 +1052,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 07/11/2026 | T-21: duplicidade de matrícula e de código (§6, "Duplicidade"; DEC-45), com o evento `CARTEIRINHA_NAO_EMITIDA` [PROP] |
 | 07/11/2026 | T-22: carteirinha no cadastro, QR Code, impressão e segunda via (§6, "Carteirinha"), com as rotas [PROP] do QR Code e da confirmação |
 | 07/11/2026 | T-23: edição do aluno (§6, "Edição do aluno"), com as rotas [PROP] da revisão e da inativação e a sessão guardando a revisão |
+| 07/11/2026 | T-24: busca por nome ou matrícula (§6, "Busca"), na tela Alunos, com a situação "Saída pendente" [PROP] |
