@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: pagina(|Revisar registro manual de ${ficha.nome()}|, 'portaria', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Revisar registro manual de Ana Teste | Furin Access</title>
+</head>
+<body>
+<th:block th:fragment="conteudo">
+  <h1 th:text="|Revisar registro manual de ${ficha.nome()}|">Revisar registro manual de Ana Teste</h1>
+
+  <!-- RF12, passo 5; CA-RF12-07; A11 §5.9.12: aluno, tipo, horário e motivo, com Corrigir e Confirmar -->
+  <p>Confira o registro. Nada foi gravado ainda.</p>
+
+  <dl class="portaria__dados">
+    <dt>Aluno</dt>
+    <dd th:text="${ficha.nome()}">Ana Teste</dd>
+    <dt>Matrícula</dt>
+    <dd th:text="${ficha.matricula()}">000123</dd>
+    <dt>Turma</dt>
+    <dd th:text="${ficha.turma()}">6A — Manhã</dd>
+    <dt>Tipo</dt>
+    <dd th:text="${ficha.tipo().name() == 'SAIDA'} ? 'Saída manual' : 'Entrada manual'">Entrada manual</dd>
+    <dt>Horário informado</dt>
+    <dd th:text="${horarioInformado}">20/10/2026 às 07:15</dd>
+    <dt>Motivo</dt>
+    <dd th:text="${manual.motivo}">Aluno esqueceu a carteirinha</dd>
+  </dl>
+
+  <!--
+    Os valores voltam ao servidor, que confere tudo de novo antes de gravar. O tipo mostrado
+    só é comparado com o recalculado (RF12, passo 6.1); a chave evita gravar duas vezes (RN08)
+  -->
+  <form th:action="@{/portaria/manual/{id}(id=${ficha.idAluno()})}" th:object="${manual}" method="post">
+    <input type="hidden" th:field="*{ocorridoEm}">
+    <input type="hidden" th:field="*{motivo}">
+    <input type="hidden" th:field="*{tipoMostrado}">
+    <input type="hidden" th:field="*{chaveRequisicao}">
+    <div class="acoes">
+      <button type="submit" class="botao">Confirmar</button>
+      <button type="submit" class="botao botao--secundario"
+              th:formaction="@{/portaria/manual/{id}/corrigir(id=${ficha.idAluno()})}">Corrigir</button>
+    </div>
+  </form>
+</th:block>
+</body>
+</html>

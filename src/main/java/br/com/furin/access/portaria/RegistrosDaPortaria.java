@@ -39,6 +39,17 @@ public class RegistrosDaPortaria {
 	public record Vencida(long idLiberacao, long idAluno) {
 	}
 
+	/**
+	 * O aluno para o registro manual (T-32; RF12, passo 4): {@code idVinculo} e {@code turma}
+	 * são nulos sem vínculo vigente.
+	 */
+	public record AlunoDoManual(long id, String nome, String matricula, boolean ativo, Long idVinculo, String turma) {
+	}
+
+	/** Um registro manual já gravado, para responder ao reenvio da mesma chave (RN08). */
+	public record Manual(long idRegistro, long idAluno, TipoMovimentacao tipo, Instant ocorridoEm, String nome) {
+	}
+
 	/** A carteirinha lida. */
 	public record Carteirinha(long id, long idAluno, Instant expiraEm, Instant revogadaEm) {
 	}
@@ -202,6 +213,58 @@ public class RegistrosDaPortaria {
 		return jdbc.update("UPDATE registro_acesso SET situacao = ?, cancelado_em = ?, motivo_cancelamento = ? "
 				+ "WHERE id_registro = ? AND situacao = ?",
 				CANCELADA, utc(agora), FUNCIONARIO, idRegistro, AGUARDANDO_GIRO) == 1;
+	}
+
+	/** RF12, passo 4: nome, matrícula, turma vigente e se o aluno está ativo, sem bloquear. */
+	Optional<AlunoDoManual> alunoDoManual(long idAluno, Instant agora) {
+		LocalDateTime utc = utc(agora);
+		return jdbc.query("SELECT a.id_aluno, a.nome, a.matricula, a.ativo, v.id_vinculo, t.nome AS turma, t.turno "
+				+ "FROM aluno a LEFT JOIN vinculo_turma v ON v.id_aluno = a.id_aluno AND v.inicio_em <= ? "
+				+ "AND (v.fim_em IS NULL OR v.fim_em > ?) LEFT JOIN turma t ON t.id_turma = v.id_turma "
+				+ "WHERE a.id_aluno = ? ORDER BY v.inicio_em DESC LIMIT 1",
+				(rs, linha) -> {
+					long idVinculo = rs.getLong("id_vinculo");
+					boolean semVinculo = rs.wasNull();
+					return new AlunoDoManual(rs.getLong("id_aluno"), rs.getString("nome"), rs.getString("matricula"),
+							rs.getBoolean("ativo"), semVinculo ? null : idVinculo,
+							semVinculo ? null : Liberacao.turmaComTurno(rs.getString("turma"), rs.getString("turno")));
+				},
+				utc, utc, idAluno).stream().findFirst();
+	}
+
+	/**
+	 * RN07, item 5 (DEC-28, B2; DEC-20): {@code forma = MANUAL}, {@code CONFIRMADA}, sem
+	 * carteirinha, com o horário informado em {@code ocorrido_em} e o do servidor em
+	 * {@code lancado_em}.
+	 */
+	long gravarManual(Vinculo vinculo, long idUsuario, TipoMovimentacao tipo, Instant ocorrido, Instant lancado,
+			String motivo, UUID chaveRequisicao) {
+		KeyHolder chave = new GeneratedKeyHolder();
+		jdbc.update(conexao -> {
+			PreparedStatement sql = conexao.prepareStatement("INSERT INTO registro_acesso (id_vinculo, id_usuario, "
+					+ "id_carteirinha, tipo, forma, situacao, lancado_em, ocorrido_em, chave_requisicao, motivo_manual) "
+					+ "VALUES (?, ?, NULL, ?, 'MANUAL', ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+			sql.setLong(1, vinculo.id());
+			sql.setLong(2, idUsuario);
+			sql.setString(3, tipo.name());
+			sql.setString(4, CONFIRMADA);
+			sql.setObject(5, utc(lancado));
+			sql.setObject(6, utc(ocorrido));
+			sql.setString(7, chaveRequisicao.toString());
+			sql.setString(8, motivo);
+			return sql;
+		}, chave);
+		return chave.getKey().longValue();
+	}
+
+	/** O registro manual gravado com esta chave, se houver (RN08). */
+	Optional<Manual> manualPorChave(UUID chaveRequisicao) {
+		return jdbc.query("SELECT r.id_registro, v.id_aluno, r.tipo, r.ocorrido_em, a.nome FROM registro_acesso r "
+				+ "JOIN vinculo_turma v ON v.id_vinculo = r.id_vinculo JOIN aluno a ON a.id_aluno = v.id_aluno "
+				+ "WHERE r.chave_requisicao = ? AND r.forma = 'MANUAL'",
+				(rs, linha) -> new Manual(rs.getLong("id_registro"), rs.getLong("id_aluno"),
+						TipoMovimentacao.valueOf(rs.getString("tipo")), instante(rs, "ocorrido_em"), rs.getString("nome")),
+				chaveRequisicao.toString()).stream().findFirst();
 	}
 
 	/** A situação de uma liberação, para a tela saber se ela expirou ou foi cancelada. */

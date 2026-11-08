@@ -161,7 +161,8 @@ public class BuscaDeAlunos {
 		}
 		LocalDate diaDaEntrada = rs.getObject("ocorrido_em", LocalDateTime.class).atOffset(ZoneOffset.UTC)
 				.atZoneSameInstant(fusoDaEscola).toLocalDate();
-		return diaDaEntrada.equals(LocalDate.now(relogio.withZone(fusoDaEscola))) ? Situacao.NA_ESCOLA
+		// LocalDate.ofInstant, e não relogio.withZone: o relógio dos testes fica sempre em UTC
+		return diaDaEntrada.equals(LocalDate.ofInstant(relogio.instant(), fusoDaEscola)) ? Situacao.NA_ESCOLA
 				: Situacao.SAIDA_PENDENTE;
 	}
 

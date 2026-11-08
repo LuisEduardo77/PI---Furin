@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: pagina('Registro manual', 'portaria', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Registro manual | Furin Access</title>
+</head>
+<body>
+<th:block th:fragment="conteudo">
+  <h1>Registro manual</h1>
+  <p><a th:href="@{/portaria}">Voltar à portaria</a></p>
+
+  <!-- RF12, passo 7. role="status": anuncia sem mover o foco -->
+  <div role="status">
+    <div class="aviso aviso--sucesso" th:if="${registrado}">
+      <p><strong>Sucesso:</strong> <span th:text="${registrado}">Entrada manual registrada para Ana às 07:15.</span></p>
+    </div>
+  </div>
+
+  <p>
+    O registro manual é uma exceção, para quando a leitura da carteirinha não é possível ou
+    para fechar uma saída que ficou sem registro. O tipo (entrada ou saída) é calculado pelo
+    sistema.
+  </p>
+
+  <!-- RF12, passo 2; RF11 (T-24): só alunos ativos. GET: a busca não muda nada -->
+  <section aria-labelledby="titulo-busca">
+    <h2 id="titulo-busca">Buscar aluno</h2>
+    <form th:action="@{/portaria/manual}" method="get" role="search" novalidate>
+      <div class="campo">
+        <label for="termo">Buscar aluno por nome ou matrícula</label>
+        <p id="termo-dica" class="campo__dica">
+          Parte do nome (pelo menos 2 letras) ou o começo da matrícula, com os zeros à esquerda.
+        </p>
+        <p id="termo-erro" class="campo__erro" th:if="${erroDoTermo}">
+          <span>Erro:</span> <span th:text="${erroDoTermo}">Digite o nome ou a matrícula do aluno.</span>
+        </p>
+        <input id="termo" name="termo" type="search" maxlength="150" autocomplete="off" th:value="${termo}"
+               th:attr="aria-invalid=${erroDoTermo} ? 'true',
+                        aria-describedby=${erroDoTermo} ? 'termo-erro termo-dica' : 'termo-dica'">
+      </div>
+      <button type="submit" class="botao">Buscar</button>
+    </form>
+  </section>
+
+  <div role="status">
+    <th:block th:if="${resultado != null}">
+      <p th:if="${resultado.alunos().isEmpty()}"
+         th:text="|Nenhum aluno ativo encontrado para '${termo}'. Confira o nome ou a matrícula.|">Nenhum aluno encontrado.</p>
+      <p th:if="${resultado.alunos().size() == 1}">1 aluno encontrado.</p>
+      <p th:if="${resultado.alunos().size() > 1 and !resultado.limiteAtingido()}"
+         th:text="|${resultado.alunos().size()} alunos encontrados.|">3 alunos encontrados.</p>
+      <p th:if="${resultado.limiteAtingido()}"
+         th:text="|Mostrando os ${maxResultados} primeiros resultados. Refine a busca.|">Mostrando os 20 primeiros resultados.</p>
+    </th:block>
+  </div>
+
+  <!-- CA-RF12-10: a ação é um link com a aparência e o tamanho de botão (44 px), com o nome do aluno -->
+  <div class="tabela-rolavel" th:if="${resultado != null and !resultado.alunos().isEmpty()}">
+    <table>
+      <caption>Alunos ativos encontrados</caption>
+      <thead>
+        <tr>
+          <th scope="col">Nome</th>
+          <th scope="col">Matrícula</th>
+          <th scope="col">Turma</th>
+          <th scope="col">Situação</th>
+          <th scope="col">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="aluno : ${resultado.alunos()}">
+          <th scope="row" th:text="${aluno.nome()}">Ana Teste</th>
+          <td th:text="${aluno.matricula()}">000123</td>
+          <td th:text="${aluno.turma() ?: '—'}">6A — Manhã</td>
+          <td th:text="${aluno.situacao().texto()}">Fora da escola</td>
+          <td>
+            <a class="botao botao--secundario" th:href="@{/portaria/manual/{id}(id=${aluno.id()})}"
+               th:text="|Registrar manualmente para ${aluno.nome()}|">Registrar manualmente para Ana Teste</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</th:block>
+</body>
+</html>
