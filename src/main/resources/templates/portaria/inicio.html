@@ -14,6 +14,8 @@
     <p><strong>Sucesso:</strong> sua nova senha foi salva.</p>
   </div>
   <p>Você entrou como <strong sec:authentication="name">ate.demo</strong>.</p>
+  <!-- RF12, passo 1 (T-32): a exceção para quando a leitura não é possível -->
+  <p><a class="botao botao--secundario" th:href="@{/portaria/manual}">Registro manual</a></p>
 
   <!--
     T-30 (RF09, RF10, RF14, RF22). Os números e o fuso vêm do servidor; o script fica em

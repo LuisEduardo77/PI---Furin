@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: pagina(|Registro manual para ${ficha.nome()}|, 'portaria', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Registro manual para Ana Teste | Furin Access</title>
+</head>
+<body>
+<th:block th:fragment="conteudo">
+  <h1 th:text="|Registro manual para ${ficha.nome()}|">Registro manual para Ana Teste</h1>
+
+  <!-- RF12, passo 4; A11 §5.9.15: os dados do aluno escolhido, sem digitar nada disso -->
+  <dl class="portaria__dados">
+    <dt>Nome</dt>
+    <dd th:text="${ficha.nome()}">Ana Teste</dd>
+    <dt>Matrícula</dt>
+    <dd th:text="${ficha.matricula()}">000123</dd>
+    <dt>Turma</dt>
+    <dd th:text="${ficha.turma() ?: '—'}">6A — Manhã</dd>
+    <th:block th:if="${bloqueio == null}">
+      <dt>Tipo (calculado pelo sistema)</dt>
+      <dd th:text="${ficha.tipo().name() == 'SAIDA'} ? 'Saída' : 'Entrada'">Entrada</dd>
+    </th:block>
+  </dl>
+
+  <!-- RF12, exceções: aluno inativo, sem turma ou com liberação em andamento (RN07, item 6) -->
+  <div id="bloqueio" class="aviso aviso--erro" role="alert" th:if="${bloqueio}">
+    <p><strong>Erro:</strong> <span th:text="${bloqueio}">Há uma liberação em andamento para Ana.</span></p>
+  </div>
+  <p th:if="${bloqueio}">
+    <a class="botao botao--secundario" th:href="@{/portaria/manual}">Voltar à busca</a>
+  </p>
+
+  <form th:if="${bloqueio == null}" th:action="@{/portaria/manual/{id}/revisar(id=${ficha.idAluno()})}"
+        th:object="${manual}" method="post" novalidate>
+    <!-- A11 §5.9.9: o resumo recebe o foco (resumo-de-erros.js) e leva a cada campo -->
+    <div id="resumo-erros" class="aviso aviso--erro" tabindex="-1" aria-labelledby="resumo-erros-titulo"
+         th:if="${#fields.hasAnyErrors()}">
+      <h2 id="resumo-erros-titulo">Corrija os erros abaixo. Nada foi gravado.</h2>
+      <ul>
+        <li th:each="erro : ${#fields.globalErrors()}" th:text="${erro}">A situação de Ana mudou. Revise o registro.</li>
+        <li th:if="${#fields.hasErrors('ocorridoEm')}"><a href="#ocorridoEm" th:errors="*{ocorridoEm}">O horário não pode ser posterior ao horário atual.</a></li>
+        <li th:if="${#fields.hasErrors('motivo')}"><a href="#motivo" th:errors="*{motivo}">Informe o motivo do registro manual.</a></li>
+      </ul>
+    </div>
+
+    <div class="campo">
+      <label for="ocorridoEm">Data e hora reais da movimentação (obrigatório)</label>
+      <p id="ocorridoEm-dica" class="campo__dica">Já vem com o momento atual. Altere se a movimentação foi em outro horário.</p>
+      <p id="ocorridoEm-erro" class="campo__erro" th:if="${#fields.hasErrors('ocorridoEm')}">
+        <span>Erro:</span> <span th:errors="*{ocorridoEm}">O horário não pode ser posterior ao horário atual.</span>
+      </p>
+      <input id="ocorridoEm" type="datetime-local" step="60" required th:field="*{ocorridoEm}"
+             th:attr="aria-invalid=${#fields.hasErrors('ocorridoEm')} ? 'true',
+                      aria-describedby=${#fields.hasErrors('ocorridoEm')} ? 'ocorridoEm-erro ocorridoEm-dica' : 'ocorridoEm-dica'">
+    </div>
+
+    <div class="campo">
+      <label for="motivo">Motivo (obrigatório)</label>
+      <p id="motivo-dica" class="campo__dica">Até 200 caracteres. Exemplos: "Aluno esqueceu a carteirinha"; "Saída não registrada no dia anterior".</p>
+      <p id="motivo-erro" class="campo__erro" th:if="${#fields.hasErrors('motivo')}">
+        <span>Erro:</span> <span th:errors="*{motivo}">Informe o motivo do registro manual.</span>
+      </p>
+      <textarea id="motivo" rows="3" maxlength="200" required th:field="*{motivo}"
+                th:attr="aria-invalid=${#fields.hasErrors('motivo')} ? 'true',
+                         aria-describedby=${#fields.hasErrors('motivo')} ? 'motivo-erro motivo-dica' : 'motivo-dica'"></textarea>
+    </div>
+
+    <div class="acoes">
+      <button type="submit" class="botao">Revisar</button>
+      <a class="botao botao--secundario" th:href="@{/portaria/manual}">Cancelar</a>
+    </div>
+  </form>
+
+  <script th:src="@{/js/resumo-de-erros.js}" defer></script>
+</th:block>
+</body>
+</html>

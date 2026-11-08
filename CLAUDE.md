@@ -45,7 +45,8 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
   tarefa `ExpiracaoAgendada`, desligada no perfil `test` por `furin.agendamentos.ativos`;
   cancelamento em `Liberacoes`), T-31 (textos das recusas em `portaria.js`, região
   `#alerta-funcionario` com `role="alert"`, motivo `LEITURA_NAO_RECONHECIDA` para o
-  formato) e T-28 (`POST /portaria/giros`,
+  formato), T-32 (registro manual em `portaria/RegistroManual` e `ManualController`; a
+  saída pendente da T-34 liga em `/portaria/manual/{idAluno}`) e T-28 (`POST /portaria/giros`,
   `@Profile("prototipo")`) e T-30 (tela `/portaria` com `static/js/portaria.js`; foto como
   "Foto indisponível" quando não carrega) estão concluídas, antecipadas. T-18 (área
   privada em `arquivo/AreaPrivada`, entrega em `GET /arquivos/{chave}`) está concluída,

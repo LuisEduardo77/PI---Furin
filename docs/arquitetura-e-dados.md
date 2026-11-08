@@ -271,7 +271,7 @@ inválido (Bean Validation). Qualquer valor pode ser trocado pelo ambiente, por 
 | `POST /portaria/giros` (só no perfil `prototipo`) | FUNCIONARIO | RF09, RF14 |
 | `POST /portaria/liberacoes/{id}/cancelar` | FUNCIONARIO | RN02 (DEC-28, A2) |
 | `GET /portaria/liberacoes/{id}` | FUNCIONARIO | RF09, fluxo A1: situação da liberação, para a tela mostrar a expiração [PROP] |
-| `GET/POST /portaria/manual` | FUNCIONARIO | RF11, RF12 |
+| `GET/POST /portaria/manual` | FUNCIONARIO | RF11, RF12. Na T-32: `GET /portaria/manual` (busca), `GET /portaria/manual/{idAluno}` (formulário), `POST /portaria/manual/{idAluno}/revisar`, `POST /portaria/manual/{idAluno}/corrigir` e `POST /portaria/manual/{idAluno}` (gravação) [PROP] |
 | `GET /alunos` (busca, com `termo` e `inativos`), `POST /alunos`, `GET /alunos/novo` [PROP], `GET/POST /alunos/{id}/editar` e `POST /alunos/{id}/editar/revisar` [PROP] (inclui o aviso por e-mail, DEC-38), `GET/POST /alunos/{id}/inativacao` [PROP] | FUNCIONARIO | RF04–RF06, RF08 |
 | `POST /alunos/{id}/carteirinhas`, `GET /carteirinhas/{id}/imprimir`, `GET /carteirinhas/{id}/qr-code` [PROP] e `GET /alunos/{id}/carteirinhas/segunda-via` (confirmação, até a página do aluno) [PROP] | FUNCIONARIO | RF07 |
 | `GET/POST /alunos/{id}/consentimentos/{idConsentimento}/revogacao` (o GET é a tela própria até a T-23 [PROP]) | FUNCIONARIO | RF05 (DEC-34) |
@@ -826,6 +826,18 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   perfil `prototipo` desligam a carga V2 com `furin.carga.ativa=false` (padrão: ligada).
   Ainda não há:
   mensagens (T-31) e notificações (Fase 6).
+- **Registro manual (T-32, 08/11/2026):** `ManualController` e `RegistroManual`, só com
+  formulários comuns (sem JavaScript). A busca reaproveita `BuscaDeAlunos` com
+  `Escopo.SO_ATIVOS`. O formulário mostra nome, matrícula, turma e o tipo calculado
+  (RN01; a saída pendente de dia anterior gera `SAIDA`), com o campo `datetime-local` já no
+  momento atual (fuso da escola) e o motivo. A revisão devolve os valores em campos ocultos,
+  com o tipo mostrado e uma `chaveRequisicao` nova: o servidor confere tudo de novo, com o
+  aluno bloqueado, compara o tipo mostrado com o recalculado ("A situação de Ana mudou") e
+  grava `MANUAL`/`CONFIRMADA` sem carteirinha, com `lancado_em` do servidor; o reenvio da
+  mesma chave devolve o registro original. Recusas: liberação pendente (RN07, item 6),
+  aluno inativo ou sem turma, horário futuro ou não posterior à última confirmada. O log
+  recebe `REGISTRO_MANUAL` só com IDs e o tipo (o motivo é texto livre). A gravação começa
+  pela expiração (T-29). A notificação é da T-38.
 - **Expiração e cancelamento (T-29, 07/11/2026):** `Expiracoes.expirarVencidas()` cancela
   com `SEM_GIRO` as liberações `AGUARDANDO_GIRO` lançadas há `furin.portaria.prazo-giro` ou
   mais, cada uma com o aluno bloqueado (RN08), e registra `LIBERACAO_EXPIRADA` [PROP] no
@@ -1096,3 +1108,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 07/11/2026 | T-27: janela de 2 s, RN04 e RN05 (§6, "Portaria, leitura e giro"); DEC-46: coluna gerada `pendente_ponto` com `uk_registro_pendente_ponto` (§5, migração V4), status 202 e motivo `OUTRA_LIBERACAO_PENDENTE` [PROP] |
 | 07/11/2026 | T-29: expiração e cancelamento (§6, "Expiração e cancelamento"), com `furin.portaria.verificacao-expiracao` (§4), `furin.agendamentos.ativos`, a rota `GET /portaria/liberacoes/{id}` (§4) e os eventos `LIBERACAO_EXPIRADA` e `LIBERACAO_CANCELADA` [PROP] |
 | 08/11/2026 | T-31: textos da leitura inválida (§6, "Portaria, leitura e giro"), com a região `#alerta-funcionario`, o motivo `LEITURA_NAO_RECONHECIDA` e os textos separados de revogada/expirada e inativo/sem turma [PROP] |
+| 08/11/2026 | T-32: registro manual (§4 e §6, "Registro manual"), com as rotas da revisão e da correção, a mensagem com a data quando o horário é de outro dia e as mensagens de formato da data [PROP] |

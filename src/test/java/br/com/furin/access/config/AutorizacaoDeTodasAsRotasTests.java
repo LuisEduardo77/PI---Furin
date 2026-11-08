@@ -155,6 +155,12 @@ class AutorizacaoDeTodasAsRotasTests {
 				// Expiração e cancelamento da liberação (T-29)
 				new Rota(HttpMethod.GET, "/portaria/liberacoes/1"),
 				new Rota(HttpMethod.POST, "/portaria/liberacoes/1/cancelar"),
+				// Registro manual (T-32)
+				new Rota(HttpMethod.GET, "/portaria/manual"),
+				new Rota(HttpMethod.GET, "/portaria/manual/1"),
+				new Rota(HttpMethod.POST, "/portaria/manual/1/revisar"),
+				new Rota(HttpMethod.POST, "/portaria/manual/1/corrigir"),
+				new Rota(HttpMethod.POST, "/portaria/manual/1"),
 				// Área privada (T-18): a chave vira o valor qualquer da descoberta
 				new Rota(HttpMethod.GET, "/arquivos/1"),
 				// Cadastro de alunos (T-19)
