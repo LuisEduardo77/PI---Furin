@@ -824,8 +824,7 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   ficam em `RegistrosDaPortaria`, com SQL explícito e os horários em UTC como
   `LocalDateTime`, sem a conversão de fuso do Hibernate. Os testes que precisam do
   perfil `prototipo` desligam a carga V2 com `furin.carga.ativa=false` (padrão: ligada).
-  Ainda não há:
-  mensagens (T-31) e notificações (Fase 6).
+  As mensagens vieram com a T-31 e a criação das notificações com a T-38.
 - **Registro manual (T-32, 08/11/2026):** `ManualController` e `RegistroManual`, só com
   formulários comuns (sem JavaScript). A busca reaproveita `BuscaDeAlunos` com
   `Escopo.SO_ATIVOS`. O formulário mostra nome, matrícula, turma e o tipo calculado
@@ -837,7 +836,17 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   mesma chave devolve o registro original. Recusas: liberação pendente (RN07, item 6),
   aluno inativo ou sem turma, horário futuro ou não posterior à última confirmada. O log
   recebe `REGISTRO_MANUAL` só com IDs e o tipo (o motivo é texto livre). A gravação começa
-  pela expiração (T-29). A notificação é da T-38.
+  pela expiração (T-29). A notificação é da T-38 (ver abaixo).
+- **Criação da notificação (T-38, 08/11/2026):** `notificacao/Notificacoes.criarParaConfirmada`
+  é chamada por `Giros.confirmar` e `RegistroManual.registrar` logo depois de gravar a
+  `CONFIRMADA`, com `Propagation.MANDATORY` (só roda dentro da transação da confirmação). Um
+  único `INSERT … SELECT` grava `PENDENTE`, `EMAIL`, 0 tentativas e `criado_em` do servidor
+  quando o registro está `CONFIRMADA` e o contato tem `principal = 1`, `ativo = 1`,
+  `recebe_notificacao = 1` e e-mail; nenhuma outra situação grava nada, e a `uk_notificacao`
+  impede a duplicada. Os reenvios (giro e manual) voltam antes, sem chamar o serviço. O corpo
+  não fica na tabela: `notificacao/MensagemDaNotificacao.montar(id)` monta, na hora do envio
+  (T-39), o assunto e o texto com o primeiro nome, o tipo, a data e a hora no fuso da escola e
+  a forma ("leitura da carteirinha" ou "registro manual") [PROP: textos].
 - **Expiração e cancelamento (T-29, 07/11/2026):** `Expiracoes.expirarVencidas()` cancela
   com `SEM_GIRO` as liberações `AGUARDANDO_GIRO` lançadas há `furin.portaria.prazo-giro` ou
   mais, cada uma com o aluno bloqueado (RN08), e registra `LIBERACAO_EXPIRADA` [PROP] no
