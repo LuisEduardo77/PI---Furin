@@ -82,7 +82,7 @@ furin:
     inatividade: 30m           # DEC-28 (E2)
     aviso-antes: 60s           # A11 §5.16.2 (mínimo 20 s)
   notificacao:
-    max-tentativas: 3          # DEC-28 (F1); só com envio real (DEC-32)
+    max-tentativas: 3          # DEC-28 (F1); tentativas de envio (T-39)
   termo:
     versao-atual: v1-2026      # RF05; DEC-26
   contato:

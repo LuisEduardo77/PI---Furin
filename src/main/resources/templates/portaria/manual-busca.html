@@ -17,6 +17,19 @@
     </div>
   </div>
 
+  <!--
+    T-39 (RF21, passo 6; DEC-28, F3; DEC-32): só no protótipo e só com notificação. Fora da
+    região role="status", para o anúncio não ler o e-mail inteiro. O e-mail não tem link (DEC-37)
+  -->
+  <section class="painel painel--simulacao" aria-labelledby="titulo-aviso-responsavel"
+           th:if="${avisoAoResponsavel}">
+    <h2 id="titulo-aviso-responsavel">Aviso ao responsável (protótipo)</h2>
+    <p><strong th:text="${avisoAoResponsavel.titulo()}">Simulação — nenhum e-mail foi enviado</strong></p>
+    <p>Para: <span th:text="${avisoAoResponsavel.destinatario()}">c***@example.com</span></p>
+    <p>Assunto: <span th:text="${avisoAoResponsavel.assunto()}">Furin Access — entrada registrada</span></p>
+    <p class="aviso-email__corpo" th:text="${avisoAoResponsavel.corpo()}">Ana entrou na escola em 20/10/2026 às 07:15 (registro manual).</p>
+  </section>
+
   <p>
     O registro manual é uma exceção, para quando a leitura da carteirinha não é possível ou
     para fechar uma saída que ficou sem registro. O tipo (entrada ou saída) é calculado pelo

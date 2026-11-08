@@ -86,6 +86,20 @@
     </div>
 
     <!--
+      T-39 (RF21, passo 6; DEC-28, F3; DEC-32): depois de um giro confirmado com notificação,
+      o texto do e-mail que teria saído. Só no protótipo. Não é região viva: o painel do
+      funcionário já anuncia o registro, e o e-mail inteiro não deve ser lido a cada giro
+    -->
+    <section id="aviso-responsavel" class="painel painel--simulacao" aria-labelledby="titulo-aviso-responsavel"
+             th:if="${simulacao}" hidden>
+      <h2 id="titulo-aviso-responsavel">Aviso ao responsável (protótipo)</h2>
+      <p><strong id="aviso-responsavel-titulo"></strong></p>
+      <p>Para: <span id="aviso-responsavel-destinatario"></span></p>
+      <p>Assunto: <span id="aviso-responsavel-assunto"></span></p>
+      <p id="aviso-responsavel-corpo" class="aviso-email__corpo"></p>
+    </section>
+
+    <!--
       T-34 (RF16, passo 4; CA-RF16-06): o contador muda com a resposta de cada giro
       confirmado, sem recarregar. Não é região viva: o painel do funcionário já anuncia o
       registro, e o contador não repete o anúncio (A11 §5.13.8, p.9)

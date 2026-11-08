@@ -29,6 +29,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import br.com.furin.access.aluno.BuscaDeAlunos;
 import br.com.furin.access.aluno.BuscaDeAlunos.Escopo;
 import br.com.furin.access.config.FurinProperties;
+import br.com.furin.access.notificacao.AvisoDaSimulacao;
 import br.com.furin.access.portaria.RegistroManual.Ficha;
 import br.com.furin.access.portaria.RegistroManual.Motivo;
 import br.com.furin.access.portaria.RegistroManual.RegistroManualRecusado;
@@ -73,12 +74,15 @@ public class ManualController {
 
 	private final ZoneId fusoDaEscola;
 
+	private final AvisoDaSimulacao avisoDaSimulacao;
+
 	public ManualController(BuscaDeAlunos busca, RegistroManual registroManual, Clock relogio,
-			FurinProperties propriedades) {
+			FurinProperties propriedades, AvisoDaSimulacao avisoDaSimulacao) {
 		this.busca = busca;
 		this.registroManual = registroManual;
 		this.relogio = relogio;
 		this.fusoDaEscola = propriedades.escola().fuso();
+		this.avisoDaSimulacao = avisoDaSimulacao;
 	}
 
 	/** Espaços nas pontas não contam. */
@@ -151,6 +155,9 @@ public class ManualController {
 			Registrado registrado = registroManual.registrar(idAluno, ocorrido.get(), form.getMotivo(),
 					tipoMostrado.get(), chave.get(), funcionario.getName());
 			redirecionamento.addFlashAttribute("registrado", mensagemDeSucesso(registrado));
+			// T-39 (DEC-28, F3): no protótipo, o texto do e-mail que teria saído, com "registro manual"
+			avisoDaSimulacao.doRegistro(registrado.idRegistro())
+					.ifPresent(aviso -> redirecionamento.addFlashAttribute("avisoAoResponsavel", aviso));
 			return "redirect:/portaria/manual";
 		} catch (RegistroManualRecusado recusa) {
 			if (recusa.getMotivo() == Motivo.ALUNO_NAO_ENCONTRADO) {

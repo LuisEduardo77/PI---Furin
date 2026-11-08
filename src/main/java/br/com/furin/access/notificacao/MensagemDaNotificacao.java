@@ -18,7 +18,8 @@ import br.com.furin.access.config.FurinProperties;
  * Vão só o primeiro nome, o tipo, a data e a hora no fuso da escola (RN10) e a forma
  * ("leitura da carteirinha" ou "registro manual", DEC-28, B3). Não vão foto, turma,
  * matrícula, nome completo nem link para o sistema (DEC-37). Os textos são [PROP]. Quem
- * usa é o envio (T-39).
+ * usa é o envio (T-39, {@link EnvioDeNotificacoes}) e o aviso de simulação da portaria
+ * ({@link AvisoDaSimulacao}).
  */
 @Component
 public class MensagemDaNotificacao {
@@ -26,6 +27,12 @@ public class MensagemDaNotificacao {
 	/** O e-mail pronto: destinatário, assunto e corpo. */
 	public record Mensagem(String destinatario, String assunto, String corpo) {
 	}
+
+	private static final String DADOS = "SELECT c.email, a.nome, r.tipo, r.forma, r.ocorrido_em FROM notificacao n "
+			+ "JOIN contato_responsavel c ON c.id_contato = n.id_contato "
+			+ "JOIN registro_acesso r ON r.id_registro = n.id_registro "
+			+ "JOIN vinculo_turma v ON v.id_vinculo = r.id_vinculo "
+			+ "JOIN aluno a ON a.id_aluno = v.id_aluno ";
 
 	private final JdbcTemplate jdbc;
 
@@ -41,14 +48,19 @@ public class MensagemDaNotificacao {
 
 	/** A mensagem de uma notificação; vazia se ela não existe. */
 	public Optional<Mensagem> montar(long idNotificacao) {
-		return jdbc.query("SELECT c.email, a.nome, r.tipo, r.forma, r.ocorrido_em FROM notificacao n "
-				+ "JOIN contato_responsavel c ON c.id_contato = n.id_contato "
-				+ "JOIN registro_acesso r ON r.id_registro = n.id_registro "
-				+ "JOIN vinculo_turma v ON v.id_vinculo = r.id_vinculo "
-				+ "JOIN aluno a ON a.id_aluno = v.id_aluno WHERE n.id_notificacao = ?",
+		return consultar(DADOS + "WHERE n.id_notificacao = ?", idNotificacao);
+	}
+
+	/** A mensagem da notificação de uma movimentação (T-39, aviso de simulação); vazia se não há. */
+	public Optional<Mensagem> doRegistro(long idRegistro) {
+		return consultar(DADOS + "WHERE n.id_registro = ? ORDER BY n.id_notificacao LIMIT 1", idRegistro);
+	}
+
+	private Optional<Mensagem> consultar(String sql, long id) {
+		return jdbc.query(sql,
 				(rs, linha) -> mensagem(rs.getString("email"), rs.getString("nome"), rs.getString("tipo"),
 						rs.getString("forma"), rs.getObject("ocorrido_em", LocalDateTime.class).toInstant(ZoneOffset.UTC)),
-				idNotificacao).stream().findFirst();
+				id).stream().findFirst();
 	}
 
 	private Mensagem mensagem(String email, String nome, String tipo, String forma, Instant ocorrido) {

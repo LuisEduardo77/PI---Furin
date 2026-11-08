@@ -23,6 +23,9 @@
  *   com o rótulo "Leitura recusada:", e o monitor do aluno mostra sempre a mesma mensagem.
  * - Contador de presentes (T-34; RF16, passo 4): a resposta do giro traz o total e o da
  *   turma, e o contador muda sem recarregar, sem anúncio próprio.
+ * - Aviso ao responsável (T-39; DEC-28, F3): a resposta do giro traz o e-mail que teria
+ *   saído, e a seção "Aviso ao responsável (protótipo)" mostra "Simulação — nenhum e-mail
+ *   foi enviado", o destinatário mascarado, o assunto e o texto. Também sem anúncio próprio.
  * - Os dois painéis são regiões role="status" separadas: anunciam sem mover o foco, e o
  *   foco volta sempre ao campo de leitura (A11 §5.1.13, §5.13.8).
  */
@@ -69,6 +72,7 @@
   var botaoCancelar = document.getElementById('botao-cancelar');
   var contadorDePresentes = document.getElementById('contador-presentes');
   var contadorDaTurma = document.getElementById('contador-turma');
+  var avisoAoResponsavel = document.getElementById('aviso-responsavel');
   var token = document.querySelector('meta[name="_csrf"]');
   var cabecalhoDoToken = document.querySelector('meta[name="_csrf_header"]');
 
@@ -385,6 +389,7 @@
         if (status === 200 && dados) {
           mostrarLiberacao(dados, 'nova');
           mostrarPresentes(dados.presentes);
+          mostrarAvisoAoResponsavel(dados.avisoAoResponsavel);
         } else if (status === 422 && dados && dados.motivo === 'LIBERACAO_ENCERRADA') {
           // RF09, exceções: giro depois do prazo ou de uma liberação cancelada
           encerrarLiberacao(GIRO_FORA_DO_PRAZO);
@@ -410,6 +415,26 @@
       contadorDaTurma.textContent = presentes.turma + ': ' + presentes.presentesNaTurma;
       contadorDaTurma.hidden = false;
     }
+  }
+
+  // --- Aviso ao responsável (T-39; RF21, passo 6; DEC-28, F3) ---
+
+  /**
+   * O e-mail que teria saído, com o destinatário mascarado. Sem notificação (aviso desligado),
+   * a seção some. Só texto (textContent), e o e-mail nunca tem link (DEC-37).
+   */
+  function mostrarAvisoAoResponsavel(aviso) {
+    if (!avisoAoResponsavel) {
+      return;
+    }
+    avisoAoResponsavel.hidden = !aviso;
+    if (!aviso) {
+      return;
+    }
+    document.getElementById('aviso-responsavel-titulo').textContent = aviso.titulo;
+    document.getElementById('aviso-responsavel-destinatario').textContent = aviso.destinatario;
+    document.getElementById('aviso-responsavel-assunto').textContent = aviso.assunto;
+    document.getElementById('aviso-responsavel-corpo').textContent = aviso.corpo;
   }
 
   // --- Painel do funcionário (RF10) ---

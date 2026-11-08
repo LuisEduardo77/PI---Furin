@@ -400,6 +400,12 @@ td {
   background-color: var(--cor-fundo-suave);
 }
 
+/* Aviso de simulação do e-mail ao responsável (T-39; DEC-28, F3): o corpo mantém as linhas */
+.aviso-email__corpo {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
 /* Contador resumido da portaria (T-34; RF16, passo 4) */
 .contador-presentes {
   margin: 0;

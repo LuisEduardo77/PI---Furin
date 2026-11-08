@@ -150,6 +150,11 @@ class PortariaTelaTests {
 
 	/** Também no começo: uma execução interrompida não deixa a cena pela metade. */
 	private void apagarACena() {
+		// T-39: o teste do aviso ao responsável grava um contato, e o giro, uma notificação
+		jdbc.update("DELETE n FROM notificacao n JOIN contato_responsavel c ON c.id_contato = n.id_contato "
+				+ "JOIN aluno a ON a.id_aluno = c.id_aluno WHERE a.matricula IN (?, ?)", MATRICULA, MATRICULA_BIA);
+		jdbc.update("DELETE c FROM contato_responsavel c JOIN aluno a ON a.id_aluno = c.id_aluno "
+				+ "WHERE a.matricula IN (?, ?)", MATRICULA, MATRICULA_BIA);
 		jdbc.update("DELETE r FROM registro_acesso r JOIN vinculo_turma v ON v.id_vinculo = r.id_vinculo "
 				+ "JOIN aluno a ON a.id_aluno = v.id_aluno WHERE a.matricula IN (?, ?)", MATRICULA, MATRICULA_BIA);
 		jdbc.update("DELETE c FROM carteirinha c JOIN aluno a ON a.id_aluno = c.id_aluno WHERE a.matricula IN (?, ?)",
@@ -222,6 +227,44 @@ class PortariaTelaTests {
 		// O foco volta ao campo de leitura (A11 §5.1.13), e o giro fica disponível
 		assertThat(portaria.getFocusedElement().getId()).isEqualTo("campo-leitura");
 		assertThat(((HtmlButton) portaria.getElementById("botao-giro")).isDisabled()).isFalse();
+	}
+
+	// --- Aviso ao responsável (T-39; RF21, passo 6; DEC-28, F3; CA-RF21-01 e 04) ---
+
+	@Test
+	void depoisDoGiroApareceOAvisoDeSimulacaoComOTextoDoEmail() throws Exception {
+		jdbc.update("INSERT INTO contato_responsavel (id_aluno, nome, telefone, email, ativo, principal, "
+				+ "recebe_notificacao) SELECT id_aluno, 'Carla Teste', '+55 11 900000030', 'carla.teste@example.com', "
+				+ "1, 1, 1 FROM aluno WHERE matricula = ?", MATRICULA);
+		HtmlPage portaria = abrir();
+		assertThat(portaria.getElementById("aviso-responsavel").hasAttribute("hidden")).as("antes do giro, escondido")
+				.isTrue();
+		simularLeituraDaAna(portaria);
+
+		confirmarOGiro(portaria);
+
+		DomElement aviso = portaria.getElementById("aviso-responsavel");
+		assertThat(aviso.hasAttribute("hidden")).isFalse();
+		// Fora das regiões vivas: o painel do funcionário já anunciou o registro
+		assertThat(aviso.getAttribute("role")).isEmpty();
+		assertThat(texto(portaria, "aviso-responsavel")).contains("Aviso ao responsável (protótipo)",
+				"Simulação — nenhum e-mail foi enviado", "Para: c***@example.com",
+				"Assunto: Furin Access — entrada registrada",
+				"Ana entrou na escola em 20/10/2026 às 07:02 (leitura da carteirinha).",
+				"Em caso de dúvida, procure a secretaria da escola.")
+				.doesNotContain("carla.teste@", "Ana Teste", TURMA, MATRICULA, "http");
+		// CA-RF21-04: nenhum link no e-mail
+		assertThat(portaria.querySelectorAll("#aviso-responsavel a")).isEmpty();
+	}
+
+	@Test
+	void semNotificacaoOAvisoDeSimulacaoNaoAparece() throws Exception {
+		HtmlPage portaria = abrir();
+		simularLeituraDaAna(portaria);
+
+		confirmarOGiro(portaria);
+
+		assertThat(portaria.getElementById("aviso-responsavel").hasAttribute("hidden")).isTrue();
 	}
 
 	// --- Foto (T-18; RF10; DEC-28, A9) ---
