@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<!--/*
+  Campos comuns do cadastro (RF04) e da edição (RF08), usados dentro de um formulário com
+  th:object. Cada campo tem label, "(obrigatório)" no rótulo, erro descritivo com
+  aria-invalid e aria-describedby, e a dica, quando houver (A11 §5.9.3, §5.9.7, §5.9.9).
+*/-->
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--/* Um campo de texto. Na matrícula repetida, o erro traz o link para o cadastro existente (RF06; DEC-45) */-->
+<div th:fragment="texto(campo, rotulo, tipo, maximo, dica)" class="campo">
+  <label th:for="${campo}" th:text="${rotulo}">Nome do aluno (obrigatório)</label>
+  <p th:if="${dica != null}" th:id="|${campo}-dica|" class="campo__dica" th:text="${dica}">Exemplo.</p>
+  <p th:id="|${campo}-erro|" class="campo__erro" th:if="${#fields.hasErrors(campo)}">
+    <span>Erro:</span> <span th:errors="*{__${campo}__}">Informe o nome do aluno.</span>
+    <a th:if="${campo == 'matricula' and matriculaEmUso != null}"
+       th:href="@{/alunos/{id}/editar(id=${matriculaEmUso})}">Abrir cadastro existente</a>
+  </p>
+  <input th:type="${tipo}" th:maxlength="${maximo}" required autocomplete="off" th:field="*{__${campo}__}"
+         th:attr="aria-invalid=${#fields.hasErrors(campo)} ? 'true',
+                  aria-describedby=${#fields.hasErrors(campo)}
+                      ? (${dica != null} ? |${campo}-erro ${campo}-dica| : |${campo}-erro|)
+                      : (${dica != null} ? |${campo}-dica| : null)">
+</div>
+
+<!--/* A turma, só entre as ativas (as turmas vêm da carga inicial, DEC-28, D3) */-->
+<div th:fragment="turma(dica)" class="campo">
+  <label for="idTurma">Turma (obrigatório)</label>
+  <p th:if="${dica != null}" id="idTurma-dica" class="campo__dica" th:text="${dica}">Dica.</p>
+  <p id="idTurma-erro" class="campo__erro" th:if="${#fields.hasErrors('idTurma')}">
+    <span>Erro:</span> <span th:errors="*{idTurma}">Selecione uma turma ativa.</span>
+  </p>
+  <select required th:field="*{idTurma}"
+          th:attr="aria-invalid=${#fields.hasErrors('idTurma')} ? 'true',
+                   aria-describedby=${#fields.hasErrors('idTurma')}
+                       ? (${dica != null} ? 'idTurma-erro idTurma-dica' : 'idTurma-erro')
+                       : (${dica != null} ? 'idTurma-dica' : null)">
+    <option value="">Escolha a turma</option>
+    <option th:each="turma : ${turmas}" th:value="${turma.id()}" th:text="${turma.nome()}">6A — Manhã</option>
+  </select>
+</div>
+
+<!--/* Os itens do resumo de erros para os campos comuns, na ordem do formulário */-->
+<th:block th:fragment="erros">
+  <li th:each="erro : ${#fields.globalErrors()}" th:text="${erro}">Não foi possível salvar.</li>
+  <li th:each="campo : ${ {'nome', 'matricula', 'idTurma', 'foto', 'contatoNome', 'contatoTelefone', 'contatoEmail'} }"
+      th:if="${#fields.hasErrors(campo)}">
+    <a th:href="|#${campo}|" th:errors="*{__${campo}__}">Informe o nome do aluno.</a>
+  </li>
+</th:block>
+
+<!--/* Nome, telefone e e-mail do contato principal */-->
+<th:block th:fragment="contato">
+  <div th:replace="~{alunos/campos :: texto('contatoNome', 'Nome do responsável (obrigatório)', 'text', 150, null)}"></div>
+  <div th:replace="~{alunos/campos :: texto('contatoTelefone', 'Telefone com DDD (obrigatório)', 'tel', 25, 'Exemplo: (11) 90000-0000.')}"></div>
+  <div th:replace="~{alunos/campos :: texto('contatoEmail', 'E-mail (obrigatório)', 'email', 254, 'Exemplo: nome@example.com.')}"></div>
+</th:block>
+
+</body>
+</html>

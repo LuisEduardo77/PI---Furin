@@ -89,7 +89,7 @@ public class ConferenciasDoAluno {
 	/** {@code @Email} aceita "carla@escola"; o aviso ao responsável precisa de um domínio completo. */
 	void dominioDoEmail(String email, BindingResult erros) {
 		if (!erros.hasFieldErrors(CAMPO_EMAIL) && !email.substring(email.lastIndexOf('@')).contains(".")) {
-			erros.rejectValue(CAMPO_EMAIL, "dominio", AlunoForm.EMAIL_INVALIDO);
+			erros.rejectValue(CAMPO_EMAIL, "dominio", DadosDoAlunoForm.EMAIL_INVALIDO);
 		}
 	}
 

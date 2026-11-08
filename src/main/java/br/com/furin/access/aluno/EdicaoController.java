@@ -5,6 +5,7 @@ import static br.com.furin.access.aluno.ConferenciasDoAluno.MATRICULA_REPETIDA;
 import static br.com.furin.access.aluno.ConferenciasDoAluno.enviado;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.time.Clock;
 import java.util.List;
 import java.util.Objects;
@@ -63,8 +64,46 @@ public class EdicaoController {
 	private static final String PENDENTE = "edicaoDoAluno";
 	private static final String PARA_A_EDICAO = "redirect:/alunos/%d/editar";
 
-	/** O que foi revisado e espera a confirmação. */
-	record EdicaoPendente(long idAluno, EdicaoForm valores, Alteracao alteracao, ByteArrayResource foto) {
+	/** O nome do formulário no modelo, no binder e nos erros. */
+	private static final String FORMULARIO = "edicao";
+	private static final String ALUNO = "aluno";
+
+	/**
+	 * O que foi revisado e espera a confirmação, guardado na sessão (por isso serializável).
+	 * A foto nova vai como bytes, copiados na entrada e na saída.
+	 */
+	static final class EdicaoPendente implements Serializable {
+
+		private static final long serialVersionUID = 1L;
+
+		private final long idAluno;
+		private final EdicaoForm valores;
+		private final Alteracao alteracao;
+		private final byte[] foto;
+
+		EdicaoPendente(long idAluno, EdicaoForm valores, Alteracao alteracao, byte[] foto) {
+			this.idAluno = idAluno;
+			this.valores = valores;
+			this.alteracao = alteracao;
+			this.foto = foto == null ? null : foto.clone();
+		}
+
+		long idAluno() {
+			return idAluno;
+		}
+
+		EdicaoForm valores() {
+			return valores;
+		}
+
+		Alteracao alteracao() {
+			return alteracao;
+		}
+
+		/** Nula quando a foto atual continua. */
+		ByteArrayResource foto() {
+			return foto == null ? null : new ByteArrayResource(foto.clone());
+		}
 	}
 
 	private final RegistrosDeAlunos registros;
@@ -87,7 +126,7 @@ public class EdicaoController {
 	}
 
 	/** Espaços nas pontas não contam, como no cadastro. */
-	@InitBinder("edicao")
+	@InitBinder(FORMULARIO)
 	void limparEspacos(WebDataBinder binder) {
 		binder.registerCustomEditor(String.class, new StringTrimmerEditor(false));
 	}
@@ -100,12 +139,12 @@ public class EdicaoController {
 		// CA-RF08-01: "Corrigir" volta ao formulário com os valores digitados
 		EdicaoForm form = corrigir != null && pendente != null ? pendente.valores() : comOsDadosAtuais(atual);
 		sessao.removeAttribute(PENDENTE);
-		model.addAttribute("edicao", form);
+		model.addAttribute(FORMULARIO, form);
 		return telaDeEdicao(atual, model);
 	}
 
 	@PostMapping("/alunos/{idAluno}/editar/revisar")
-	public String revisar(@PathVariable long idAluno, @Valid @ModelAttribute("edicao") EdicaoForm form,
+	public String revisar(@PathVariable long idAluno, @Valid @ModelAttribute(FORMULARIO) EdicaoForm form,
 			BindingResult erros, HttpSession sessao, Model model) throws IOException {
 		CadastroAtual atual = atual(idAluno);
 		List<TurmaAtiva> turmas = registros.turmasAtivas();
@@ -128,9 +167,9 @@ public class EdicaoController {
 			model.addAttribute("semAlteracoes", true);
 			return telaDeEdicao(atual, model);
 		}
-		ByteArrayResource foto = fotoNova ? new ByteArrayResource(form.getFoto().getBytes()) : null;
+		byte[] foto = fotoNova ? form.getFoto().getBytes() : null;
 		sessao.setAttribute(PENDENTE, new EdicaoPendente(idAluno, form.semFoto(), alteracao, foto));
-		model.addAttribute("aluno", atual);
+		model.addAttribute(ALUNO, atual);
 		model.addAttribute("diferencas", diferencas);
 		model.addAttribute("avisoMuda", atual.recebeAviso() != alteracao.recebeAviso());
 		model.addAttribute("alteracao", alteracao);
@@ -146,9 +185,9 @@ public class EdicaoController {
 			redirecionamento.addFlashAttribute("revisaoPerdida", true);
 			return PARA_A_EDICAO.formatted(idAluno);
 		}
-		model.addAttribute("edicao", pendente.valores());
-		BindingResult erros = new BeanPropertyBindingResult(pendente.valores(), "edicao");
-		model.addAttribute(BindingResult.MODEL_KEY_PREFIX + "edicao", erros);
+		model.addAttribute(FORMULARIO, pendente.valores());
+		BindingResult erros = new BeanPropertyBindingResult(pendente.valores(), FORMULARIO);
+		model.addAttribute(BindingResult.MODEL_KEY_PREFIX + FORMULARIO, erros);
 		try {
 			edicao.gravar(idAluno, pendente.alteracao(), pendente.foto());
 			sessao.removeAttribute(PENDENTE);
@@ -169,7 +208,7 @@ public class EdicaoController {
 
 	@GetMapping("/alunos/{idAluno}/inativacao")
 	public String confirmarInativacao(@PathVariable long idAluno, Model model) {
-		model.addAttribute("aluno", atual(idAluno));
+		model.addAttribute(ALUNO, atual(idAluno));
 		return TELA_INATIVACAO;
 	}
 
@@ -185,7 +224,7 @@ public class EdicaoController {
 			model.addAttribute("erro", "Registre a saída de " + primeiroNome(atual.nome())
 					+ " antes de inativar o cadastro.");
 		}
-		model.addAttribute("aluno", atual);
+		model.addAttribute(ALUNO, atual);
 		return TELA_INATIVACAO;
 	}
 
@@ -199,7 +238,7 @@ public class EdicaoController {
 	}
 
 	private String telaDeEdicao(CadastroAtual atual, Model model) {
-		model.addAttribute("aluno", atual);
+		model.addAttribute(ALUNO, atual);
 		model.addAttribute("turmas", registros.turmasAtivas());
 		model.addAttribute("regraDaFoto", conferencias.regraDaFoto());
 		model.addAttribute("carteirinhaValida", carteirinhas.valida(atual.idAluno()).orElse(null));

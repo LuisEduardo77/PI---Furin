@@ -36,56 +36,18 @@
     <div id="resumo-erros" class="aviso aviso--erro" tabindex="-1" aria-labelledby="resumo-erros-titulo"
          th:if="${#fields.hasAnyErrors()}">
       <h2 id="resumo-erros-titulo">Corrija os erros abaixo. Nada foi salvo.</h2>
-      <p th:if="${#fields.hasErrors('*')}">Uma foto nova precisa ser selecionada de novo, porque o navegador não a mantém.</p>
+      <p>Uma foto nova precisa ser selecionada de novo, porque o navegador não a mantém.</p>
       <ul>
-        <li th:each="erro : ${#fields.globalErrors()}" th:text="${erro}">Não foi possível salvar as alterações.</li>
-        <li th:if="${#fields.hasErrors('nome')}"><a href="#nome" th:errors="*{nome}">Informe o nome do aluno.</a></li>
-        <li th:if="${#fields.hasErrors('matricula')}"><a href="#matricula" th:errors="*{matricula}">Esta matrícula já está cadastrada.</a></li>
-        <li th:if="${#fields.hasErrors('idTurma')}"><a href="#idTurma" th:errors="*{idTurma}">Selecione uma turma ativa.</a></li>
-        <li th:if="${#fields.hasErrors('foto')}"><a href="#foto" th:errors="*{foto}">A foto precisa ser JPEG ou PNG.</a></li>
-        <li th:if="${#fields.hasErrors('contatoNome')}"><a href="#contatoNome" th:errors="*{contatoNome}">Informe o nome do responsável.</a></li>
-        <li th:if="${#fields.hasErrors('contatoTelefone')}"><a href="#contatoTelefone" th:errors="*{contatoTelefone}">Informe o telefone com DDD.</a></li>
-        <li th:if="${#fields.hasErrors('contatoEmail')}"><a href="#contatoEmail" th:errors="*{contatoEmail}">Informe um e-mail válido.</a></li>
+        <th:block th:replace="~{alunos/campos :: erros}"></th:block>
       </ul>
     </div>
 
     <fieldset class="grupo-de-campos">
       <legend><h2>Aluno</h2></legend>
 
-      <div class="campo">
-        <label for="nome">Nome do aluno (obrigatório)</label>
-        <p id="nome-erro" class="campo__erro" th:if="${#fields.hasErrors('nome')}">
-          <span>Erro:</span> <span th:errors="*{nome}">Informe o nome do aluno.</span>
-        </p>
-        <input id="nome" type="text" maxlength="150" required autocomplete="off" th:field="*{nome}"
-               th:attr="aria-invalid=${#fields.hasErrors('nome')} ? 'true',
-                        aria-describedby=${#fields.hasErrors('nome')} ? 'nome-erro'">
-      </div>
-
-      <div class="campo">
-        <label for="matricula">Matrícula (obrigatório)</label>
-        <p id="matricula-erro" class="campo__erro" th:if="${#fields.hasErrors('matricula')}">
-          <span>Erro:</span> <span th:errors="*{matricula}">Esta matrícula já está cadastrada.</span>
-          <a th:if="${matriculaEmUso != null}" th:href="@{/alunos/{id}/editar(id=${matriculaEmUso})}">Abrir cadastro existente</a>
-        </p>
-        <input id="matricula" type="text" maxlength="30" required autocomplete="off" th:field="*{matricula}"
-               th:attr="aria-invalid=${#fields.hasErrors('matricula')} ? 'true',
-                        aria-describedby=${#fields.hasErrors('matricula')} ? 'matricula-erro'">
-      </div>
-
-      <div class="campo">
-        <label for="idTurma">Turma (obrigatório)</label>
-        <p id="idTurma-dica" class="campo__dica">Trocar a turma não muda o histórico: as movimentações antigas continuam na turma anterior.</p>
-        <p id="idTurma-erro" class="campo__erro" th:if="${#fields.hasErrors('idTurma')}">
-          <span>Erro:</span> <span th:errors="*{idTurma}">Selecione uma turma ativa.</span>
-        </p>
-        <select id="idTurma" required th:field="*{idTurma}"
-                th:attr="aria-invalid=${#fields.hasErrors('idTurma')} ? 'true',
-                         aria-describedby=${#fields.hasErrors('idTurma')} ? 'idTurma-erro idTurma-dica' : 'idTurma-dica'">
-          <option value="">Escolha a turma</option>
-          <option th:each="turma : ${turmas}" th:value="${turma.id()}" th:text="${turma.nome()}">6A — Manhã</option>
-        </select>
-      </div>
+      <div th:replace="~{alunos/campos :: texto('nome', 'Nome do aluno (obrigatório)', 'text', 150, null)}"></div>
+      <div th:replace="~{alunos/campos :: texto('matricula', 'Matrícula (obrigatório)', 'text', 30, null)}"></div>
+      <div th:replace="~{alunos/campos :: turma('Trocar a turma não muda o histórico: as movimentações antigas continuam na turma anterior.')}"></div>
 
       <!-- CA-RF08-04: sem foto nova, a atual continua; não há como ficar sem foto -->
       <div class="campo">
@@ -118,37 +80,7 @@
         </p>
       </div>
 
-      <div class="campo">
-        <label for="contatoNome">Nome do responsável (obrigatório)</label>
-        <p id="contatoNome-erro" class="campo__erro" th:if="${#fields.hasErrors('contatoNome')}">
-          <span>Erro:</span> <span th:errors="*{contatoNome}">Informe o nome do responsável.</span>
-        </p>
-        <input id="contatoNome" type="text" maxlength="150" required autocomplete="off" th:field="*{contatoNome}"
-               th:attr="aria-invalid=${#fields.hasErrors('contatoNome')} ? 'true',
-                        aria-describedby=${#fields.hasErrors('contatoNome')} ? 'contatoNome-erro'">
-      </div>
-
-      <div class="campo">
-        <label for="contatoTelefone">Telefone com DDD (obrigatório)</label>
-        <p id="contatoTelefone-dica" class="campo__dica">Exemplo: (11) 90000-0000.</p>
-        <p id="contatoTelefone-erro" class="campo__erro" th:if="${#fields.hasErrors('contatoTelefone')}">
-          <span>Erro:</span> <span th:errors="*{contatoTelefone}">Informe o telefone com DDD.</span>
-        </p>
-        <input id="contatoTelefone" type="tel" maxlength="25" required autocomplete="off" th:field="*{contatoTelefone}"
-               th:attr="aria-invalid=${#fields.hasErrors('contatoTelefone')} ? 'true',
-                        aria-describedby=${#fields.hasErrors('contatoTelefone')} ? 'contatoTelefone-erro contatoTelefone-dica' : 'contatoTelefone-dica'">
-      </div>
-
-      <div class="campo">
-        <label for="contatoEmail">E-mail (obrigatório)</label>
-        <p id="contatoEmail-dica" class="campo__dica">Exemplo: nome@example.com.</p>
-        <p id="contatoEmail-erro" class="campo__erro" th:if="${#fields.hasErrors('contatoEmail')}">
-          <span>Erro:</span> <span th:errors="*{contatoEmail}">Informe um e-mail válido.</span>
-        </p>
-        <input id="contatoEmail" type="email" maxlength="254" required autocomplete="off" th:field="*{contatoEmail}"
-               th:attr="aria-invalid=${#fields.hasErrors('contatoEmail')} ? 'true',
-                        aria-describedby=${#fields.hasErrors('contatoEmail')} ? 'contatoEmail-erro contatoEmail-dica' : 'contatoEmail-dica'">
-      </div>
+      <th:block th:replace="~{alunos/campos :: contato}"></th:block>
 
       <!-- RF08, fluxo A5; DEC-38: o funcionário muda a pedido do responsável -->
       <div class="campo campo--caixa">

@@ -897,7 +897,9 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   `aviso=LIGADO` ou `DESLIGADO`. A pessoa do contato só muda com a caixa "Substituir o
   contato principal por outra pessoa" [PROP]. A inativação tem confirmação própria e é
   recusada com saída pendente ou liberação aguardando o giro. A página de edição reúne as
-  outras ações do aluno: imprimir, segunda via, revogação do termo e inativação.
+  outras ações do aluno: imprimir, segunda via, revogação do termo e inativação. Os campos
+  comuns do cadastro e da edição ficam em `DadosDoAlunoForm` (serializável, porque a revisão
+  vai para a sessão) e nos fragmentos `templates/alunos/campos.html`.
 
 **Log de auditoria (T-10, 01/11/2026):** pacote `br.com.furin.access.auditoria`.
 

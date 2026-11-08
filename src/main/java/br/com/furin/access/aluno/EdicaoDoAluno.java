@@ -4,6 +4,7 @@ import static br.com.furin.access.auditoria.DetalhesAuditoria.detalhes;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -42,10 +43,13 @@ import br.com.furin.access.auditoria.EventoAuditoria;
 @Service
 public class EdicaoDoAluno {
 
-	/** Os dados revisados, já conferidos, com o telefone normalizado. */
+	/** Os dados revisados, já conferidos, com o telefone normalizado. Vai para a sessão até a confirmação. */
 	public record Alteracao(String nome, String matricula, long idTurma, String turma, boolean substituirContato,
-			String contatoNome, String contatoTelefone, String contatoEmail, boolean recebeAviso) {
+			String contatoNome, String contatoTelefone, String contatoEmail, boolean recebeAviso) implements Serializable {
 	}
+
+	/** O nome do detalhe com o ID do aluno, nos três eventos. */
+	private static final String ALUNO = "aluno";
 
 	/** Uma linha do resumo "antes → depois" (A11 §5.9.12). */
 	public record Diferenca(String campo, String antes, String depois) {
@@ -156,7 +160,7 @@ public class EdicaoDoAluno {
 			throw new SaidaPendente();
 		}
 		registros.inativarAluno(idAluno);
-		auditoria.registrar(EventoAuditoria.ALUNO_EDITADO, detalhes().id("aluno", idAluno).campos(List.of("ativo")));
+		auditoria.registrar(EventoAuditoria.ALUNO_EDITADO, detalhes().id(ALUNO, idAluno).campos(List.of("ativo")));
 	}
 
 	/** @return a chave da foto antiga, se ela foi trocada */
@@ -189,11 +193,11 @@ public class EdicaoDoAluno {
 
 		if (!campos.isEmpty()) {
 			// CA-RF08-07: só os nomes dos campos, sem os valores
-			auditoria.registrar(EventoAuditoria.ALUNO_EDITADO, detalhes().id("aluno", idAluno).campos(campos));
+			auditoria.registrar(EventoAuditoria.ALUNO_EDITADO, detalhes().id(ALUNO, idAluno).campos(campos));
 		}
 		if (atual.recebeAviso() != nova.recebeAviso()) {
 			// DEC-38: o autor é o funcionário da sessão
-			auditoria.registrar(EventoAuditoria.PREFERENCIA_AVISO_ALTERADA, detalhes().id("aluno", idAluno)
+			auditoria.registrar(EventoAuditoria.PREFERENCIA_AVISO_ALTERADA, detalhes().id(ALUNO, idAluno)
 					.texto("aviso", nova.recebeAviso() ? "LIGADO" : "DESLIGADO"));
 		}
 		return chaveNova == null ? null : atual.fotoChave();
