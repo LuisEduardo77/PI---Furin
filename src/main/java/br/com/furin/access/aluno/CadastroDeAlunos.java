@@ -1,5 +1,7 @@
 package br.com.furin.access.aluno;
 
+import static br.com.furin.access.auditoria.DetalhesAuditoria.detalhes;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Clock;
@@ -15,15 +17,15 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import br.com.furin.access.arquivo.AreaPrivada;
 import br.com.furin.access.arquivo.AreaPrivada.TipoDeDocumento;
+import br.com.furin.access.auditoria.Auditoria;
+import br.com.furin.access.auditoria.EventoAuditoria;
+import br.com.furin.access.carteirinha.EmissaoDeCarteirinha;
 
 /**
- * Cadastro do aluno em uma única transação (T-19, T-20; RF04, passo 5; RF05; RN16).
- * <p>
- * O RF04 só salva o cadastro com <b>todos</b> os blocos completos (DEC-44). Aluno, vínculo,
- * contato principal e consentimento já são gravados; a carteirinha é da T-22. Por isso,
- * por enquanto, o bloco que falta faz o cadastro falhar como qualquer outro bloco:
- * {@link CadastroIncompleto} desfaz a transação, e a foto e o termo digitalizado saem da
- * área privada (CA-RF04-02). Nenhum aluno é salvo até a T-22.
+ * Cadastro do aluno em uma única transação (T-19, T-20, T-22; RF04, passo 5; RF05; RF07;
+ * RN16): aluno, vínculo de turma vigente, contato principal, consentimento e carteirinha.
+ * Se qualquer bloco falhar, a transação desfaz todos, e a foto e o termo digitalizado saem
+ * da área privada (CA-RF04-02).
  */
 @Service
 public class CadastroDeAlunos {
@@ -41,17 +43,7 @@ public class CadastroDeAlunos {
 	}
 
 	/** Os IDs gravados na transação. */
-	record BlocosGravados(long idAluno, long idContato, long idConsentimento) {
-	}
-
-	/** Falta a carteirinha (T-22). A transação foi desfeita. */
-	public static class CadastroIncompleto extends RuntimeException {
-
-		private static final long serialVersionUID = 1L;
-
-		CadastroIncompleto() {
-			super("Falta a carteirinha", null, false, false);
-		}
+	public record BlocosGravados(long idAluno, long idContato, long idConsentimento, long idCarteirinha) {
 	}
 
 	/** Outro cadastro ficou com a matrícula entre a conferência e a gravação (UNIQUE). */
@@ -68,36 +60,41 @@ public class CadastroDeAlunos {
 
 	private final AreaPrivada areaPrivada;
 
+	private final EmissaoDeCarteirinha emissao;
+
 	private final TransactionTemplate transacao;
+
+	private final Auditoria auditoria;
 
 	private final Clock relogio;
 
-	public CadastroDeAlunos(RegistrosDeAlunos registros, AreaPrivada areaPrivada, TransactionTemplate transacao,
-			Clock relogio) {
+	public CadastroDeAlunos(RegistrosDeAlunos registros, AreaPrivada areaPrivada, EmissaoDeCarteirinha emissao,
+			TransactionTemplate transacao, Auditoria auditoria, Clock relogio) {
 		this.registros = registros;
 		this.areaPrivada = areaPrivada;
+		this.emissao = emissao;
 		this.transacao = transacao;
+		this.auditoria = auditoria;
 		this.relogio = relogio;
 	}
 
 	/**
 	 * @param termoDigitalizado nulo quando a referência é o protocolo do termo físico
 	 * @param login             o funcionário da sessão, gravado como conferente (CA-RF05-04)
-	 * @throws CadastroIncompleto    sempre que tudo der certo, até a T-22: nada foi salvo
+	 * @return os IDs gravados; a carteirinha vai para a impressão (RF04, passo 6)
 	 * @throws MatriculaJaCadastrada se a matrícula já existir: nada foi salvo
 	 */
-	public void cadastrar(NovoAluno novo, TermoConferido termo, InputStream foto, InputStream termoDigitalizado,
-			String login) throws IOException {
+	public BlocosGravados cadastrar(NovoAluno novo, TermoConferido termo, InputStream foto,
+			InputStream termoDigitalizado, String login) throws IOException {
 		List<String> arquivos = new ArrayList<>();
 		try {
 			String fotoChave = guardar(TipoDeDocumento.FOTO, foto, arquivos);
 			String referencia = termoDigitalizado == null ? termo.protocolo()
 					: guardar(TipoDeDocumento.TERMO, termoDigitalizado, arquivos);
-			transacao.executeWithoutResult(status -> {
-				gravarBlocos(novo, termo, fotoChave, referencia, login);
-				// RF04, passo 5.6: a carteirinha é da T-22 (DEC-44)
-				throw new CadastroIncompleto();
-			});
+			BlocosGravados blocos = transacao.execute(status -> gravarBlocos(novo, termo, fotoChave, referencia, login));
+			// RF04, passo 7: o funcionário (pela sessão) e o ID do aluno, sem dados pessoais
+			auditoria.registrar(EventoAuditoria.ALUNO_CADASTRADO, detalhes().id("aluno", blocos.idAluno()));
+			return blocos;
 		} catch (IOException | RuntimeException falha) {
 			// A transação desfaz o banco; os arquivos não fazem parte dela (CA-RF04-02)
 			arquivos.forEach(areaPrivada::apagar);
@@ -105,7 +102,7 @@ public class CadastroDeAlunos {
 		}
 	}
 
-	/** Os blocos de RF04 e RF05, dentro da transação de quem chama. */
+	/** Os blocos de RF04, RF05 e RF07, dentro da transação de quem chama. */
 	BlocosGravados gravarBlocos(NovoAluno novo, TermoConferido termo, String fotoChave, String referencia,
 			String login) {
 		Instant agora = relogio.instant().truncatedTo(ChronoUnit.MICROS);
@@ -121,7 +118,9 @@ public class CadastroDeAlunos {
 		// CA-RF05-04: conferente e instante sempre do servidor
 		long idConsentimento = registros.inserirConsentimento(idContato, termo.versao(), termo.assinadoEm(),
 				referencia, registros.idDoUsuario(login), agora);
-		return new BlocosGravados(idAluno, idContato, idConsentimento);
+		// RF07, emissão no cadastro: código novo, com nova tentativa na colisão (RF06)
+		long idCarteirinha = emissao.emitir(idAluno, agora);
+		return new BlocosGravados(idAluno, idContato, idConsentimento, idCarteirinha);
 	}
 
 	private String guardar(TipoDeDocumento documento, InputStream conteudo, List<String> arquivos)

@@ -99,6 +99,7 @@ class FormularioDeAlunoTests {
 		if (navegador != null) {
 			navegador.close();
 		}
+		LimpezaDeAlunos.apagar(jdbc, "matricula = 'T19-TELA'");
 		jdbc.update("DELETE FROM turma WHERE nome = ?", TURMA);
 		jdbc.update("DELETE FROM usuario WHERE login = ?", FUNCIONARIO);
 	}
@@ -162,12 +163,14 @@ class FormularioDeAlunoTests {
 	}
 
 	@Test
-	void fotoEnviadaPassaPeloTokenCsrfENadaESalvo() throws Exception {
+	void cadastroCompletoSalvaELevaAImpressaoDaCarteirinha() throws Exception {
+		// RF04, passo 6; RN16: o envio de arquivo passa pelo token CSRF, e o aluno sai com a carteirinha
 		HtmlPage resposta = salvar(preenchido(foto(PNG)));
 
-		assertThat(textoDoMain(resposta)).contains("Dados conferidos");
-		assertThat(resposta.getElementById("resumo-erros")).isNull();
-		assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM aluno WHERE matricula = 'T19-TELA'", Integer.class)).isZero();
+		assertThat(resposta.getTitleText()).isEqualTo("Carteirinha de Ana Teste | Furin Access");
+		assertThat(textoDoMain(resposta)).contains("Aluno Ana Teste cadastrado. Imprima a carteirinha.");
+		assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM carteirinha c JOIN aluno a ON a.id_aluno = c.id_aluno "
+				+ "WHERE a.matricula = 'T19-TELA' AND c.revogada_em IS NULL", Integer.class)).isEqualTo(1);
 	}
 
 	@Test

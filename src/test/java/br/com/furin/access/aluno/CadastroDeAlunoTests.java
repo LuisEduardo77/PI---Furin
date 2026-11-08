@@ -5,6 +5,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.within;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -12,7 +15,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -31,17 +33,22 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
@@ -51,19 +58,21 @@ import org.springframework.util.FileSystemUtils;
 
 import br.com.furin.access.RelogioAjustavel;
 import br.com.furin.access.aluno.CadastroDeAlunos.BlocosGravados;
-import br.com.furin.access.aluno.CadastroDeAlunos.CadastroIncompleto;
 import br.com.furin.access.aluno.CadastroDeAlunos.NovoAluno;
 import br.com.furin.access.aluno.CadastroDeAlunos.TermoConferido;
+import br.com.furin.access.carteirinha.EmissaoDeCarteirinha;
 import br.com.furin.access.config.SegurancaConfig;
 
 /**
- * Cadastro de aluno (T-19; RF04; RN16). Até a T-20 e a T-22, o cadastro nunca é salvo: o
- * RF04 exige todos os blocos. Sem a transação do teste, para o que a transação do cadastro
- * desfaz ser conferido de verdade. Só dados fictícios (A10 §8.33).
+ * Cadastro de aluno (T-19, T-20, T-22; RF04; RF05; RN16): os cinco blocos numa transação.
+ * Sem a transação do teste, para o que a transação do cadastro grava ou desfaz ser conferido
+ * de verdade. A cena e a área privada são apagadas depois de cada teste. Só dados
+ * fictícios (A10 §8.33).
  */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@ExtendWith(OutputCaptureExtension.class)
 class CadastroDeAlunoTests {
 
 	private static final byte[] PNG = { (byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1A, '\n', 0, 0 };
@@ -103,12 +112,15 @@ class CadastroDeAlunoTests {
 	@Autowired
 	private TransactionTemplate transacao;
 
+	@MockitoSpyBean
+	private EmissaoDeCarteirinha emissao;
+
 	private long idTurma;
 
 	private long idTurmaInativa;
 
 	@BeforeEach
-	void preparar() {
+	void preparar() throws IOException {
 		apagarACena();
 		jdbc.update("INSERT INTO turma (nome, ano_letivo, turno, ativa) VALUES (?, 2026, 'MANHA', 1)", TURMA);
 		jdbc.update("INSERT INTO turma (nome, ano_letivo, turno, ativa) VALUES (?, 2026, 'TARDE', 0)", TURMA_INATIVA);
@@ -123,10 +135,11 @@ class CadastroDeAlunoTests {
 	}
 
 	@AfterEach
-	void apagarACena() {
-		jdbc.update("DELETE FROM aluno WHERE matricula LIKE 'T19-%'");
+	void apagarACena() throws IOException {
+		LimpezaDeAlunos.apagar(jdbc, "matricula LIKE 'T19-%'");
 		jdbc.update("DELETE FROM turma WHERE nome IN (?, ?)", TURMA, TURMA_INATIVA);
 		jdbc.update("DELETE FROM usuario WHERE login = ?", FUNCIONARIO);
+		FileSystemUtils.deleteRecursively(AREA_PRIVADA);
 	}
 
 	// --- Formulário ---
@@ -145,9 +158,7 @@ class CadastroDeAlunoTests {
 				.andExpect(content().string(containsString("E-mail (obrigatório)")))
 				.andExpect(content().string(containsString("JPEG ou PNG, até 2 MB")))
 				.andExpect(content().string(containsString(TURMA + " — Manhã")))
-				.andExpect(content().string(not(containsString(TURMA_INATIVA))))
-				// A tela avisa que nada é salvo por enquanto
-				.andExpect(content().string(containsString("nesta versão o aluno ainda não é salvo")));
+				.andExpect(content().string(not(containsString(TURMA_INATIVA))));
 	}
 
 	@Test
@@ -166,20 +177,48 @@ class CadastroDeAlunoTests {
 				.andExpect(content().string(containsString("href=\"/alunos/novo\"")));
 	}
 
-	// --- RN16: nada é salvo sem todos os blocos ---
+	// --- RN16: os cinco blocos numa transação ---
 
 	@Test
-	void dadosValidosNaoSaoSalvosEATelaDizIsso() throws Exception {
-		enviar(valido().file(foto(PNG)))
+	void cadastroValidoSalvaOsCincoBlocosEVaiParaAImpressao() throws Exception {
+		// CA-RF04-01, CA-RF04-05; RN16: aluno, vínculo vigente, contato principal, consentimento e carteirinha
+		String destino = enviar(valido().file(foto(PNG)))
+				.andExpect(status().is3xxRedirection())
+				.andReturn().getResponse().getRedirectedUrl();
+
+		long aluno = jdbc.queryForObject("SELECT id_aluno FROM aluno WHERE matricula = ? AND ativo = 1", Long.class,
+				MATRICULA_NOVA);
+		assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM vinculo_turma WHERE id_aluno = ? AND id_turma = ? "
+				+ "AND fim_em IS NULL", Integer.class, aluno, idTurma)).isEqualTo(1);
+		assertThat(jdbc.queryForMap("SELECT principal, recebe_notificacao, telefone FROM contato_responsavel "
+				+ "WHERE id_aluno = ?", aluno))
+				.containsEntry("principal", true).containsEntry("recebe_notificacao", true)
+				.containsEntry("telefone", "+55 11 900000001");
+		assertThat(consentimentos()).isEqualTo(1);
+		String codigo = jdbc.queryForObject("SELECT codigo FROM carteirinha WHERE id_aluno = ? AND revogada_em IS NULL",
+				String.class, aluno);
+		assertThat(codigo).matches("[0-9a-f]{32}");
+		long carteirinha = jdbc.queryForObject("SELECT id_carteirinha FROM carteirinha WHERE id_aluno = ?", Long.class,
+				aluno);
+		// RF04, passo 6: a tela vai para a impressão da carteirinha
+		assertThat(destino).isEqualTo("/carteirinhas/" + carteirinha + "/imprimir");
+		// Só a foto: a referência do termo é o protocolo
+		assertThat(arquivosNaAreaPrivada()).isEqualTo(1);
+	}
+
+	@Test
+	void falhaNaCarteirinhaDesfazOCadastroInteiro() throws Exception {
+		// CA-RF04-02; RN16: a carteirinha é o último bloco. Nada fica, nem a foto
+		doThrow(new DataAccessResourceFailureException("falha simulada")).when(emissao).emitir(anyLong(), any());
+
+		enviar(comValor("termoProtocolo", "").file(foto(PNG)).file(termo(PDF)))
 				.andExpect(status().isOk())
-				.andExpect(view().name("alunos/novo"))
-				.andExpect(content().string(containsString("Dados conferidos")))
-				.andExpect(content().string(containsString("o aluno não")))
-				// Os dados continuam na tela
+				.andExpect(content().string(containsString("Não foi possível salvar o cadastro. Tente novamente.")))
 				.andExpect(content().string(containsString("value=\"Ana Teste\"")));
 
 		assertThat(alunosNovos()).isZero();
 		assertThat(contatos()).isZero();
+		assertThat(consentimentos()).isZero();
 		assertThat(arquivosNaAreaPrivada()).isZero();
 	}
 
@@ -200,23 +239,22 @@ class CadastroDeAlunoTests {
 	}
 
 	@Test
-	void comTudoValidoATransacaoTerminaFaltandoACarteirinha() throws IOException {
-		// RN16; DEC-44: com o termo, só falta a carteirinha (T-22). Nada fica, nem o termo digitalizado
+	void termoDigitalizadoFicaNaAreaPrivadaComAChaveNaReferencia() throws IOException {
+		// RF05, passo 4
 		ByteArrayInputStream foto = new ByteArrayInputStream(PNG);
 		ByteArrayInputStream termo = new ByteArrayInputStream(PDF);
-		NovoAluno novo = novo();
+		BlocosGravados blocos = cadastro.cadastrar(novo(), TERMO_DIGITALIZADO, foto, termo, FUNCIONARIO);
 
-		assertThatThrownBy(() -> cadastro.cadastrar(novo, TERMO_DIGITALIZADO, foto, termo, FUNCIONARIO))
-				.isInstanceOf(CadastroIncompleto.class);
-
-		assertThat(alunosNovos()).isZero();
-		assertThat(consentimentos()).isZero();
-		assertThat(arquivosNaAreaPrivada()).isZero();
+		String referencia = jdbc.queryForObject("SELECT referencia_termo FROM consentimento WHERE id_consentimento = ?",
+				String.class, blocos.idConsentimento());
+		assertThat(referencia).matches("[0-9a-f-]{36}\\.pdf");
+		assertThat(AREA_PRIVADA.resolve(referencia)).hasBinaryContent(PDF);
+		assertThat(arquivosNaAreaPrivada()).isEqualTo(2);
 	}
 
 	@Test
 	void conferenteEInstanteDaConferenciaVemDoServidor() {
-		// CA-RF05-04: os blocos gravados dentro de uma transação, vistos antes de ela ser desfeita
+		// CA-RF05-04: os blocos gravados dentro de uma transação desfeita no fim
 		transacao.executeWithoutResult(status -> {
 			status.setRollbackOnly();
 			BlocosGravados blocos = cadastro.gravarBlocos(novo(), new TermoConferido("v1-2026",
@@ -240,7 +278,28 @@ class CadastroDeAlunoTests {
 	void valoresDeConferenteEnviadosPelaTelaSaoIgnorados() throws Exception {
 		// CA-RF05-04: o formulário não tem esses campos; enviados à força, não mudam nada
 		enviar(valido().file(foto(PNG)).param("idUsuarioConferente", "999999").param("conferidoEm", "2020-01-01"))
-				.andExpect(content().string(containsString("Dados conferidos")));
+				.andExpect(status().is3xxRedirection());
+
+		long idFuncionario = jdbc.queryForObject("SELECT id_usuario FROM usuario WHERE login = ?", Long.class,
+				FUNCIONARIO);
+		Map<String, Object> consentimento = jdbc.queryForMap("SELECT c.id_usuario_conferente, c.conferido_em "
+				+ "FROM consentimento c JOIN contato_responsavel r ON r.id_contato = c.id_contato "
+				+ "JOIN aluno a ON a.id_aluno = r.id_aluno WHERE a.matricula = ?", MATRICULA_NOVA);
+		assertThat(((Number) consentimento.get("id_usuario_conferente")).longValue()).isEqualTo(idFuncionario);
+		assertThat((LocalDateTime) consentimento.get("conferido_em"))
+				.isCloseTo(LocalDateTime.now(ZoneOffset.UTC), within(1, ChronoUnit.MINUTES));
+	}
+
+	@Test
+	void cadastroRegistraAlunoCadastradoSoComOId(CapturedOutput saida) throws Exception {
+		// RF04, passo 7: o funcionário e o ID do aluno, sem dados pessoais completos
+		enviar(valido().file(foto(PNG))).andExpect(status().is3xxRedirection());
+
+		long aluno = jdbc.queryForObject("SELECT id_aluno FROM aluno WHERE matricula = ?", Long.class, MATRICULA_NOVA);
+		assertThat(saida.getOut().lines().filter(linha -> linha.contains("evento=ALUNO_CADASTRADO")))
+				.singleElement().asString()
+				.contains("aluno=" + aluno, "usuario=c***")
+				.doesNotContain("carla.teste@example.com", MATRICULA_NOVA, "Ana Teste");
 	}
 
 	// --- Erros (CA-RF04-03, 04 e 09) ---
@@ -329,8 +388,15 @@ class CadastroDeAlunoTests {
 
 	@Test
 	void textoComHtmlAparececomoTexto() throws Exception {
-		// CA-RF04-11; A10 §8.28
-		enviar(comValor("nome", "<b>Ana</b>").file(foto(PNG)))
+		// CA-RF04-11; A10 §8.28: no formulário com erro (sem foto) e na impressão, depois de salvo
+		enviar(comValor("nome", "<b>Ana</b>"))
+				.andExpect(content().string(containsString("&lt;b&gt;Ana&lt;/b&gt;")))
+				.andExpect(content().string(not(containsString("<b>Ana</b>"))));
+
+		String impressao = enviar(comValor("nome", "<b>Ana</b>").file(foto(PNG)))
+				.andExpect(status().is3xxRedirection())
+				.andReturn().getResponse().getRedirectedUrl();
+		mvc.perform(get(impressao).with(funcionario()))
 				.andExpect(content().string(containsString("&lt;b&gt;Ana&lt;/b&gt;")))
 				.andExpect(content().string(not(containsString("<b>Ana</b>"))));
 	}
@@ -353,7 +419,7 @@ class CadastroDeAlunoTests {
 		enviar(comValor("termoConferido", "false").file(foto(PNG)))
 				.andExpect(content().string(containsString("Confirme que o termo de consentimento assinado foi conferido.")))
 				.andExpect(content().string(containsString("aria-describedby=\"termoConferido-erro\"")))
-				.andExpect(content().string(not(containsString("Dados conferidos"))));
+				.andExpect(status().isOk());
 		assertThat(alunosNovos()).isZero();
 	}
 
@@ -377,7 +443,7 @@ class CadastroDeAlunoTests {
 		// Hoje vale
 		String hoje = LocalDate.now(RelogioAjustavel.FUSO_DA_ESCOLA).toString();
 		enviar(comValor("termoAssinadoEm", hoje).file(foto(PNG)))
-				.andExpect(content().string(containsString("Dados conferidos")));
+				.andExpect(status().is3xxRedirection());
 	}
 
 	@Test
@@ -386,7 +452,7 @@ class CadastroDeAlunoTests {
 		long contatoDeOutroAluno = jdbc.queryForObject("SELECT MAX(id_aluno) FROM aluno", Long.class);
 		enviar(comValor("termoSignatario", String.valueOf(contatoDeOutroAluno)).file(foto(PNG)))
 				.andExpect(content().string(containsString("Não foi possível conferir o signatário do termo.")))
-				.andExpect(content().string(not(containsString("Dados conferidos"))));
+				.andExpect(status().isOk());
 		assertThat(alunosNovos()).isZero();
 	}
 
@@ -394,8 +460,9 @@ class CadastroDeAlunoTests {
 	void termoDigitalizadoPassaPelaAreaPrivadaENaoFicaOrfao() throws Exception {
 		// RF05, passo 4; CA-RF05-06 (a entrega autorizada está em ArquivoControllerTests)
 		enviar(comValor("termoProtocolo", "").file(foto(PNG)).file(termo(PDF)))
-				.andExpect(content().string(containsString("Dados conferidos")));
-		assertThat(arquivosNaAreaPrivada()).isZero();
+				.andExpect(status().is3xxRedirection());
+		// A foto e o termo ficam, cada um com o seu nome UUID
+		assertThat(arquivosNaAreaPrivada()).isEqualTo(2);
 	}
 
 	@Test

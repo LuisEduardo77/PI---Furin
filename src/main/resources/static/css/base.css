@@ -393,3 +393,53 @@ td {
 .painel--simulacao {
   background-color: var(--cor-fundo-suave);
 }
+
+/* Carteirinha (T-22; RF07; DEC-28, D8 e D9): cartão de 85,6 × 54 mm, QR Code com mais de 2,5 cm */
+.carteirinha {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2mm;
+  box-sizing: border-box;
+  width: 85.6mm;
+  height: 54mm;
+  padding: 3mm 4mm;
+  color: #000;
+  background-color: #fff;
+  border: 1px solid #000;
+  border-radius: 3mm;
+}
+
+.carteirinha__dados p {
+  margin: 0 0 1.5mm;
+}
+
+.carteirinha__nome {
+  font-size: 12pt;
+  font-weight: 700;
+}
+
+.carteirinha__turma,
+.carteirinha__sistema {
+  font-size: 10pt;
+}
+
+.carteirinha__qr {
+  flex: none;
+  width: 30mm;
+  height: 30mm;
+}
+
+/* Na impressão, só o cartão: sem menu, sem avisos e sem botões */
+@media print {
+  .pular-para-conteudo,
+  .cabecalho,
+  .sem-impressao,
+  .aviso-sessao {
+    display: none !important;
+  }
+
+  @page {
+    margin: 10mm;
+  }
+}

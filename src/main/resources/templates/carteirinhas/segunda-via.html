@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: pagina('Emitir segunda via', 'alunos', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Emitir segunda via | Furin Access</title>
+</head>
+<body>
+<th:block th:fragment="conteudo">
+  <h1>Emitir segunda via</h1>
+
+  <div id="resumo-erros" class="aviso aviso--erro" tabindex="-1" th:if="${erro}">
+    <p><strong>Erro:</strong> <span th:text="${erro}">Não é possível emitir carteirinha para aluno inativo.</span></p>
+  </div>
+
+  <!-- RF07, segunda via, passo 2; A11 §5.9.12: confirmação antes de revogar -->
+  <p>Aluno: <strong th:text="${nomeDoAluno}">Ana Teste</strong></p>
+  <p><strong>A carteirinha atual deixará de funcionar. Confirmar?</strong></p>
+  <p>Uma carteirinha nova, com outro código, será emitida para impressão.</p>
+
+  <form th:action="@{/alunos/{id}/carteirinhas(id=${idAluno})}" method="post">
+    <div class="acoes">
+      <button type="submit" class="botao">Confirmar segunda via</button>
+      <a class="botao botao--secundario" th:if="${carteirinhaAtual != null}"
+         th:href="@{/carteirinhas/{id}/imprimir(id=${carteirinhaAtual})}">Cancelar</a>
+      <a class="botao botao--secundario" th:if="${carteirinhaAtual == null}" th:href="@{/alunos}">Cancelar</a>
+    </div>
+  </form>
+
+  <script th:src="@{/js/resumo-de-erros.js}" defer></script>
+</th:block>
+</body>
+</html>

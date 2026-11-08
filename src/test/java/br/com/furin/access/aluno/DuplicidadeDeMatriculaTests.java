@@ -124,12 +124,7 @@ class DuplicidadeDeMatriculaTests {
 	@AfterEach
 	void apagarACena() {
 		for (String matricula : MATRICULAS) {
-			String doAluno = "(SELECT id_aluno FROM aluno WHERE matricula = '" + matricula + "')";
-			jdbc.update("DELETE c FROM consentimento c JOIN contato_responsavel r ON r.id_contato = c.id_contato "
-					+ "WHERE r.id_aluno = " + doAluno);
-			jdbc.update("DELETE FROM contato_responsavel WHERE id_aluno = " + doAluno);
-			jdbc.update("DELETE FROM vinculo_turma WHERE id_aluno = " + doAluno);
-			jdbc.update("DELETE FROM aluno WHERE matricula = ?", matricula);
+			LimpezaDeAlunos.apagar(jdbc, "matricula = ?", matricula);
 		}
 		jdbc.update("DELETE FROM turma WHERE nome = ?", TURMA);
 		jdbc.update("DELETE FROM usuario WHERE login = ?", FUNCIONARIO);
@@ -140,8 +135,8 @@ class DuplicidadeDeMatriculaTests {
 		// CA-RF06-01
 		enviar(MATRICULA_EM_USO)
 				.andExpect(status().isOk())
-				.andExpect(content().string(containsString(MENSAGEM)))
-				.andExpect(content().string(not(containsString("Dados conferidos"))));
+				.andExpect(content().string(containsString(MENSAGEM)));
+		assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM aluno WHERE nome = 'Davi Teste'", Integer.class)).isZero();
 	}
 
 	@Test
@@ -154,10 +149,10 @@ class DuplicidadeDeMatriculaTests {
 	void espacosNasPontasSaoIgnoradosMasOsZerosAEsquerdaContam() throws Exception {
 		// CA-RF06-03
 		enviar("  " + MATRICULA_EM_USO + "  ").andExpect(content().string(containsString(MENSAGEM)));
-		// "21123" é diferente de "0021123": passa pela conferência e chega ao fim da transação
-		enviar("21123")
-				.andExpect(content().string(not(containsString(MENSAGEM))))
-				.andExpect(content().string(containsString("Dados conferidos")));
+		// "21123" é diferente de "0021123": o cadastro é salvo
+		enviar("21123").andExpect(status().is3xxRedirection());
+		assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM aluno WHERE matricula = '21123'", Integer.class))
+				.isEqualTo(1);
 	}
 
 	@Test

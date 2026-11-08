@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: pagina(|Carteirinha de ${carteirinha.nomeDoAluno()}|, 'alunos', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Carteirinha de Ana Teste | Furin Access</title>
+</head>
+<body>
+<th:block th:fragment="conteudo">
+  <!--
+    RF07, impressão (T-22; DEC-28, D8 e D9): cartão de 85,6 × 54 mm, com nome, turma, QR Code e
+    o nome do sistema. Sem foto e sem o código em texto: o código só existe dentro do QR Code.
+    Na impressão (@media print), só o cartão aparece. Textos [PROP]
+  -->
+  <h1 class="sem-impressao" th:text="|Carteirinha de ${carteirinha.nomeDoAluno()}|">Carteirinha de Ana Teste</h1>
+
+  <div role="status" class="sem-impressao">
+    <div class="aviso aviso--sucesso" th:if="${alunoCadastrado}">
+      <p><strong>Sucesso:</strong> <span th:text="|Aluno ${carteirinha.nomeDoAluno()} cadastrado. Imprima a carteirinha.|">Aluno Ana Teste cadastrado. Imprima a carteirinha.</span></p>
+    </div>
+    <div class="aviso aviso--sucesso" th:if="${segundaViaEmitida}">
+      <p><strong>Sucesso:</strong> segunda via emitida. A carteirinha anterior deixou de funcionar.</p>
+    </div>
+  </div>
+
+  <th:block th:if="${carteirinha.revogada()}">
+    <p class="aviso aviso--erro">
+      <strong>Esta carteirinha foi revogada</strong> e não funciona mais na portaria.
+    </p>
+  </th:block>
+
+  <th:block th:unless="${carteirinha.revogada()}">
+    <p class="sem-impressao">
+      Use a impressão do navegador (Ctrl+P). Só o cartão é impresso, em 85,6 × 54 mm.
+    </p>
+
+    <div class="carteirinha">
+      <div class="carteirinha__dados">
+        <p class="carteirinha__nome" th:text="${carteirinha.nomeDoAluno()}">Ana Teste</p>
+        <p class="carteirinha__turma" th:text="${carteirinha.turma()}">6A — Manhã</p>
+        <p class="carteirinha__sistema">Furin Access</p>
+      </div>
+      <!-- CA-RF07-07: o texto alternativo diz de quem é, sem o código -->
+      <img class="carteirinha__qr" th:src="@{/carteirinhas/{id}/qr-code(id=${carteirinha.id()})}"
+           th:alt="|QR Code da carteirinha de ${carteirinha.nomeDoAluno()}|"
+           alt="QR Code da carteirinha de Ana Teste" width="300" height="300">
+    </div>
+  </th:block>
+
+  <p class="sem-impressao">
+    <a class="botao botao--secundario"
+       th:href="@{/alunos/{id}/carteirinhas/segunda-via(id=${carteirinha.idAluno()})}">Emitir segunda via</a>
+  </p>
+</th:block>
+</body>
+</html>

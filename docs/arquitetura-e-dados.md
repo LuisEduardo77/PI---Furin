@@ -271,7 +271,7 @@ inválido (Bean Validation). Qualquer valor pode ser trocado pelo ambiente, por 
 | `POST /portaria/liberacoes/{id}/cancelar` | FUNCIONARIO | RN02 (DEC-28, A2) |
 | `GET/POST /portaria/manual` | FUNCIONARIO | RF11, RF12 |
 | `GET/POST /alunos`, `GET /alunos/novo` [PROP], `/alunos/{id}/editar` (inclui o aviso por e-mail, DEC-38) | FUNCIONARIO | RF04–RF06, RF08 |
-| `POST /alunos/{id}/carteirinhas`, `GET /carteirinhas/{id}/imprimir` | FUNCIONARIO | RF07 |
+| `POST /alunos/{id}/carteirinhas`, `GET /carteirinhas/{id}/imprimir`, `GET /carteirinhas/{id}/qr-code` [PROP] e `GET /alunos/{id}/carteirinhas/segunda-via` (confirmação, até a página do aluno) [PROP] | FUNCIONARIO | RF07 |
 | `GET/POST /alunos/{id}/consentimentos/{idConsentimento}/revogacao` (o GET é a tela própria até a T-23 [PROP]) | FUNCIONARIO | RF05 (DEC-34) |
 | `GET /arquivos/{chave}` | FUNCIONARIO | DEC-08 |
 | `GET /presentes` | FUNCIONARIO | RF16 |
@@ -871,6 +871,18 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   `furin.carteirinha.tentativas-colisao` vezes, contando também a colisão barrada pela
   UNIQUE. Sem sucesso, registra `CARTEIRINHA_NAO_EMITIDA` [PROP: nome], só com o ID do
   aluno. A T-22 é quem chama a emissão no cadastro.
+- **Carteirinha (T-22, 07/11/2026; RF07; RN15; DEC-28, D8 e D9):** `CadastroDeAlunos`
+  emite a carteirinha na mesma transação dos outros blocos, e o cadastro passou a ser
+  salvo (DEC-44 cumprida); depois de salvo, a tela vai para a impressão e o log recebe
+  `ALUNO_CADASTRADO`. `QrCodeDaCarteirinha` gera o PNG com ZXing (`com.google.zxing:core`;
+  o `javase` fica só nos testes, para decodificar), nível M e zona clara de 4 módulos; o
+  conteúdo é só o código. A imagem sai de `GET /carteirinhas/{id}/qr-code`, e não embutida
+  na página, porque a CSP não aceita imagem `data:`; carteirinha revogada não tem QR. A
+  página de impressão usa o layout-base com `@media print`, que esconde tudo menos o cartão
+  (85,6 × 54 mm, QR de 30 mm). `Carteirinhas.emitirSegundaVia` bloqueia o aluno (RN08),
+  recusa aluno inativo, revoga a válida e emite outra, com `CARTEIRINHA_SEGUNDA_VIA` só com
+  os IDs. O painel "Simular leitura" já lia as carteirinhas válidas do banco, então passa a
+  mostrar o código novo sem mudança.
 
 **Log de auditoria (T-10, 01/11/2026):** pacote `br.com.furin.access.auditoria`.
 
@@ -1013,3 +1025,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 05/11/2026 | T-19: formulário de aluno sem salvar (§6, "Cadastro de aluno"; DEC-44), com `GET /alunos/novo` e `furin.contato.ddi` [PROP] |
 | 07/11/2026 | T-20: termo no cadastro e revogação (§6, "Termo e revogação"), com a tela própria da revogação e as regras [PROP] de signatário, referência e `revogado_em` |
 | 07/11/2026 | T-21: duplicidade de matrícula e de código (§6, "Duplicidade"; DEC-45), com o evento `CARTEIRINHA_NAO_EMITIDA` [PROP] |
+| 07/11/2026 | T-22: carteirinha no cadastro, QR Code, impressão e segunda via (§6, "Carteirinha"), com as rotas [PROP] do QR Code e da confirmação |
