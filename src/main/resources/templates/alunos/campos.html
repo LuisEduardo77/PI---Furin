@@ -5,18 +5,23 @@
   aria-invalid e aria-describedby, e a dica, quando houver (A11 §5.9.3, §5.9.7, §5.9.9).
 */-->
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: os fragmentos entram em páginas que já têm título -->
+  <title>Campos do aluno | Furin Access</title>
+</head>
 <body>
 
 <!--/* Um campo de texto. Na matrícula repetida, o erro traz o link para o cadastro existente (RF06; DEC-45) */-->
 <div th:fragment="texto(campo, rotulo, tipo, maximo, dica)" class="campo">
-  <label th:for="${campo}" th:text="${rotulo}">Nome do aluno (obrigatório)</label>
+  <label for="nome" th:for="${campo}" th:text="${rotulo}">Nome do aluno (obrigatório)</label>
   <p th:if="${dica != null}" th:id="|${campo}-dica|" class="campo__dica" th:text="${dica}">Exemplo.</p>
   <p th:id="|${campo}-erro|" class="campo__erro" th:if="${#fields.hasErrors(campo)}">
     <span>Erro:</span> <span th:errors="*{__${campo}__}">Informe o nome do aluno.</span>
     <a th:if="${campo == 'matricula' and matriculaEmUso != null}"
        th:href="@{/alunos/{id}/editar(id=${matriculaEmUso})}">Abrir cadastro existente</a>
   </p>
-  <input th:type="${tipo}" th:maxlength="${maximo}" required autocomplete="off" th:field="*{__${campo}__}"
+  <input id="nome" th:id="${campo}" th:type="${tipo}" th:maxlength="${maximo}" required autocomplete="off"
+         th:field="*{__${campo}__}"
          th:attr="aria-invalid=${#fields.hasErrors(campo)} ? 'true',
                   aria-describedby=${#fields.hasErrors(campo)}
                       ? (${dica != null} ? |${campo}-erro ${campo}-dica| : |${campo}-erro|)
@@ -30,7 +35,7 @@
   <p id="idTurma-erro" class="campo__erro" th:if="${#fields.hasErrors('idTurma')}">
     <span>Erro:</span> <span th:errors="*{idTurma}">Selecione uma turma ativa.</span>
   </p>
-  <select required th:field="*{idTurma}"
+  <select id="idTurma" required th:field="*{idTurma}"
           th:attr="aria-invalid=${#fields.hasErrors('idTurma')} ? 'true',
                    aria-describedby=${#fields.hasErrors('idTurma')}
                        ? (${dica != null} ? 'idTurma-erro idTurma-dica' : 'idTurma-erro')
