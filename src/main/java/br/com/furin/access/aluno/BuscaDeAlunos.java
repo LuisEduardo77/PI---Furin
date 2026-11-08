@@ -129,7 +129,7 @@ public class BuscaDeAlunos {
 	 * @throws IllegalArgumentException se {@link #problemaNoTermo(String)} recusar o termo
 	 */
 	public Resultado buscar(String termo, Escopo escopo) {
-		if (problemaNoTermo(termo).isPresent()) {
+		if (termo == null || problemaNoTermo(termo).isPresent()) {
 			throw new IllegalArgumentException("Termo de busca inválido");
 		}
 		String limpo = termo.strip();

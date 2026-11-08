@@ -150,6 +150,7 @@ class BuscaDeAlunosTests {
 		// Um dígito é o começo de uma matrícula
 		assertThat(busca.problemaNoTermo("0")).isEmpty();
 		assertThatThrownBy(() -> busca.buscar("a", Escopo.SO_ATIVOS)).isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> busca.buscar(null, Escopo.SO_ATIVOS)).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	// --- Tela Alunos (CA-RF11-04 a 08) ---
