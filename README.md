@@ -64,7 +64,8 @@ Uma tela que mostra um comportamento não prova o controle técnico por trás de
 `Implementação: Planejada`**, menos RF17, RF24 e RF25, que estão **fora do escopo**
 (não implementar). RF02 (T-13 e T-14) e RF03 (T-12 e T-17) estão `Implementada`;
 falta a conferência manual com teclado e leitor de tela. RF15 (T-27) está `Implementada`;
-falta a demonstração. RF01 e RNF03 estão em andamento
+falta a demonstração. RF23 (T-31) está `Implementada`; falta a conferência com leitor de
+tela e sem cores. RF01 e RNF03 estão em andamento
 (login da T-12, senha da T-15 e sessão da T-16; ver o campo **Implementação** de cada um).
 
 ## Organização dos documentos

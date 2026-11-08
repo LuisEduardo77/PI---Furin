@@ -26,6 +26,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -306,21 +308,95 @@ class PortariaTelaTests {
 		assertThat(portaria.getFocusedElement()).isEqualTo(campo);
 	}
 
-	@Test
-	void leituraRecusadaMostraOMotivoSoAoFuncionario() throws Exception {
+	// --- Leitura inválida (T-31; RF23; CA-RF23-01, 02, 05, 06 e 08) ---
+
+	/** Um cenário por motivo da tabela do RF23, passo 1. */
+	enum LeituraInvalida {
+		FORA_DO_FORMATO_CURTO("abc", "Leitura não reconhecida. Tente novamente."),
+		FORA_DO_FORMATO_LONGO("a1b2c3d4e5f60718293a4b5c6d7e8f9200112233", "Leitura não reconhecida. Tente novamente."),
+		CODIGO_DESCONHECIDO("ffffffffffffffffffffffffffffff00", "Código não reconhecido."),
+		REVOGADA(CODIGO_REVOGADO, "Carteirinha revogada. Emitir segunda via."),
+		EXPIRADA(CODIGO_ANA, "Carteirinha expirada. Emitir segunda via."),
+		INATIVO(CODIGO_ANA, "Aluno inativo."),
+		SEM_TURMA(CODIGO_ANA, "Aluno sem turma vigente."),
+		SAIDA_PENDENTE(CODIGO_ANA, "Saída pendente de 19/10: registre a saída manual antes da nova entrada.");
+
+		final String codigo;
+		final String motivo;
+
+		LeituraInvalida(String codigo, String motivo) {
+			this.codigo = codigo;
+			this.motivo = motivo;
+		}
+	}
+
+	@ParameterizedTest
+	@EnumSource(LeituraInvalida.class)
+	void leituraRecusadaMostraOMotivoSoAoFuncionario(LeituraInvalida cenario) throws Exception {
+		prepararARecusa(cenario);
 		HtmlPage portaria = abrir();
 		HtmlInput campo = (HtmlInput) portaria.getElementById("campo-leitura");
+		DomElement alerta = portaria.getElementById("alerta-funcionario");
+		assertThat(alerta.getAttribute("role")).isEqualTo("alert");
+		assertThat(texto(portaria, "alerta-funcionario")).as("vazio até a primeira recusa").isEmpty();
 
-		campo.type(CODIGO_REVOGADO);
+		campo.type(cenario.codigo);
 		campo.type('\n');
 		esperar(Duration.ofMillis(800));
 
-		// Motivo técnico até a T-31; o monitor recebe só a mensagem genérica (RF22; RN17)
-		assertThat(texto(portaria, "painel-funcionario")).contains("Leitura recusada", "CARTEIRINHA_REVOGADA");
-		assertThat(texto(portaria, "monitor-aluno")).isEqualTo(MONITOR_RECUSA)
-				.doesNotContain("Ana", "REVOGADA");
-		assertThat(((HtmlButton) portaria.getElementById("botao-giro")).isDisabled()).isTrue();
+		// CA-RF23-02, 05 e 08: o motivo, em texto, na região de alerta; o foco não sai do campo
+		assertThat(texto(portaria, "alerta-funcionario")).isEqualTo("Leitura recusada: " + cenario.motivo);
 		assertThat(portaria.getFocusedElement()).isEqualTo(campo);
+		// CA-RF23-01 e 06: a mesma mensagem para o aluno, sem nome nem motivo
+		assertThat(texto(portaria, "monitor-aluno")).isEqualTo(MONITOR_RECUSA)
+				.doesNotContain("Ana", "revogada", "expirada", "inativo", "turma", "Código", "Saída");
+		assertThat(texto(portaria, "painel-funcionario")).isEqualTo("Nenhuma leitura em andamento.");
+		assertThat(((HtmlButton) portaria.getElementById("botao-giro")).isDisabled()).isTrue();
+		// CA-RF23-03
+		assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM registro_acesso r JOIN vinculo_turma v "
+				+ "ON v.id_vinculo = r.id_vinculo JOIN aluno a ON a.id_aluno = v.id_aluno "
+				+ "WHERE a.matricula = ? AND r.situacao <> 'CONFIRMADA'", Integer.class, MATRICULA)).isZero();
+	}
+
+	@Test
+	void leituraValidaDepoisDeUmaRecusaLimpaOAlerta() throws Exception {
+		HtmlPage portaria = abrir();
+		HtmlInput campo = (HtmlInput) portaria.getElementById("campo-leitura");
+		campo.type("abc");
+		campo.type('\n');
+		esperar(Duration.ofMillis(800));
+		assertThat(texto(portaria, "alerta-funcionario")).contains("Leitura não reconhecida");
+
+		simularLeituraDaAna(portaria);
+
+		assertThat(texto(portaria, "alerta-funcionario")).isEmpty();
+		assertThat(texto(portaria, "monitor-aluno")).isEqualTo("Ana, entrada liberada. Pode passar.");
+	}
+
+	/** Deixa a Ana (ou a carteirinha) na situação que leva à recusa. */
+	private void prepararARecusa(LeituraInvalida cenario) {
+		switch (cenario) {
+			case EXPIRADA -> jdbc.update("UPDATE carteirinha SET expira_em = ? WHERE codigo = ?",
+					CenaDaPortaria.utc(relogio.instant().minusSeconds(1)), CODIGO_ANA);
+			case INATIVO -> jdbc.update("UPDATE aluno SET ativo = 0 WHERE matricula = ?", MATRICULA);
+			case SEM_TURMA -> jdbc.update("UPDATE vinculo_turma v JOIN aluno a ON a.id_aluno = v.id_aluno "
+					+ "SET v.fim_em = ? WHERE a.matricula = ?", CenaDaPortaria.utc(relogio.instant().minusSeconds(1)),
+					MATRICULA);
+			case SAIDA_PENDENTE -> {
+				// RN06: entrada de ontem (19/10 no horário da escola) sem saída
+				long vinculo = jdbc.queryForObject("SELECT v.id_vinculo FROM vinculo_turma v JOIN aluno a "
+						+ "ON a.id_aluno = v.id_aluno WHERE a.matricula = ?", Long.class, MATRICULA);
+				long usuario = jdbc.queryForObject("SELECT id_usuario FROM usuario WHERE login = ?", Long.class,
+						FUNCIONARIO);
+				long carteirinha = jdbc.queryForObject("SELECT id_carteirinha FROM carteirinha WHERE codigo = ?",
+						Long.class, CODIGO_ANA);
+				new CenaDaPortaria(jdbc).confirmada(vinculo, usuario, carteirinha, TipoMovimentacao.ENTRADA,
+						AGORA.minus(Duration.ofDays(1)));
+			}
+			default -> {
+				// O código já leva à recusa
+			}
+		}
 	}
 
 	// --- Aviso do leitor (DEC-28, A8; CA-RNF07-04) ---
@@ -388,7 +464,9 @@ class PortariaTelaTests {
 		campo.type('\n');
 		esperar(Duration.ofMillis(800));
 
-		assertThat(texto(portaria, "painel-funcionario")).contains("CODIGO_NAO_RECONHECIDO");
+		// T-31: o motivo vai para o alerta, e a liberação da Ana continua no painel
+		assertThat(texto(portaria, "alerta-funcionario")).contains("Leitura não reconhecida");
+		assertThat(texto(portaria, "painel-funcionario")).contains("Ana Teste");
 		confirmarOGiro(portaria);
 	}
 

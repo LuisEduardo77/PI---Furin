@@ -43,7 +43,9 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
   RN04 e RN05 em `Leituras`; RN05 também na `uk_registro_pendente_ponto`, DEC-46), T-29
   (expiração em `Expiracoes`, chamada no começo de cada operação da portaria e pela
   tarefa `ExpiracaoAgendada`, desligada no perfil `test` por `furin.agendamentos.ativos`;
-  cancelamento em `Liberacoes`) e T-28 (`POST /portaria/giros`,
+  cancelamento em `Liberacoes`), T-31 (textos das recusas em `portaria.js`, região
+  `#alerta-funcionario` com `role="alert"`, motivo `LEITURA_NAO_RECONHECIDA` para o
+  formato) e T-28 (`POST /portaria/giros`,
   `@Profile("prototipo")`) e T-30 (tela `/portaria` com `static/js/portaria.js`; foto como
   "Foto indisponível" quando não carrega) estão concluídas, antecipadas. T-18 (área
   privada em `arquivo/AreaPrivada`, entrega em `GET /arquivos/{chave}`) está concluída,
@@ -59,7 +61,7 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
   grava aluno de verdade usa `aluno/LimpezaDeAlunos` para apagar. O
   perfil `test` usa pools de 4 conexões. Teste que precisa do
   `prototipo` usa `furin.carga.ativa=false` para não rodar a carga V2, e teste com
-  JavaScript que faz pedidos não usa a transação do teste (grava e apaga a cena). RF02, RF03 e RF15 estão `Implementada`. RF01 e RNF03 estão
+  JavaScript que faz pedidos não usa a transação do teste (grava e apaga a cena). RF02, RF03, RF15 e RF23 estão `Implementada`. RF01 e RNF03 estão
   `Planejada, em andamento`; os
   demais RF e RNF estão com `Implementação: Planejada`, menos **RF17, RF24 e RF25**, que
   estão **fora do escopo** e não devem ser implementados (DEC-37).
