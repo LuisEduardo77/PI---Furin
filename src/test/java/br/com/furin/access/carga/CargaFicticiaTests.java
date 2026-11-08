@@ -121,7 +121,7 @@ class CargaFicticiaTests {
 	void flywayRegistraACargaComoV2() {
 		List<Map<String, Object>> migracoes = jdbc.queryForList(
 				"SELECT version, success FROM flyway_schema_history WHERE version IS NOT NULL ORDER BY installed_rank");
-		assertThat(migracoes).extracting(m -> m.get("version")).containsExactly("1", "2", "3");
+		assertThat(migracoes).extracting(m -> m.get("version")).containsExactly("1", "2", "3", "4");
 		assertThat(migracoes).allSatisfy(m -> assertThat(m).containsEntry("success", true));
 	}
 

@@ -94,6 +94,23 @@ public class RegistrosDaPortaria {
 				idAluno, AGUARDANDO_GIRO).stream().findFirst();
 	}
 
+	/**
+	 * RN03 (DEC-02; arquitetura §3.1): a leitura mais recente desta carteirinha com
+	 * {@code lancado_em} a partir de {@code desde} e ainda não confirmada. Uma liberação
+	 * {@code CONFIRMADA} quer dizer que houve giro, e o giro encerra a janela.
+	 */
+	Optional<Liberacao> leituraNaJanela(long idCarteirinha, Instant desde) {
+		return jdbc.query(LIBERACAO + "WHERE r.id_carteirinha = ? AND r.lancado_em >= ? AND r.situacao <> ? "
+				+ "ORDER BY r.lancado_em DESC, r.id_registro DESC LIMIT 1", this::liberacaoDaLinha,
+				idCarteirinha, utc(desde), CONFIRMADA).stream().findFirst();
+	}
+
+	/** RN05 (DEC-46): há alguma liberação pendente no ponto de leitura? */
+	boolean existeLiberacaoPendente() {
+		return Boolean.TRUE.equals(jdbc.queryForObject(
+				"SELECT EXISTS (SELECT 1 FROM registro_acesso WHERE pendente_ponto = 1)", Boolean.class));
+	}
+
 	/** RN01; RF13, passo 1: a última CONFIRMADA, por {@code ocorrido_em} e, no empate, pelo ID. */
 	Optional<UltimaMovimentacao> ultimaConfirmada(long idAluno) {
 		return jdbc.query("SELECT r.tipo, r.ocorrido_em FROM registro_acesso r "

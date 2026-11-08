@@ -23,9 +23,12 @@ import jakarta.validation.constraints.Size;
  * devolve a liberação. Qualquer outro campo, como um {@code tipo}, é ignorado (RN01;
  * CA-RF13-07). Uma recusa responde 422 com o motivo técnico (os textos são da T-31).
  * <p>
- * A resposta tem só o que o CA-RNF05-03 lista (DEC-43). O status diz se a liberação é
- * nova ou se já estava pendente (RN04): {@code 201} ou {@code 200}. Um reenvio com a mesma
- * chave repete o {@code 201} da primeira resposta (RN08).
+ * A resposta tem só o que o CA-RNF05-03 lista (DEC-43). O status diz o que aconteceu
+ * (T-27; RF15): {@code 201}, liberação nova; {@code 200}, já estava pendente, "Aguardando
+ * passagem" (RN04); {@code 202}, leitura ignorada na janela de 2 s, "Leitura já recebida"
+ * (RN03), com a liberação pendente no corpo ou sem corpo se ela já não está pendente. Um
+ * reenvio com a mesma chave repete o {@code 201} da primeira resposta (RN08). A recusa da
+ * RN05 é um {@code 422} com o motivo {@code OUTRA_LIBERACAO_PENDENTE}.
  */
 @RestController
 public class LeituraController {
@@ -63,8 +66,15 @@ public class LeituraController {
 	public ResponseEntity<RespostaDaLeitura> ler(@Valid @RequestBody PedidoDeLeitura pedido,
 			Authentication funcionario) {
 		ResultadoDaLeitura resultado = leituras.ler(pedido.codigo(), pedido.chaveRequisicao(), funcionario.getName());
-		return ResponseEntity.status(resultado.repetida() ? HttpStatus.OK : HttpStatus.CREATED)
-				.body(RespostaDaLeitura.de(resultado.liberacao()));
+		HttpStatus situacao = switch (resultado.desfecho()) {
+			case NOVA -> HttpStatus.CREATED;
+			case AGUARDANDO_PASSAGEM -> HttpStatus.OK;
+			case JA_RECEBIDA -> HttpStatus.ACCEPTED;
+		};
+		if (resultado.liberacao() == null) {
+			return ResponseEntity.status(situacao).build();
+		}
+		return ResponseEntity.status(situacao).body(RespostaDaLeitura.de(resultado.liberacao()));
 	}
 
 	@ExceptionHandler(LeituraRecusada.class)

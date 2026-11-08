@@ -67,6 +67,24 @@ final class CenaDaPortaria {
 				vinculo, usuario, carteirinha, tipo.name(), utc(lancado), utc(lancado), UUID.randomUUID().toString());
 	}
 
+	/** Uma liberação AGUARDANDO_GIRO gravada direto, sem passar pela leitura (CA-RF15-08). */
+	long pendente(long vinculo, long usuario, long carteirinha, TipoMovimentacao tipo, Instant lancado) {
+		return inserir("INSERT INTO registro_acesso (id_vinculo, id_usuario, id_carteirinha, tipo, forma, situacao, "
+				+ "lancado_em, chave_requisicao) VALUES (?, ?, ?, ?, 'LEITURA', 'AGUARDANDO_GIRO', ?, ?)",
+				vinculo, usuario, carteirinha, tipo.name(), utc(lancado), UUID.randomUUID().toString());
+	}
+
+	/**
+	 * CA-RF15-07: quantas movimentações {@code CONFIRMADA} repetem o tipo da anterior do
+	 * mesmo aluno, no que esta conexão enxerga do banco. Deve ser sempre zero.
+	 */
+	int confirmadasRepetidas() {
+		return jdbc.queryForObject("SELECT COUNT(*) FROM (SELECT r.tipo, LAG(r.tipo) OVER ("
+				+ "PARTITION BY v.id_aluno ORDER BY r.ocorrido_em, r.id_registro) AS anterior "
+				+ "FROM registro_acesso r JOIN vinculo_turma v ON v.id_vinculo = r.id_vinculo "
+				+ "WHERE r.situacao = 'CONFIRMADA') sequencia WHERE tipo = anterior", Integer.class);
+	}
+
 	static LocalDateTime utc(Instant instante) {
 		return LocalDateTime.ofInstant(instante, ZoneOffset.UTC);
 	}

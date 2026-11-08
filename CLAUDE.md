@@ -25,7 +25,7 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
   rota nova entra em `ROTAS_DO_FUNCIONARIO`) e T-10 (log de auditoria: use
   `auditoria.Auditoria` e `DetalhesAuditoria`, nunca um logger comum para eventos) e T-11
   (carga fictícia: migração Java `carga/V2__CargaFicticia`, só no perfil `prototipo`; a
-  próxima migração de esquema é a V4) e T-12 (login pelas contas do banco no pacote
+  próxima migração de esquema é a V5) e T-12 (login pelas contas do banco no pacote
   `autenticacao`; tela inicial em `SegurancaConfig.TELA_INICIAL`; `/portaria` ainda é
   provisória) e T-13 (erros do login: `LoginComFalhaAuditado` com `LOGIN_FALHA`,
   `CamposDoLoginObrigatorios` e `RetornoAoLogin`) e T-14 (bloqueio em
@@ -39,7 +39,8 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
   cookie; `config/AutorizacaoDeTodasAsRotasTests` descobre as rotas sozinho e roda de novo
   no fim de cada fase) estão concluídas. A **Fase 3 foi pulada de propósito** para
   demonstrar a portaria: T-25 (`portaria/TipoAutomatico`), T-26 (`POST /portaria/leituras`
-  em `Leituras`, SQL explícito em `RegistrosDaPortaria`) e T-28 (`POST /portaria/giros`,
+  em `Leituras`, SQL explícito em `RegistrosDaPortaria`), T-27 (janela de 2 s no banco,
+  RN04 e RN05 em `Leituras`; RN05 também na `uk_registro_pendente_ponto`, DEC-46) e T-28 (`POST /portaria/giros`,
   `@Profile("prototipo")`) e T-30 (tela `/portaria` com `static/js/portaria.js`; foto como
   "Foto indisponível" quando não carrega) estão concluídas, antecipadas. T-18 (área
   privada em `arquivo/AreaPrivada`, entrega em `GET /arquivos/{chave}`) está concluída,
@@ -55,7 +56,7 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
   grava aluno de verdade usa `aluno/LimpezaDeAlunos` para apagar. O
   perfil `test` usa pools de 4 conexões. Teste que precisa do
   `prototipo` usa `furin.carga.ativa=false` para não rodar a carga V2, e teste com
-  JavaScript que faz pedidos não usa a transação do teste (grava e apaga a cena). RF02 e RF03 estão `Implementada`. RF01 e RNF03 estão
+  JavaScript que faz pedidos não usa a transação do teste (grava e apaga a cena). RF02, RF03 e RF15 estão `Implementada`. RF01 e RNF03 estão
   `Planejada, em andamento`; os
   demais RF e RNF estão com `Implementação: Planejada`, menos **RF17, RF24 e RF25**, que
   estão **fora do escopo** e não devem ser implementados (DEC-37).
@@ -65,7 +66,7 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
 Em caso de conflito, vale a primeira fonte da lista:
 
 1. Decisões registradas em [`docs/rastreabilidade.md`](docs/rastreabilidade.md) §2
-   (ATU-01 a ATU-07, DEC-01 a DEC-45). Uma decisão marcada como "substituída" não vale
+   (ATU-01 a ATU-07, DEC-01 a DEC-46). Uma decisão marcada como "substituída" não vale
    mais; vale a que a substituiu.
 2. Os requisitos: [`requirements/rf/`](requirements/rf/) (RF01 a RF26) e
    [`requirements/rnf/`](requirements/rnf/) (RNF01 a RNF08).

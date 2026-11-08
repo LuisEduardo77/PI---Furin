@@ -40,8 +40,8 @@ import br.com.furin.access.config.SegurancaConfig;
 
 /**
  * {@code POST /portaria/leituras} (T-26; RF09, RF13, RF14; RN01, RN02, RN06, RN08,
- * RN09). A janela de 2 s, a RN04/RN05 completas (T-27) e a expiração (T-29) não estão
- * aqui.
+ * RN09). As repetições do RF15 (T-27) estão em {@link RepeticaoTests}; a expiração
+ * (T-29) ainda não existe.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
