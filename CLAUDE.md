@@ -62,7 +62,9 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
   grava aluno de verdade usa `aluno/LimpezaDeAlunos` para apagar. O
   perfil `test` usa pools de 4 conexões. Teste que precisa do
   `prototipo` usa `furin.carga.ativa=false` para não rodar a carga V2, e teste com
-  JavaScript que faz pedidos não usa a transação do teste (grava e apaga a cena). RF02, RF03, RF15 e RF23 estão `Implementada`. RF01 e RNF03 estão
+  JavaScript que faz pedidos não usa a transação do teste (grava e apaga a cena). RF02, RF03, RF13, RF15 e RF23 estão `Implementada`. A T-33 mediu o RNF02 só no
+  servidor (`DesempenhoDaPortariaTests`, carga em `scripts/desempenho/`, fora da carga
+  padrão); falta a medição na tela. RF01 e RNF03 estão
   `Planejada, em andamento`; os
   demais RF e RNF estão com `Implementação: Planejada`, menos **RF17, RF24 e RF25**, que
   estão **fora do escopo** e não devem ser implementados (DEC-37).

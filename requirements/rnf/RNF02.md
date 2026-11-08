@@ -4,8 +4,8 @@
 |---|---|
 | **Categoria** | Desempenho |
 | **Documentação** | Revisada em 19/10/2026 (T-00: DEC-24 a DEC-36) |
-| **Implementação** | Planejada |
-| **Atualizado em** | 19/10/2026 |
+| **Implementação** | Planejada, em andamento. T-33 (08/11/2026): carga de referência em `scripts/desempenho/carga-800-alunos.sql` (fora da carga padrão) e teste `DesempenhoDaPortariaTests`, que mede 30 leituras e 30 giros no servidor com essa carga: máximo de 446 ms na leitura e 25 ms no giro ([evidência](../../docs/evidencias/rnf02-medicao.md)). CA-RNF02-03 atendido no código. Falta a medição na tela com `scripts/desempenho/medir-portaria.js` (CA-RNF02-01, 02 e 04) |
+| **Atualizado em** | 08/11/2026 |
 
 ## Descrição
 

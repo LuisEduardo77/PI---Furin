@@ -1108,4 +1108,5 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 07/11/2026 | T-27: janela de 2 s, RN04 e RN05 (§6, "Portaria, leitura e giro"); DEC-46: coluna gerada `pendente_ponto` com `uk_registro_pendente_ponto` (§5, migração V4), status 202 e motivo `OUTRA_LIBERACAO_PENDENTE` [PROP] |
 | 07/11/2026 | T-29: expiração e cancelamento (§6, "Expiração e cancelamento"), com `furin.portaria.verificacao-expiracao` (§4), `furin.agendamentos.ativos`, a rota `GET /portaria/liberacoes/{id}` (§4) e os eventos `LIBERACAO_EXPIRADA` e `LIBERACAO_CANCELADA` [PROP] |
 | 08/11/2026 | T-31: textos da leitura inválida (§6, "Portaria, leitura e giro"), com a região `#alerta-funcionario`, o motivo `LEITURA_NAO_RECONHECIDA` e os textos separados de revogada/expirada e inativo/sem turma [PROP] |
+| 08/11/2026 | T-33: carga de referência do RNF02 em `scripts/desempenho/` (fora da carga padrão e do Flyway) e o teste `DesempenhoDaPortariaTests` [PROP] |
 | 08/11/2026 | T-32: registro manual (§4 e §6, "Registro manual"), com as rotas da revisão e da correção, a mensagem com a data quando o horário é de outro dia e as mensagens de formato da data [PROP] |
