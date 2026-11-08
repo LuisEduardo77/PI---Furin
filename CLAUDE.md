@@ -40,7 +40,10 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
   no fim de cada fase) estão concluídas. A **Fase 3 foi pulada de propósito** para
   demonstrar a portaria: T-25 (`portaria/TipoAutomatico`), T-26 (`POST /portaria/leituras`
   em `Leituras`, SQL explícito em `RegistrosDaPortaria`), T-27 (janela de 2 s no banco,
-  RN04 e RN05 em `Leituras`; RN05 também na `uk_registro_pendente_ponto`, DEC-46) e T-28 (`POST /portaria/giros`,
+  RN04 e RN05 em `Leituras`; RN05 também na `uk_registro_pendente_ponto`, DEC-46), T-29
+  (expiração em `Expiracoes`, chamada no começo de cada operação da portaria e pela
+  tarefa `ExpiracaoAgendada`, desligada no perfil `test` por `furin.agendamentos.ativos`;
+  cancelamento em `Liberacoes`) e T-28 (`POST /portaria/giros`,
   `@Profile("prototipo")`) e T-30 (tela `/portaria` com `static/js/portaria.js`; foto como
   "Foto indisponível" quando não carrega) estão concluídas, antecipadas. T-18 (área
   privada em `arquivo/AreaPrivada`, entrega em `GET /arquivos/{chave}`) está concluída,

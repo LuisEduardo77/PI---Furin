@@ -1,8 +1,6 @@
 package br.com.furin.access.portaria;
 
-import java.time.Clock;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,8 +16,13 @@ import org.springframework.transaction.annotation.Transactional;
  * DEC-41). Um giro novo, com outra chave, numa liberação já confirmada ou cancelada é
  * recusado e não muda nada (CA-RF09-05).
  * <p>
+ * O giro começa pela expiração (T-29; arquitetura §3.1): uma liberação que passou do prazo
+ * de 15 s é cancelada com {@code SEM_GIRO}, e o giro é recusado (RF09, passo 7.2). A
+ * recusa não desfaz a transação, para a expiração ficar gravada; o giro recusado não
+ * mudou nada.
+ * <p>
  * No protótipo, o giro é simulado (DEC-18): só o {@link GiroSimuladoController} chama
- * este serviço. Ficam para depois: o prazo de 15 s (T-29) e a notificação (RF21, Fase 6).
+ * este serviço. Fica para depois a notificação (RF21, Fase 6).
  */
 @Service
 public class Giros {
@@ -51,19 +54,20 @@ public class Giros {
 
 	private final RegistrosDaPortaria registros;
 
-	private final Clock relogio;
+	private final Expiracoes expiracoes;
 
-	public Giros(RegistrosDaPortaria registros, Clock relogio) {
+	public Giros(RegistrosDaPortaria registros, Expiracoes expiracoes) {
 		this.registros = registros;
-		this.relogio = relogio;
+		this.expiracoes = expiracoes;
 	}
 
 	/**
 	 * @param idLiberacao     a liberação devolvida pela leitura
 	 * @param chaveRequisicao UUID gerado pelo navegador para este giro (RN08; DEC-41)
 	 */
-	@Transactional(isolation = Isolation.READ_COMMITTED)
+	@Transactional(isolation = Isolation.READ_COMMITTED, noRollbackFor = GiroRecusado.class)
 	public Liberacao confirmar(long idLiberacao, UUID chaveRequisicao) {
+		expiracoes.expirarVencidas();
 		long idAluno = registros.alunoDaLiberacao(idLiberacao)
 				.orElseThrow(() -> new GiroRecusado(MotivoDoGiroRecusado.LIBERACAO_NAO_ENCONTRADA));
 		registros.bloquearAluno(idAluno);
@@ -75,8 +79,8 @@ public class Giros {
 		}
 
 		// O instante do giro é sempre do servidor (DATETIME(6): microssegundos)
-		Instant giro = relogio.instant().truncatedTo(ChronoUnit.MICROS);
-		if (!registros.confirmar(idLiberacao, giro, chaveRequisicao)) {
+		Instant giro = expiracoes.agora();
+		if (!registros.confirmar(idLiberacao, giro, chaveRequisicao, expiracoes.limite(giro))) {
 			throw new GiroRecusado(MotivoDoGiroRecusado.LIBERACAO_ENCERRADA);
 		}
 		return registros.liberacao(idLiberacao).orElseThrow();

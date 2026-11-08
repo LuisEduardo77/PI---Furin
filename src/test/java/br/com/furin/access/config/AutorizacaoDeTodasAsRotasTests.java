@@ -152,6 +152,9 @@ class AutorizacaoDeTodasAsRotasTests {
 				// Portaria antecipada (T-26 e T-28; o giro simulado só existe no prototipo)
 				new Rota(HttpMethod.POST, "/portaria/leituras"),
 				new Rota(HttpMethod.POST, "/portaria/giros"),
+				// Expiração e cancelamento da liberação (T-29)
+				new Rota(HttpMethod.GET, "/portaria/liberacoes/1"),
+				new Rota(HttpMethod.POST, "/portaria/liberacoes/1/cancelar"),
 				// Área privada (T-18): a chave vira o valor qualquer da descoberta
 				new Rota(HttpMethod.GET, "/arquivos/1"),
 				// Cadastro de alunos (T-19)

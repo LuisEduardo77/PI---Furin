@@ -23,8 +23,11 @@
        th:data-leituras="@{/portaria/leituras}"
        th:data-giros="@{/portaria/giros}"
        th:data-arquivos="@{/arquivos/}"
+       th:data-liberacoes="@{/portaria/liberacoes/}"
        th:data-monitor-ms="${monitorExibicaoMs}"
-       th:data-painel-ms="${painelLimpezaMs}">
+       th:data-painel-ms="${painelLimpezaMs}"
+       th:data-prazo-giro-ms="${prazoGiroMs}"
+       th:data-verificacao-ms="${verificacaoExpiracaoMs}">
 
     <p class="aviso" th:if="${simulacao}">
       <strong>Protótipo:</strong> não há leitor nem catraca. A leitura e a passagem pela
@@ -55,6 +58,12 @@
         <div id="painel-funcionario" role="status">
           <p data-vazio>Nenhuma leitura em andamento.</p>
         </div>
+        <!--
+          RF09, fluxo A2; RN02, item 5 (DEC-28, A2): fora da região role="status", para o
+          anúncio não repetir o botão. Aparece só com uma liberação pendente, com o nome do
+          aluno no texto ("Cancelar liberação de Ana Teste")
+        -->
+        <button type="button" id="botao-cancelar" class="botao botao--secundario" hidden>Cancelar liberação</button>
       </section>
 
       <!--

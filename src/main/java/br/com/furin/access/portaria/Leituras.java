@@ -38,8 +38,9 @@ import br.com.furin.access.portaria.TipoAutomatico.Decisao;
  * janela de 2 s é ignorada (RN03); com o aluno já aguardando o giro, a leitura devolve a
  * mesma liberação, sem renovar o prazo (RN04); com outro aluno aguardando, é recusada
  * (RN05). A janela é calculada no banco, e o giro a encerra porque deixa a liberação
- * {@code CONFIRMADA} (DEC-02). Ficam para depois a expiração de 15 s (T-29) e os textos
- * das recusas (T-31).
+ * {@code CONFIRMADA} (DEC-02). A leitura começa pela expiração das liberações sem giro
+ * (T-29): passado o prazo de 15 s, a pendente não segura mais a portaria. Ficam para
+ * depois os textos das recusas (T-31).
  */
 @Service
 public class Leituras {
@@ -78,8 +79,11 @@ public class Leituras {
 
 	private final Clock relogio;
 
+	private final Expiracoes expiracoes;
+
 	public Leituras(RegistrosDaPortaria registros, TipoAutomatico tipoAutomatico, Auditoria auditoria, Clock relogio,
-			FurinProperties propriedades) {
+			FurinProperties propriedades, Expiracoes expiracoes) {
+		this.expiracoes = expiracoes;
 		this.formatoDoCodigo = Pattern.compile("[0-9a-f]{" + propriedades.carteirinha().tamanhoCodigo() + "}");
 		this.janelaDeRepeticao = propriedades.portaria().janelaRepeticao();
 		this.registros = registros;
@@ -93,8 +97,11 @@ public class Leituras {
 	 * @param chaveRequisicao UUID gerado pelo navegador (RN08)
 	 * @param login           o funcionário da sessão, gravado em {@code id_usuario}
 	 */
-	@Transactional(isolation = Isolation.READ_COMMITTED)
+	@Transactional(isolation = Isolation.READ_COMMITTED, noRollbackFor = LeituraRecusada.class)
 	public ResultadoDaLeitura ler(String codigo, UUID chaveRequisicao, String login) {
+		// T-29: a liberação vencida sai antes de tudo, e a recusa não desfaz a expiração.
+		// Nenhuma recusa grava outra coisa (RN09)
+		expiracoes.expirarVencidas();
 		// DATETIME(6) guarda microssegundos: o instante gravado é o mesmo que volta
 		Instant agora = relogio.instant().truncatedTo(ChronoUnit.MICROS);
 		String normalizado = codigo.strip().toLowerCase(Locale.ROOT);

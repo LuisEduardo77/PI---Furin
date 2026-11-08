@@ -37,6 +37,7 @@ class FurinPropertiesTests {
 		assertThat(portaria.prazoGiro()).isEqualTo(Duration.ofSeconds(15));
 		assertThat(portaria.monitorExibicao()).isEqualTo(Duration.ofSeconds(4));
 		assertThat(portaria.painelLimpeza()).isEqualTo(Duration.ofSeconds(60));
+		assertThat(portaria.verificacaoExpiracao()).isEqualTo(Duration.ofSeconds(1));
 	}
 
 	@Test

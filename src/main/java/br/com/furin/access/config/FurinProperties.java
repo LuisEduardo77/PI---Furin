@@ -49,13 +49,17 @@ public record FurinProperties(
 	public record Escola(@NotBlank String nome, @NotNull ZoneId fuso) {
 	}
 
-	/** DEC-02, A08 RNF02, DEC-28 (A1, A6, A7). */
+	/**
+	 * DEC-02, A08 RNF02, DEC-28 (A1, A6, A7). {@code verificacaoExpiracao}: de quanto em
+	 * quanto tempo a tarefa agendada cancela as liberações sem giro (T-29) [PROP].
+	 */
 	public record Portaria(
 			@NotNull @DurationMin(millis = 1) Duration janelaRepeticao,
 			@NotNull @DurationMin(millis = 1) Duration tempoRespostaMax,
 			@NotNull @DurationMin(millis = 1) Duration prazoGiro,
 			@NotNull @DurationMin(millis = 1) Duration monitorExibicao,
-			@NotNull @DurationMin(millis = 1) Duration painelLimpeza) {
+			@NotNull @DurationMin(millis = 1) Duration painelLimpeza,
+			@NotNull @DurationMin(millis = 100) Duration verificacaoExpiracao) {
 	}
 
 	/** RF06; DEC-28 (D7). A14 p.6: o código tem um número par de caracteres hexadecimais. */
