@@ -1,5 +1,6 @@
 package br.com.furin.access.config;
 
+import java.time.Clock;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
@@ -18,6 +19,7 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 
 import br.com.furin.access.auditoria.AcessoNegadoAuditado;
 import br.com.furin.access.auditoria.Auditoria;
+import br.com.furin.access.autenticacao.AtualizacaoAutomatica;
 import br.com.furin.access.autenticacao.CamposDoLoginObrigatorios;
 import br.com.furin.access.autenticacao.ContaDesativada;
 import br.com.furin.access.autenticacao.ContasDosFuncionarios;
@@ -26,6 +28,7 @@ import br.com.furin.access.autenticacao.LoginBloqueado;
 import br.com.furin.access.autenticacao.LoginComSucessoAuditado;
 import br.com.furin.access.autenticacao.SessaoController;
 import br.com.furin.access.autenticacao.SessaoExpirada;
+import br.com.furin.access.autenticacao.TemposDaSessao;
 import br.com.furin.access.autenticacao.TentativasDeLogin;
 import br.com.furin.access.autenticacao.TrocaDeSenhaObrigatoria;
 import jakarta.servlet.DispatcherType;
@@ -82,6 +85,7 @@ public class SegurancaConfig {
 	@Bean
 	SecurityFilterChain filtroDeSeguranca(HttpSecurity http, AcessoNegadoAuditado acessoNegado,
 			Auditoria auditoria, TentativasDeLogin tentativas, ContasDosFuncionarios contas,
+			TemposDaSessao temposDaSessao, Clock relogio,
 			@Qualifier("requestMappingHandlerMapping") RequestMappingHandlerMapping rotasDosControllers) {
 		http
 				.authorizeHttpRequests(rotas -> rotas
@@ -116,6 +120,9 @@ public class SegurancaConfig {
 				// inatividade leva ao login com o aviso. Antes do CSRF: o token do formulário
 				// era da sessão antiga
 				.addFilterBefore(new SessaoExpirada(LOGIN_SESSAO_EXPIRADA), CsrfFilter.class)
+				// RF16 (T-34): a atualização automática da tela Presentes não prolonga a sessão
+				.addFilterBefore(new AtualizacaoAutomatica(temposDaSessao, relogio, LOGIN_SESSAO_EXPIRADA),
+						CsrfFilter.class)
 				// POST /logout com o token CSRF; depois, volta ao login. O cookie é apagado
 				// para que o próximo pedido não pareça uma sessão expirada (T-16)
 				.logout(sair -> sair.deleteCookies(COOKIE_DA_SESSAO))

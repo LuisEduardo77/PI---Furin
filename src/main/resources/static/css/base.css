@@ -400,6 +400,33 @@ td {
   background-color: var(--cor-fundo-suave);
 }
 
+/* Contador resumido da portaria (T-34; RF16, passo 4) */
+.contador-presentes {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+/* Presentes (T-34; RF16; CA-RF16-10): com 320 px, as ações quebram a linha e as tabelas
+   rolam dentro do próprio contêiner, sem rolagem horizontal da página */
+.presentes__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+
+.presentes__hora {
+  margin: 0;
+}
+
+.presentes__total {
+  font-size: 1.5rem;
+}
+
+.presentes td .botao {
+  text-align: center;
+}
+
 /* Carteirinha (T-22; RF07; DEC-28, D8 e D9): cartão de 85,6 × 54 mm, QR Code com mais de 2,5 cm */
 .carteirinha {
   display: flex;

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: pagina('Presentes', 'presentes', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Presentes | Furin Access</title>
+</head>
+<body>
+<th:block th:fragment="conteudo">
+  <h1>Presentes</h1>
+
+  <!--
+    T-34 (RF16; RN12; DEC-28, C1 a C3). static/js/presentes.js pede esta página de novo a
+    cada data-intervalo-ms e quando o funcionário aciona "Atualizar", e troca o conteúdo de
+    #dados-presentes. A região #anuncio-presentes (role="status") só recebe texto no
+    "Atualizar": a atualização automática não é anunciada (A11 p.9; CA-RF16-09).
+  -->
+  <div id="presentes" class="presentes"
+       th:data-endereco="@{/presentes}"
+       th:data-intervalo-ms="${intervaloAtualizacaoMs}">
+
+    <div class="presentes__acoes">
+      <button type="button" id="botao-atualizar" class="botao botao--secundario">Atualizar</button>
+      <p id="atualizado-em" class="presentes__hora">Atualizado às
+        <span data-hora th:text="${painel.atualizadoAs()}">09:41</span></p>
+    </div>
+    <!-- RF16, exceções: a falha mantém os últimos números. Fora de região viva [PROP] -->
+    <p id="falha-atualizacao" class="aviso aviso--erro" hidden></p>
+    <div id="anuncio-presentes" class="visualmente-oculto" role="status"></div>
+
+    <div id="dados-presentes">
+      <section aria-labelledby="titulo-agora">
+        <h2 id="titulo-agora">Presentes agora</h2>
+        <p class="presentes__total">Total: <strong id="total-presentes" th:text="${painel.total()}">412</strong></p>
+        <p th:if="${painel.total() == 0}">Nenhum aluno com entrada registrada hoje.</p>
+        <!-- A11 §5.12.12 (com o "hoje" do DEC-28, C1) e A13 p.4 (CA-RF16-08) -->
+        <p id="legenda-presentes">
+          Presentes agora: alunos com entrada registrada hoje e sem saída registrada.
+        </p>
+        <p id="aviso-presenca" class="aviso">Este número não comprova presença em sala de aula.</p>
+      </section>
+
+      <section aria-labelledby="titulo-turmas">
+        <h2 id="titulo-turmas">Por turma</h2>
+        <!-- DEC-28, C3: todas as turmas ativas, inclusive as que têm zero -->
+        <div class="tabela-rolavel">
+          <table id="tabela-turmas">
+            <caption>Presentes agora por turma (vínculo vigente)</caption>
+            <thead>
+              <tr>
+                <th scope="col">Turma</th>
+                <th scope="col">Turno</th>
+                <th scope="col">Presentes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="turma : ${painel.turmas()}">
+                <th scope="row" th:text="${turma.nome() ?: 'Sem turma vigente'}">6A</th>
+                <td th:text="${turma.turno() ?: '—'}">Manhã</td>
+                <td th:text="${turma.presentes()}">28</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p th:if="${#lists.isEmpty(painel.turmas())}">Nenhuma turma ativa.</p>
+      </section>
+
+      <section aria-labelledby="titulo-pendentes">
+        <h2 id="titulo-pendentes">Saídas pendentes</h2>
+        <p>
+          Entradas de dias anteriores que ficaram sem saída. Elas não contam em "Presentes
+          agora". Registre a saída pelo registro manual.
+        </p>
+        <p th:if="${#lists.isEmpty(painel.pendentes())}">Não há saídas pendentes.</p>
+        <div class="tabela-rolavel" th:unless="${#lists.isEmpty(painel.pendentes())}">
+          <table id="tabela-pendentes">
+            <caption>Saídas pendentes de dias anteriores</caption>
+            <thead>
+              <tr>
+                <th scope="col">Aluno</th>
+                <th scope="col">Turma</th>
+                <th scope="col">Entrada em</th>
+                <th scope="col">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="pendente : ${painel.pendentes()}">
+                <th scope="row" th:text="${pendente.nome()}">Ana Teste</th>
+                <td th:text="${pendente.turma() ?: '—'}">6A — Manhã</td>
+                <td th:text="${pendente.entradaEm()}">16/10 07:02</td>
+                <td>
+                  <!-- RF16; RF12 (T-32): o formulário já calcula a SAIDA que fecha a pendência -->
+                  <a class="botao botao--secundario"
+                     th:id="|registrar-saida-${pendente.idAluno()}|"
+                     th:href="@{/portaria/manual/{id}(id=${pendente.idAluno()})}"
+                     th:text="|Registrar saída de ${pendente.nome()}|">Registrar saída de Ana Teste</a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script th:src="@{/js/presentes.js}" defer></script>
+</th:block>
+</body>
+</html>
