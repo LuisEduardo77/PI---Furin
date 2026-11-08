@@ -21,6 +21,8 @@
  *   POST /portaria/liberacoes/{id}/cancelar (RN02, item 5).
  * - Leitura inválida (T-31; RF23): o motivo vai para a região role="alert" do funcionário,
  *   com o rótulo "Leitura recusada:", e o monitor do aluno mostra sempre a mesma mensagem.
+ * - Contador de presentes (T-34; RF16, passo 4): a resposta do giro traz o total e o da
+ *   turma, e o contador muda sem recarregar, sem anúncio próprio.
  * - Os dois painéis são regiões role="status" separadas: anunciam sem mover o foco, e o
  *   foco volta sempre ao campo de leitura (A11 §5.1.13, §5.13.8).
  */
@@ -65,6 +67,8 @@
   var avisoDoLeitor = document.getElementById('aviso-leitor');
   var botaoGiro = document.getElementById('botao-giro');
   var botaoCancelar = document.getElementById('botao-cancelar');
+  var contadorDePresentes = document.getElementById('contador-presentes');
+  var contadorDaTurma = document.getElementById('contador-turma');
   var token = document.querySelector('meta[name="_csrf"]');
   var cabecalhoDoToken = document.querySelector('meta[name="_csrf_header"]');
 
@@ -380,6 +384,7 @@
       function (status, dados) {
         if (status === 200 && dados) {
           mostrarLiberacao(dados, 'nova');
+          mostrarPresentes(dados.presentes);
         } else if (status === 422 && dados && dados.motivo === 'LIBERACAO_ENCERRADA') {
           // RF09, exceções: giro depois do prazo ou de uma liberação cancelada
           encerrarLiberacao(GIRO_FORA_DO_PRAZO);
@@ -391,6 +396,20 @@
         }
         campo.focus();
       });
+  }
+
+  // --- Contador de presentes (T-34; RF16, passo 4) ---
+
+  /** Fora de região viva: o painel do funcionário já anunciou o registro (CA-RF16-09). */
+  function mostrarPresentes(presentes) {
+    if (!presentes || !contadorDePresentes) {
+      return;
+    }
+    contadorDePresentes.textContent = String(presentes.total);
+    if (contadorDaTurma && presentes.turma) {
+      contadorDaTurma.textContent = presentes.turma + ': ' + presentes.presentesNaTurma;
+      contadorDaTurma.hidden = false;
+    }
   }
 
   // --- Painel do funcionário (RF10) ---

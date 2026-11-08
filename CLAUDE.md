@@ -58,11 +58,16 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
   estão concluídas: **o cadastro de aluno é salvo** com os cinco blocos (RN16). T-23
   (edição em `aluno/EdicaoController` e `EdicaoDoAluno`; conferências comuns do cadastro e
   da edição em `aluno/ConferenciasDoAluno`) e T-24 (busca em `aluno/BuscaDeAlunos`, que o
-  registro manual da T-32 reaproveita com `Escopo.SO_ATIVOS`) estão concluídas. Teste que
+  registro manual da T-32 reaproveita com `Escopo.SO_ATIVOS`) estão concluídas. T-34 (painel
+em `presenca/PainelDePresentes`, tela com `static/js/presentes.js`; pedido automático da
+tela vai com o cabeçalho `X-Furin-Atualizacao-Automatica`, que o filtro
+`autenticacao/AtualizacaoAutomatica` não conta como atividade; contador da portaria pela
+resposta do giro) está concluída. `CenaDaPortaria` é pública para os testes de outros
+pacotes. Teste que
   grava aluno de verdade usa `aluno/LimpezaDeAlunos` para apagar. O
   perfil `test` usa pools de 4 conexões. Teste que precisa do
   `prototipo` usa `furin.carga.ativa=false` para não rodar a carga V2, e teste com
-  JavaScript que faz pedidos não usa a transação do teste (grava e apaga a cena). RF02, RF03, RF13, RF15 e RF23 estão `Implementada`. A T-33 mediu o RNF02 só no
+  JavaScript que faz pedidos não usa a transação do teste (grava e apaga a cena). RF02, RF03, RF13, RF15, RF16 e RF23 estão `Implementada`. A T-33 mediu o RNF02 só no
   servidor (`DesempenhoDaPortariaTests`, carga em `scripts/desempenho/`, fora da carga
   padrão); falta a medição na tela. RF01 e RNF03 estão
   `Planejada, em andamento`; os

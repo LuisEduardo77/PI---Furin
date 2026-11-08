@@ -86,6 +86,19 @@
     </div>
 
     <!--
+      T-34 (RF16, passo 4; CA-RF16-06): o contador muda com a resposta de cada giro
+      confirmado, sem recarregar. Não é região viva: o painel do funcionário já anuncia o
+      registro, e o contador não repete o anúncio (A11 §5.13.8, p.9)
+    -->
+    <section class="painel" aria-labelledby="titulo-presentes">
+      <h2 id="titulo-presentes">Alunos presentes</h2>
+      <p class="contador-presentes">Presentes agora:
+        <strong id="contador-presentes" th:text="${presentesAgora}">412</strong></p>
+      <p id="contador-turma" hidden></p>
+      <p><a th:href="@{/presentes}">Ver o painel de presentes</a></p>
+    </section>
+
+    <!--
       DEC-25 e DEC-18: simulações só no perfil prototipo, sempre identificadas
       (CA-RF09-11). O painel não existe fora dele, e a rota do giro responde 404
     -->

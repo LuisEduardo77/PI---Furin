@@ -276,7 +276,7 @@ inválido (Bean Validation). Qualquer valor pode ser trocado pelo ambiente, por 
 | `POST /alunos/{id}/carteirinhas`, `GET /carteirinhas/{id}/imprimir`, `GET /carteirinhas/{id}/qr-code` [PROP] e `GET /alunos/{id}/carteirinhas/segunda-via` (confirmação, até a página do aluno) [PROP] | FUNCIONARIO | RF07 |
 | `GET/POST /alunos/{id}/consentimentos/{idConsentimento}/revogacao` (o GET é a tela própria até a T-23 [PROP]) | FUNCIONARIO | RF05 (DEC-34) |
 | `GET /arquivos/{chave}` | FUNCIONARIO | DEC-08 |
-| `GET /presentes` | FUNCIONARIO | RF16 |
+| `GET /presentes` | FUNCIONARIO | RF16. Na T-34, a tela pede a mesma rota de novo a cada `furin.presentes.intervalo-atualizacao`, com o cabeçalho `X-Furin-Atualizacao-Automatica` [PROP]: o filtro `autenticacao/AtualizacaoAutomatica` não conta esse pedido como atividade, e a sessão expira por inatividade do mesmo jeito (T-16). A resposta de `POST /portaria/giros` traz também `presentes` (total e turma) para o contador da portaria [PROP] |
 | `GET /historico` | FUNCIONARIO | RF18–RF20 |
 | `/contas/equipe/**` | FUNCIONARIO | RF26 (DEC-39) |
 

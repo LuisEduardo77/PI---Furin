@@ -294,6 +294,28 @@ class PortariaTelaTests {
 	}
 
 	@Test
+	void contadorDePresentesMudaLogoDepoisDoGiroSemRecarregar() throws Exception {
+		// CA-RF16-06 (T-34; RF16, passo 4): a resposta do giro traz o novo total
+		HtmlPage portaria = abrir();
+		int antes = Integer.parseInt(texto(portaria, "contador-presentes"));
+		assertThat(portaria.getElementById("contador-turma").hasAttribute("hidden")).isTrue();
+		simularLeituraDaAna(portaria);
+		// A liberação ainda não conta (CA-RF09-02)
+		assertThat(texto(portaria, "contador-presentes")).isEqualTo(String.valueOf(antes));
+
+		((HtmlButton) portaria.getElementById("botao-giro")).click();
+		esperar(Duration.ofMillis(800));
+
+		assertThat(portaria.getUrl().getPath()).as("a mesma página, sem recarregar").isEqualTo("/portaria");
+		assertThat(texto(portaria, "contador-presentes")).isEqualTo(String.valueOf(antes + 1));
+		assertThat(texto(portaria, "contador-turma")).isEqualTo(TURMA + " — Manhã: 1");
+		// Sem anúncio próprio: o painel do funcionário já anunciou "Entrada registrada"
+		DomNode secao = portaria.getElementById("titulo-presentes").getParentNode();
+		assertThat(secao.getNodeName()).isEqualTo("section");
+		assertThat(secao.querySelectorAll("[role], [aria-live]")).isEmpty();
+	}
+
+	@Test
 	void codigoDigitadoComEnterTambemRegistraALeitura() throws Exception {
 		// RNF07: o leitor USB "digita" o código e tecla Enter
 		HtmlPage portaria = abrir();

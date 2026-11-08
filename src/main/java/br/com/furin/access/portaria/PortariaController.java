@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import br.com.furin.access.config.FurinProperties;
+import br.com.furin.access.presenca.PainelDePresentes;
 
 /**
  * Tela da portaria (T-30; RF09, RF10, RF14, RF22; DEC-06, DEC-25): campo de leitura, painel
@@ -27,13 +28,19 @@ public class PortariaController {
 
 	private final FurinProperties.Portaria tempos;
 
-	public PortariaController(ObjectProvider<CarteirinhasFicticias> simulacao, FurinProperties propriedades) {
+	private final PainelDePresentes presentes;
+
+	public PortariaController(ObjectProvider<CarteirinhasFicticias> simulacao, FurinProperties propriedades,
+			PainelDePresentes presentes) {
 		this.simulacao = simulacao;
 		this.tempos = propriedades.portaria();
+		this.presentes = presentes;
 	}
 
 	@GetMapping("/portaria")
 	public String exibir(Model model) {
+		// T-34 (RF16, passo 4): o contador resumido; depois, cada giro traz o novo valor
+		model.addAttribute("presentesAgora", presentes.calcular().total());
 		// Sem o bean (fora do perfil prototipo), não há simulação nenhuma na tela
 		CarteirinhasFicticias ficticias = simulacao.getIfAvailable();
 		model.addAttribute("simulacao", ficticias != null);

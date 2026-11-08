@@ -21,14 +21,18 @@ public record Liberacao(
 
 	/** RF10: "6A — Manhã". O turno vem de {@code turma.turno}. */
 	public static String turmaComTurno(String turma, String turno) {
-		String nomeDoTurno = switch (turno) {
+		return turma + " — " + nomeDoTurno(turno);
+	}
+
+	/** "Manhã" para {@code MANHA}, como na tela (RF10, RF16). */
+	public static String nomeDoTurno(String turno) {
+		return switch (turno) {
 			case "MANHA" -> "Manhã";
 			case "TARDE" -> "Tarde";
 			case "INTEGRAL" -> "Integral";
 			case "NOITE" -> "Noite";
 			default -> throw new IllegalArgumentException("Turno desconhecido: " + turno);
 		};
-		return turma + " — " + nomeDoTurno;
 	}
 
 	static String primeiroNomeDe(String nome) {
