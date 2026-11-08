@@ -21,14 +21,7 @@
       <h2 id="resumo-erros-titulo">Corrija os erros abaixo. Nada foi salvo.</h2>
       <p>A foto e a cópia do termo precisam ser selecionadas de novo, porque o navegador não as mantém.</p>
       <ul>
-        <li th:each="erro : ${#fields.globalErrors()}" th:text="${erro}">Não foi possível salvar o cadastro.</li>
-        <li th:if="${#fields.hasErrors('nome')}"><a href="#nome" th:errors="*{nome}">Informe o nome do aluno.</a></li>
-        <li th:if="${#fields.hasErrors('matricula')}"><a href="#matricula" th:errors="*{matricula}">Informe a matrícula do aluno.</a></li>
-        <li th:if="${#fields.hasErrors('idTurma')}"><a href="#idTurma" th:errors="*{idTurma}">Selecione uma turma ativa.</a></li>
-        <li th:if="${#fields.hasErrors('foto')}"><a href="#foto" th:errors="*{foto}">Envie a foto do aluno.</a></li>
-        <li th:if="${#fields.hasErrors('contatoNome')}"><a href="#contatoNome" th:errors="*{contatoNome}">Informe o nome do responsável.</a></li>
-        <li th:if="${#fields.hasErrors('contatoTelefone')}"><a href="#contatoTelefone" th:errors="*{contatoTelefone}">Informe o telefone com DDD.</a></li>
-        <li th:if="${#fields.hasErrors('contatoEmail')}"><a href="#contatoEmail" th:errors="*{contatoEmail}">Informe um e-mail válido.</a></li>
+        <th:block th:replace="~{alunos/campos :: erros}"></th:block>
         <li th:if="${#fields.hasErrors('termoVersao')}"><a href="#termoVersao" th:errors="*{termoVersao}">Informe a versão do termo.</a></li>
         <li th:if="${#fields.hasErrors('termoAssinadoEm')}"><a href="#termoAssinadoEm" th:errors="*{termoAssinadoEm}">Informe a data da assinatura do termo.</a></li>
         <li th:if="${#fields.hasErrors('termoProtocolo')}"><a href="#termoProtocolo" th:errors="*{termoProtocolo}">Informe o protocolo.</a></li>
@@ -40,39 +33,9 @@
     <fieldset class="grupo-de-campos">
       <legend><h2>Aluno</h2></legend>
 
-      <div class="campo">
-        <label for="nome">Nome do aluno (obrigatório)</label>
-        <p id="nome-erro" class="campo__erro" th:if="${#fields.hasErrors('nome')}">
-          <span>Erro:</span> <span th:errors="*{nome}">Informe o nome do aluno.</span>
-        </p>
-        <input id="nome" type="text" maxlength="150" required autocomplete="off" th:field="*{nome}"
-               th:attr="aria-invalid=${#fields.hasErrors('nome')} ? 'true',
-                        aria-describedby=${#fields.hasErrors('nome')} ? 'nome-erro'">
-      </div>
-
-      <div class="campo">
-        <label for="matricula">Matrícula (obrigatório)</label>
-        <p id="matricula-erro" class="campo__erro" th:if="${#fields.hasErrors('matricula')}">
-          <span>Erro:</span> <span th:errors="*{matricula}">Informe a matrícula do aluno.</span>
-        </p>
-        <input id="matricula" type="text" maxlength="30" required autocomplete="off" th:field="*{matricula}"
-               th:attr="aria-invalid=${#fields.hasErrors('matricula')} ? 'true',
-                        aria-describedby=${#fields.hasErrors('matricula')} ? 'matricula-erro'">
-      </div>
-
-      <div class="campo">
-        <label for="idTurma">Turma (obrigatório)</label>
-        <p id="idTurma-erro" class="campo__erro" th:if="${#fields.hasErrors('idTurma')}">
-          <span>Erro:</span> <span th:errors="*{idTurma}">Selecione uma turma ativa.</span>
-        </p>
-        <select id="idTurma" required th:field="*{idTurma}"
-                th:attr="aria-invalid=${#fields.hasErrors('idTurma')} ? 'true',
-                         aria-describedby=${#fields.hasErrors('idTurma')} ? 'idTurma-erro'">
-          <option value="">Escolha a turma</option>
-          <option th:each="turma : ${turmas}" th:value="${turma.id()}" th:text="${turma.nome()}">6A — Manhã</option>
-        </select>
-      </div>
-
+      <div th:replace="~{alunos/campos :: texto('nome', 'Nome do aluno (obrigatório)', 'text', 150, null)}"></div>
+      <div th:replace="~{alunos/campos :: texto('matricula', 'Matrícula (obrigatório)', 'text', 30, null)}"></div>
+      <div th:replace="~{alunos/campos :: turma(null)}"></div>
       <div class="campo">
         <label for="foto">Foto do aluno (obrigatório)</label>
         <p id="foto-dica" class="campo__dica">Formatos aceitos: <span th:text="${regraDaFoto}">JPEG ou PNG, até 2 MB</span>.</p>
@@ -88,37 +51,7 @@
     <fieldset class="grupo-de-campos">
       <legend><h2>Contato principal</h2></legend>
 
-      <div class="campo">
-        <label for="contatoNome">Nome do responsável (obrigatório)</label>
-        <p id="contatoNome-erro" class="campo__erro" th:if="${#fields.hasErrors('contatoNome')}">
-          <span>Erro:</span> <span th:errors="*{contatoNome}">Informe o nome do responsável.</span>
-        </p>
-        <input id="contatoNome" type="text" maxlength="150" required autocomplete="off" th:field="*{contatoNome}"
-               th:attr="aria-invalid=${#fields.hasErrors('contatoNome')} ? 'true',
-                        aria-describedby=${#fields.hasErrors('contatoNome')} ? 'contatoNome-erro'">
-      </div>
-
-      <div class="campo">
-        <label for="contatoTelefone">Telefone com DDD (obrigatório)</label>
-        <p id="contatoTelefone-dica" class="campo__dica">Exemplo: (11) 90000-0000.</p>
-        <p id="contatoTelefone-erro" class="campo__erro" th:if="${#fields.hasErrors('contatoTelefone')}">
-          <span>Erro:</span> <span th:errors="*{contatoTelefone}">Informe o telefone com DDD.</span>
-        </p>
-        <input id="contatoTelefone" type="tel" maxlength="25" required autocomplete="off" th:field="*{contatoTelefone}"
-               th:attr="aria-invalid=${#fields.hasErrors('contatoTelefone')} ? 'true',
-                        aria-describedby=${#fields.hasErrors('contatoTelefone')} ? 'contatoTelefone-erro contatoTelefone-dica' : 'contatoTelefone-dica'">
-      </div>
-
-      <div class="campo">
-        <label for="contatoEmail">E-mail (obrigatório)</label>
-        <p id="contatoEmail-dica" class="campo__dica">Exemplo: nome@example.com.</p>
-        <p id="contatoEmail-erro" class="campo__erro" th:if="${#fields.hasErrors('contatoEmail')}">
-          <span>Erro:</span> <span th:errors="*{contatoEmail}">Informe um e-mail válido.</span>
-        </p>
-        <input id="contatoEmail" type="email" maxlength="254" required autocomplete="off" th:field="*{contatoEmail}"
-               th:attr="aria-invalid=${#fields.hasErrors('contatoEmail')} ? 'true',
-                        aria-describedby=${#fields.hasErrors('contatoEmail')} ? 'contatoEmail-erro contatoEmail-dica' : 'contatoEmail-dica'">
-      </div>
+      <th:block th:replace="~{alunos/campos :: contato}"></th:block>
     </fieldset>
 
     <!-- RF05 (T-20). O conferente e o instante da conferência vêm do servidor (CA-RF05-04) -->

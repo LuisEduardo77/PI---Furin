@@ -165,7 +165,13 @@ class AutorizacaoDeTodasAsRotasTests {
 				new Rota(HttpMethod.GET, "/carteirinhas/1/imprimir"),
 				new Rota(HttpMethod.GET, "/carteirinhas/1/qr-code"),
 				new Rota(HttpMethod.GET, "/alunos/1/carteirinhas/segunda-via"),
-				new Rota(HttpMethod.POST, "/alunos/1/carteirinhas"))
+				new Rota(HttpMethod.POST, "/alunos/1/carteirinhas"),
+				// Edição do aluno (T-23)
+				new Rota(HttpMethod.GET, "/alunos/1/editar"),
+				new Rota(HttpMethod.POST, "/alunos/1/editar/revisar"),
+				new Rota(HttpMethod.POST, "/alunos/1/editar"),
+				new Rota(HttpMethod.GET, "/alunos/1/inativacao"),
+				new Rota(HttpMethod.POST, "/alunos/1/inativacao"))
 				.doesNotContain(new Rota(HttpMethod.GET, ROTA_SEM_REGRA));
 	}
 

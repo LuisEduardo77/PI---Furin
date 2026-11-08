@@ -256,6 +256,12 @@ button {
   gap: 1rem;
 }
 
+.acoes--lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 .aviso {
   margin: 1rem 0;
   padding: 0.75rem 1rem;
@@ -430,13 +436,16 @@ td {
   height: 30mm;
 }
 
-/* Na impressão, só o cartão: sem menu, sem avisos e sem botões */
+/*
+ * Na impressão, só o cartão: sem menu, sem avisos e sem botões. Esta regra vem depois das
+ * outras, com a mesma especificidade, e por isso vence sem !important
+ */
 @media print {
   .pular-para-conteudo,
   .cabecalho,
   .sem-impressao,
   .aviso-sessao {
-    display: none !important;
+    display: none;
   }
 
   @page {

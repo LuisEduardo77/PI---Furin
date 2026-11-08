@@ -270,7 +270,7 @@ inválido (Bean Validation). Qualquer valor pode ser trocado pelo ambiente, por 
 | `POST /portaria/giros` (só no perfil `prototipo`) | FUNCIONARIO | RF09, RF14 |
 | `POST /portaria/liberacoes/{id}/cancelar` | FUNCIONARIO | RN02 (DEC-28, A2) |
 | `GET/POST /portaria/manual` | FUNCIONARIO | RF11, RF12 |
-| `GET/POST /alunos`, `GET /alunos/novo` [PROP], `/alunos/{id}/editar` (inclui o aviso por e-mail, DEC-38) | FUNCIONARIO | RF04–RF06, RF08 |
+| `GET/POST /alunos`, `GET /alunos/novo` [PROP], `GET/POST /alunos/{id}/editar` e `POST /alunos/{id}/editar/revisar` [PROP] (inclui o aviso por e-mail, DEC-38), `GET/POST /alunos/{id}/inativacao` [PROP] | FUNCIONARIO | RF04–RF06, RF08 |
 | `POST /alunos/{id}/carteirinhas`, `GET /carteirinhas/{id}/imprimir`, `GET /carteirinhas/{id}/qr-code` [PROP] e `GET /alunos/{id}/carteirinhas/segunda-via` (confirmação, até a página do aluno) [PROP] | FUNCIONARIO | RF07 |
 | `GET/POST /alunos/{id}/consentimentos/{idConsentimento}/revogacao` (o GET é a tela própria até a T-23 [PROP]) | FUNCIONARIO | RF05 (DEC-34) |
 | `GET /arquivos/{chave}` | FUNCIONARIO | DEC-08 |
@@ -883,6 +883,23 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   recusa aluno inativo, revoga a válida e emite outra, com `CARTEIRINHA_SEGUNDA_VIA` só com
   os IDs. O painel "Simular leitura" já lia as carteirinhas válidas do banco, então passa a
   mostrar o código novo sem mudança.
+- **Edição do aluno (T-23, 07/11/2026; RF08; DEC-38; DEC-45):** `EdicaoController` confere
+  com `ConferenciasDoAluno` (as mesmas regras e mensagens do cadastro, num lugar só) e mostra
+  o resumo "antes → depois" de `EdicaoDoAluno.diferencas`. O que foi revisado, com a foto
+  nova, fica na sessão até "Confirmar", porque o navegador não reenvia o arquivo e porque
+  assim se grava exatamente o que foi revisado [PROP]. `EdicaoDoAluno.gravar` bloqueia o
+  aluno (RN08) e, numa transação, atualiza nome, matrícula e foto, encerra o vínculo e cria
+  outro se a turma mudou, atualiza ou substitui o contato principal e grava o aviso por
+  e-mail; a foto antiga sai da área privada depois da gravação (D10). Vale a última
+  gravação (D10). Telefone gravado antes da normalização conta como o mesmo número. Logs:
+  `ALUNO_EDITADO` com os nomes `nome`, `matricula`, `turma`, `foto`, `contatoPrincipal`,
+  `contatoTelefone`, `contatoEmail` e `ativo` [PROP], e `PREFERENCIA_AVISO_ALTERADA` com
+  `aviso=LIGADO` ou `DESLIGADO`. A pessoa do contato só muda com a caixa "Substituir o
+  contato principal por outra pessoa" [PROP]. A inativação tem confirmação própria e é
+  recusada com saída pendente ou liberação aguardando o giro. A página de edição reúne as
+  outras ações do aluno: imprimir, segunda via, revogação do termo e inativação. Os campos
+  comuns do cadastro e da edição ficam em `DadosDoAlunoForm` (serializável, porque a revisão
+  vai para a sessão) e nos fragmentos `templates/alunos/campos.html`.
 
 **Log de auditoria (T-10, 01/11/2026):** pacote `br.com.furin.access.auditoria`.
 
@@ -1026,3 +1043,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 07/11/2026 | T-20: termo no cadastro e revogação (§6, "Termo e revogação"), com a tela própria da revogação e as regras [PROP] de signatário, referência e `revogado_em` |
 | 07/11/2026 | T-21: duplicidade de matrícula e de código (§6, "Duplicidade"; DEC-45), com o evento `CARTEIRINHA_NAO_EMITIDA` [PROP] |
 | 07/11/2026 | T-22: carteirinha no cadastro, QR Code, impressão e segunda via (§6, "Carteirinha"), com as rotas [PROP] do QR Code e da confirmação |
+| 07/11/2026 | T-23: edição do aluno (§6, "Edição do aluno"), com as rotas [PROP] da revisão e da inativação e a sessão guardando a revisão |

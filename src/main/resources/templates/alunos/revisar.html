@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: pagina(|Revisar alterações de ${aluno.nome()}|, 'alunos', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Revisar alterações de Ana Teste | Furin Access</title>
+</head>
+<body>
+<th:block th:fragment="conteudo">
+  <h1 th:text="|Revisar alterações de ${aluno.nome()}|">Revisar alterações de Ana Teste</h1>
+
+  <!-- RF08, passo 3; CA-RF08-01; A11 §5.9.12: resumo com Corrigir e Confirmar. Nada foi gravado ainda -->
+  <p>Confira as alterações. Nada foi gravado ainda.</p>
+
+  <div class="tabela-rolavel">
+    <table>
+      <caption>Alterações no cadastro</caption>
+      <thead>
+        <tr>
+          <th scope="col">Campo</th>
+          <th scope="col">Antes</th>
+          <th scope="col">Depois</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="linha : ${diferencas}">
+          <th scope="row" th:text="${linha.campo()}">Turma</th>
+          <td th:text="${linha.antes()}">6A — Manhã</td>
+          <td th:text="${linha.depois()}">6B — Manhã</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- RF08, exceções: a mudança do aviso pede confirmação [PROP: texto] -->
+  <p th:if="${avisoMuda and !alteracao.recebeAviso()}">
+    <strong th:text="|Os avisos de ${aluno.nome()} deixarão de ser enviados a ${alteracao.contatoNome()}. Confirmar?|">Os avisos de Ana Teste deixarão de ser enviados a Carla Teste. Confirmar?</strong>
+  </p>
+  <p th:if="${avisoMuda and alteracao.recebeAviso()}">
+    <strong th:text="|Os avisos de ${aluno.nome()} voltarão a ser enviados a ${alteracao.contatoNome()}. Confirmar?|">Os avisos de Ana Teste voltarão a ser enviados a Carla Teste. Confirmar?</strong>
+  </p>
+
+  <form th:action="@{/alunos/{id}/editar(id=${aluno.idAluno()})}" method="post">
+    <div class="acoes">
+      <button type="submit" class="botao">Confirmar</button>
+      <a class="botao botao--secundario" th:href="@{/alunos/{id}/editar(id=${aluno.idAluno()},corrigir='sim')}">Corrigir</a>
+    </div>
+  </form>
+</th:block>
+</body>
+</html>

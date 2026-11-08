@@ -28,6 +28,15 @@ public class RegistrosDeAlunos {
 	public record TurmaAtiva(long id, String nome) {
 	}
 
+	/**
+	 * O cadastro como está no banco, para a edição (RF08). Turma e contato podem faltar num
+	 * cadastro antigo incompleto; o formulário pede os dois.
+	 */
+	public record CadastroAtual(long idAluno, String nome, String matricula, String fotoChave, boolean ativo,
+			Long idVinculo, Long idTurma, String turma, Long idContato, String contatoNome, String contatoTelefone,
+			String contatoEmail, boolean recebeAviso) {
+	}
+
 	/** Um consentimento e o nome do aluno, para a tela da revogação. */
 	public record Consentimento(long id, long idAluno, String nomeDoAluno, String versao, LocalDate assinadoEm,
 			Instant conferidoEm, Instant revogadoEm) {
@@ -69,8 +78,64 @@ public class RegistrosDeAlunos {
 
 	/** RF04, passo 5: principal, com a preferência de aviso em "receber" (DEC-22, DEC-38). */
 	long inserirContatoPrincipal(long idAluno, String nome, String telefone, String email) {
+		return inserirContatoPrincipal(idAluno, nome, telefone, email, true);
+	}
+
+	/** RF08, fluxo A1: o novo contato principal. */
+	long inserirContatoPrincipal(long idAluno, String nome, String telefone, String email, boolean recebeAviso) {
 		return inserir("INSERT INTO contato_responsavel (id_aluno, nome, telefone, email, ativo, principal, "
-				+ "recebe_notificacao) VALUES (?, ?, ?, ?, 1, 1, 1)", idAluno, nome, telefone, email);
+				+ "recebe_notificacao) VALUES (?, ?, ?, ?, 1, 1, ?)", idAluno, nome, telefone, email, recebeAviso);
+	}
+
+	// --- Edição (RF08) ---
+
+	/** O cadastro como está agora: aluno, turma vigente e contato principal ativo. */
+	Optional<CadastroAtual> cadastroAtual(long idAluno, Instant agora) {
+		LocalDateTime utc = utc(agora);
+		return jdbc.query("SELECT a.id_aluno, a.nome, a.matricula, a.foto_chave, a.ativo, v.id_vinculo, t.id_turma, "
+				+ "t.nome AS turma, t.turno, r.id_contato, r.nome AS contato, r.telefone, r.email, r.recebe_notificacao "
+				+ "FROM aluno a "
+				+ "LEFT JOIN vinculo_turma v ON v.id_aluno = a.id_aluno AND v.inicio_em <= ? "
+				+ "AND (v.fim_em IS NULL OR v.fim_em > ?) "
+				+ "LEFT JOIN turma t ON t.id_turma = v.id_turma "
+				+ "LEFT JOIN contato_responsavel r ON r.id_aluno = a.id_aluno AND r.principal = 1 AND r.ativo = 1 "
+				+ "WHERE a.id_aluno = ? ORDER BY v.inicio_em DESC LIMIT 1",
+				(rs, linha) -> new CadastroAtual(rs.getLong("id_aluno"), rs.getString("nome"), rs.getString("matricula"),
+						rs.getString("foto_chave"), rs.getBoolean("ativo"), (Long) rs.getObject("id_vinculo", Long.class),
+						(Long) rs.getObject("id_turma", Long.class),
+						rs.getString("turma") == null ? null
+								: Liberacao.turmaComTurno(rs.getString("turma"), rs.getString("turno")),
+						(Long) rs.getObject("id_contato", Long.class), rs.getString("contato"), rs.getString("telefone"),
+						rs.getString("email"), rs.getBoolean("recebe_notificacao")),
+				utc, utc, idAluno).stream().findFirst();
+	}
+
+	/** O consentimento ainda não revogado mais recente, para o link da revogação (RF08, fluxo A4). */
+	Optional<Long> consentimentoValido(long idAluno) {
+		return jdbc.queryForList("SELECT c.id_consentimento FROM consentimento c "
+				+ "JOIN contato_responsavel r ON r.id_contato = c.id_contato "
+				+ "WHERE r.id_aluno = ? AND c.revogado_em IS NULL ORDER BY c.conferido_em DESC LIMIT 1", Long.class,
+				idAluno).stream().findFirst();
+	}
+
+	void atualizarAluno(long idAluno, String nome, String matricula, String fotoChave) {
+		jdbc.update("UPDATE aluno SET nome = ?, matricula = ?, foto_chave = ? WHERE id_aluno = ?", nome, matricula,
+				fotoChave, idAluno);
+	}
+
+	/** RF08, passo 4.2: o vínculo vigente termina agora; o histórico continua apontando para ele. */
+	void encerrarVinculo(long idVinculo, Instant agora) {
+		jdbc.update("UPDATE vinculo_turma SET fim_em = ? WHERE id_vinculo = ?", utc(agora), idVinculo);
+	}
+
+	/** RF08, fluxo A1, passo 3: o contato anterior deixa de ser o principal. */
+	void deixarDeSerPrincipal(long idContato) {
+		jdbc.update("UPDATE contato_responsavel SET principal = 0 WHERE id_contato = ?", idContato);
+	}
+
+	void atualizarContato(long idContato, String telefone, String email, boolean recebeAviso) {
+		jdbc.update("UPDATE contato_responsavel SET telefone = ?, email = ?, recebe_notificacao = ? WHERE id_contato = ?",
+				telefone, email, recebeAviso, idContato);
 	}
 
 	long idDoUsuario(String login) {

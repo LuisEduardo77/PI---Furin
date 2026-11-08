@@ -132,10 +132,12 @@ class DuplicidadeDeMatriculaTests {
 
 	@Test
 	void matriculaJaUsadaEhRecusadaComAMensagemDeA11() throws Exception {
-		// CA-RF06-01
+		// CA-RF06-01: com o link para o cadastro existente (DEC-45, desde a T-23)
 		enviar(MATRICULA_EM_USO)
 				.andExpect(status().isOk())
-				.andExpect(content().string(containsString(MENSAGEM)));
+				.andExpect(content().string(containsString(MENSAGEM)))
+				.andExpect(content().string(containsString("href=\"/alunos/" + alunoEmUso + "/editar\"")))
+				.andExpect(content().string(containsString("Abrir cadastro existente")));
 		assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM aluno WHERE nome = 'Davi Teste'", Integer.class)).isZero();
 	}
 

@@ -1,5 +1,9 @@
 package br.com.furin.access.aluno;
 
+import static br.com.furin.access.aluno.ConferenciasDoAluno.CAMPO_MATRICULA;
+import static br.com.furin.access.aluno.ConferenciasDoAluno.MATRICULA_REPETIDA;
+import static br.com.furin.access.aluno.ConferenciasDoAluno.enviado;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Clock;
@@ -7,7 +11,6 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -31,24 +34,20 @@ import br.com.furin.access.aluno.CadastroDeAlunos.MatriculaJaCadastrada;
 import br.com.furin.access.aluno.CadastroDeAlunos.NovoAluno;
 import br.com.furin.access.aluno.CadastroDeAlunos.TermoConferido;
 import br.com.furin.access.aluno.RegistrosDeAlunos.TurmaAtiva;
-import br.com.furin.access.arquivo.AreaPrivada;
-import br.com.furin.access.arquivo.AreaPrivada.TipoDeDocumento;
-import br.com.furin.access.arquivo.ArquivoRecusado;
 import br.com.furin.access.carteirinha.EmissaoDeCarteirinha.CarteirinhaNaoEmitida;
 import br.com.furin.access.config.FurinProperties;
-import br.com.furin.access.config.FurinProperties.RegraArquivo;
 import jakarta.validation.Valid;
 
 /**
- * Telas de alunos (T-19, T-20; RF04, RF05):
+ * Telas de alunos (T-19, T-20, T-22; RF04, RF05):
  * <ul>
  * <li>{@code GET /alunos}: a entrada do menu, com o link "Novo aluno". A busca é da T-24;</li>
  * <li>{@code GET /alunos/novo}: o formulário;</li>
- * <li>{@code POST /alunos}: confere tudo e tenta o cadastro completo.</li>
+ * <li>{@code POST /alunos}: confere tudo e grava o cadastro completo.</li>
  * </ul>
  * Salvo o cadastro (com a carteirinha, RN16), a tela vai para a impressão da carteirinha.
- * Em qualquer erro, nada é salvo, e os dados válidos voltam preenchidos, menos a foto, que o navegador não
- * permite manter (RF04; A11 §5.9.9).
+ * Em qualquer erro, nada é salvo, e os dados válidos voltam preenchidos, menos os arquivos,
+ * que o navegador não permite manter (RF04; A11 §5.9.9).
  */
 @Controller
 public class AlunoController {
@@ -56,30 +55,17 @@ public class AlunoController {
 	private static final Logger LOG = LoggerFactory.getLogger(AlunoController.class);
 
 	private static final String TELA_NOVO = "alunos/novo";
-	private static final String CAMPO_FOTO = "foto";
-	private static final String CAMPO_TURMA = "idTurma";
-	private static final String CAMPO_MATRICULA = "matricula";
-	private static final String CAMPO_EMAIL = "contatoEmail";
 	private static final String CAMPO_ASSINATURA = "termoAssinadoEm";
 	private static final String CAMPO_PROTOCOLO = "termoProtocolo";
 
 	/** O único signatário possível no cadastro novo: o contato principal [PROP]. */
 	static final String SIGNATARIO_PRINCIPAL = "principal";
-	/** RF06; A11 §5.9.10. O link "Abrir cadastro existente" entra com a edição do aluno (T-23). */
-	private static final String MATRICULA_REPETIDA = "Esta matrícula já está cadastrada. Confira a matrícula ou "
-			+ "localize o cadastro existente para editá-lo.";
 
 	private final CadastroDeAlunos cadastro;
 
 	private final RegistrosDeAlunos registros;
 
-	private final AreaPrivada areaPrivada;
-
-	private final String ddi;
-
-	private final String regraDaFoto;
-
-	private final String regraDoTermo;
+	private final ConferenciasDoAluno conferencias;
 
 	private final String versaoDoTermo;
 
@@ -87,33 +73,30 @@ public class AlunoController {
 
 	private final ZoneId fusoDaEscola;
 
-	public AlunoController(CadastroDeAlunos cadastro, RegistrosDeAlunos registros, AreaPrivada areaPrivada,
+	public AlunoController(CadastroDeAlunos cadastro, RegistrosDeAlunos registros, ConferenciasDoAluno conferencias,
 			FurinProperties propriedades, Clock relogio) {
 		this.cadastro = cadastro;
 		this.registros = registros;
-		this.areaPrivada = areaPrivada;
-		this.ddi = propriedades.contato().ddi();
-		this.regraDaFoto = regraEmTexto(propriedades.arquivos().foto());
-		this.regraDoTermo = regraEmTexto(propriedades.arquivos().termo());
+		this.conferencias = conferencias;
 		this.versaoDoTermo = propriedades.termo().versaoAtual();
 		this.relogio = relogio;
 		this.fusoDaEscola = propriedades.escola().fuso();
 	}
 
+	@ModelAttribute("regraDaFoto")
+	String regraDaFoto() {
+		return conferencias.regraDaFoto();
+	}
+
 	@ModelAttribute("regraDoTermo")
 	String regraDoTermo() {
-		return regraDoTermo;
+		return conferencias.regraDoTermo();
 	}
 
 	/** Espaços nas pontas não contam: um campo só de espaços vale como vazio. */
 	@InitBinder("aluno")
 	void limparEspacos(WebDataBinder binder) {
 		binder.registerCustomEditor(String.class, new StringTrimmerEditor(false));
-	}
-
-	@ModelAttribute("regraDaFoto")
-	String regraDaFoto() {
-		return regraDaFoto;
 	}
 
 	@GetMapping("/alunos")
@@ -137,11 +120,13 @@ public class AlunoController {
 			Authentication funcionario, RedirectAttributes redirecionamento) {
 		List<TurmaAtiva> turmas = registros.turmasAtivas();
 		model.addAttribute("turmas", turmas);
-		Optional<TurmaAtiva> turma = conferirTurma(form, turmas, erros);
-		Optional<String> telefone = conferirTelefone(form, erros);
-		conferirDominioDoEmail(form, erros);
-		conferirMatricula(form, erros);
-		conferirFoto(form.getFoto(), erros);
+		Optional<TurmaAtiva> turma = conferencias.turma(form.getIdTurma(), turmas, erros);
+		Optional<String> telefone = conferencias.telefone(form.getContatoTelefone(), erros);
+		conferencias.dominioDoEmail(form.getContatoEmail(), erros);
+		// DEC-45: o link "Abrir cadastro existente" leva à edição do aluno que já usa a matrícula
+		conferencias.matricula(form.getMatricula(), null, erros)
+				.ifPresent(existente -> model.addAttribute("matriculaEmUso", existente));
+		conferencias.foto(form.getFoto(), true, erros);
 		Optional<TermoConferido> termo = conferirTermo(form, erros);
 		if (erros.hasErrors()) {
 			return TELA_NOVO;
@@ -158,6 +143,8 @@ public class AlunoController {
 			return "redirect:/carteirinhas/" + blocos.idCarteirinha() + "/imprimir";
 		} catch (MatriculaJaCadastrada repetida) {
 			erros.rejectValue(CAMPO_MATRICULA, "repetida", MATRICULA_REPETIDA);
+			registros.alunoComMatricula(form.getMatricula(), null)
+					.ifPresent(existente -> model.addAttribute("matriculaEmUso", existente));
 		} catch (CarteirinhaNaoEmitida naoEmitida) {
 			// RF06, exceções: todas as tentativas de código colidiram. Nada foi salvo
 			erros.reject("carteirinha", "Não foi possível emitir a carteirinha. Tente novamente.");
@@ -166,51 +153,6 @@ public class AlunoController {
 			erros.reject("falha", "Não foi possível salvar o cadastro. Tente novamente.");
 		}
 		return TELA_NOVO;
-	}
-
-	private static Optional<TurmaAtiva> conferirTurma(AlunoForm form, List<TurmaAtiva> turmas, BindingResult erros) {
-		Optional<TurmaAtiva> turma = turmas.stream()
-				.filter(ativa -> String.valueOf(ativa.id()).equals(form.getIdTurma()))
-				.findFirst();
-		if (turma.isEmpty()) {
-			erros.rejectValue(CAMPO_TURMA, "inativa", "Selecione uma turma ativa.");
-		}
-		return turma;
-	}
-
-	private Optional<String> conferirTelefone(AlunoForm form, BindingResult erros) {
-		Optional<String> telefone = TelefoneDoContato.normalizar(form.getContatoTelefone(), ddi);
-		if (telefone.isEmpty() && !erros.hasFieldErrors("contatoTelefone")) {
-			erros.rejectValue("contatoTelefone", "invalido", "Informe o telefone com DDD. Exemplo: (11) 90000-0000.");
-		}
-		return telefone;
-	}
-
-	/** {@code @Email} aceita "carla@escola"; o aviso ao responsável precisa de um domínio completo. */
-	private static void conferirDominioDoEmail(AlunoForm form, BindingResult erros) {
-		String email = form.getContatoEmail();
-		if (!erros.hasFieldErrors(CAMPO_EMAIL) && !email.substring(email.lastIndexOf('@')).contains(".")) {
-			erros.rejectValue(CAMPO_EMAIL, "dominio", AlunoForm.EMAIL_INVALIDO);
-		}
-	}
-
-	private void conferirMatricula(AlunoForm form, BindingResult erros) {
-		// RF06: espaços das pontas já saíram (StringTrimmerEditor); os zeros à esquerda ficam
-		if (!erros.hasFieldErrors(CAMPO_MATRICULA) && registros.alunoComMatricula(form.getMatricula(), null).isPresent()) {
-			erros.rejectValue(CAMPO_MATRICULA, "repetida", MATRICULA_REPETIDA);
-		}
-	}
-
-	private void conferirFoto(MultipartFile foto, BindingResult erros) {
-		if (foto == null || foto.isEmpty()) {
-			erros.rejectValue(CAMPO_FOTO, "ausente", "Envie a foto do aluno.");
-			return;
-		}
-		try (InputStream conteudo = foto.getInputStream()) {
-			areaPrivada.conferir(TipoDeDocumento.FOTO, conteudo);
-		} catch (ArquivoRecusado | IOException recusada) {
-			erros.rejectValue(CAMPO_FOTO, "regra", "A foto precisa ser " + regraDaFoto + ".");
-		}
 	}
 
 	/**
@@ -234,7 +176,7 @@ public class AlunoController {
 					+ "dois.");
 		}
 		if (comArquivo) {
-			conferirTermoDigitalizado(form.getTermoArquivo(), erros);
+			conferencias.termoDigitalizado(form.getTermoArquivo(), erros);
 		}
 		if (assinadoEm.isEmpty() || form.getTermoVersao() == null) {
 			return Optional.empty();
@@ -257,28 +199,6 @@ public class AlunoController {
 			return Optional.empty();
 		}
 		return Optional.of(data);
-	}
-
-	private void conferirTermoDigitalizado(MultipartFile arquivo, BindingResult erros) {
-		try (InputStream conteudo = arquivo.getInputStream()) {
-			areaPrivada.conferir(TipoDeDocumento.TERMO, conteudo);
-		} catch (ArquivoRecusado | IOException recusado) {
-			erros.rejectValue("termoArquivo", "regra", "O termo digitalizado precisa ser " + regraDoTermo + ".");
-		}
-	}
-
-	private static boolean enviado(MultipartFile arquivo) {
-		return arquivo != null && !arquivo.isEmpty();
-	}
-
-	/** "JPEG ou PNG, até 2 MB" ou "PDF, JPEG ou PNG, até 5 MB", sempre igual a {@code furin.arquivos.*}. */
-	private static String regraEmTexto(RegraArquivo regra) {
-		List<String> formatos = regra.tipos().stream()
-				.map(tipo -> tipo.substring(tipo.indexOf('/') + 1).toUpperCase(Locale.ROOT))
-				.toList();
-		String lista = formatos.size() == 1 ? formatos.get(0)
-				: String.join(", ", formatos.subList(0, formatos.size() - 1)) + " ou " + formatos.getLast();
-		return lista + ", até " + regra.tamanhoMax().toMegabytes() + " MB";
 	}
 
 }
