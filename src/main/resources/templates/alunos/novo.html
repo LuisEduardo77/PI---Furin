@@ -9,25 +9,8 @@
 <th:block th:fragment="conteudo">
   <h1>Novo aluno</h1>
 
-  <!--
-    RF04; RN16; DEC-44: o cadastro só é salvo com os blocos completos. A carteirinha é da
-    T-22: até lá, a tela confere os dados e avisa que nada foi salvo. Textos [PROP]
-  -->
-  <p class="aviso">
-    <strong>Atenção:</strong> nesta versão o aluno ainda não é salvo. O cadastro só é salvo
-    com a carteirinha, que ainda não está disponível. Por enquanto, esta tela só confere os
-    dados.
-  </p>
-
-  <!-- A11 §5.13.8: role="status" sem mover o foco -->
-  <div role="status">
-    <div class="aviso aviso--sucesso" th:if="${cadastroIncompleto}">
-      <p>
-        <strong>Dados conferidos:</strong> nenhum erro encontrado, mas <strong>o aluno não
-        foi salvo</strong>, porque ainda falta a emissão da carteirinha.
-      </p>
-    </div>
-  </div>
+  <!-- RF04; RN16: ao salvar, o aluno sai com a carteirinha emitida, e a tela vai para a impressão -->
+  <p>Todos os blocos são obrigatórios. Ao salvar, a carteirinha é emitida para impressão.</p>
 
   <!-- novalidate: o erro descritivo vem do servidor (Bean Validation, A11 §5.9.9) -->
   <form th:action="@{/alunos}" th:object="${aluno}" method="post" enctype="multipart/form-data" novalidate>

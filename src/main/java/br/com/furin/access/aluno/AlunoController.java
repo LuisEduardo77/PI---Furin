@@ -24,8 +24,9 @@ import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import br.com.furin.access.aluno.CadastroDeAlunos.CadastroIncompleto;
+import br.com.furin.access.aluno.CadastroDeAlunos.BlocosGravados;
 import br.com.furin.access.aluno.CadastroDeAlunos.MatriculaJaCadastrada;
 import br.com.furin.access.aluno.CadastroDeAlunos.NovoAluno;
 import br.com.furin.access.aluno.CadastroDeAlunos.TermoConferido;
@@ -33,6 +34,7 @@ import br.com.furin.access.aluno.RegistrosDeAlunos.TurmaAtiva;
 import br.com.furin.access.arquivo.AreaPrivada;
 import br.com.furin.access.arquivo.AreaPrivada.TipoDeDocumento;
 import br.com.furin.access.arquivo.ArquivoRecusado;
+import br.com.furin.access.carteirinha.EmissaoDeCarteirinha.CarteirinhaNaoEmitida;
 import br.com.furin.access.config.FurinProperties;
 import br.com.furin.access.config.FurinProperties.RegraArquivo;
 import jakarta.validation.Valid;
@@ -44,8 +46,8 @@ import jakarta.validation.Valid;
  * <li>{@code GET /alunos/novo}: o formulário;</li>
  * <li>{@code POST /alunos}: confere tudo e tenta o cadastro completo.</li>
  * </ul>
- * Até a T-22, nada é salvo (ver {@link CadastroDeAlunos}), e a tela diz isso com clareza.
- * Em qualquer erro, os dados válidos voltam preenchidos, menos a foto, que o navegador não
+ * Salvo o cadastro (com a carteirinha, RN16), a tela vai para a impressão da carteirinha.
+ * Em qualquer erro, nada é salvo, e os dados válidos voltam preenchidos, menos a foto, que o navegador não
  * permite manter (RF04; A11 §5.9.9).
  */
 @Controller
@@ -132,7 +134,7 @@ public class AlunoController {
 
 	@PostMapping("/alunos")
 	public String cadastrar(@Valid @ModelAttribute("aluno") AlunoForm form, BindingResult erros, Model model,
-			Authentication funcionario) {
+			Authentication funcionario, RedirectAttributes redirecionamento) {
 		List<TurmaAtiva> turmas = registros.turmasAtivas();
 		model.addAttribute("turmas", turmas);
 		Optional<TurmaAtiva> turma = conferirTurma(form, turmas, erros);
@@ -149,11 +151,16 @@ public class AlunoController {
 		MultipartFile digitalizado = form.getTermoArquivo();
 		try (InputStream foto = form.getFoto().getInputStream();
 				InputStream termoDigitalizado = enviado(digitalizado) ? digitalizado.getInputStream() : null) {
-			cadastro.cadastrar(novo, termo.orElseThrow(), foto, termoDigitalizado, funcionario.getName());
-		} catch (CadastroIncompleto faltamBlocos) {
-			model.addAttribute("cadastroIncompleto", true);
+			BlocosGravados blocos = cadastro.cadastrar(novo, termo.orElseThrow(), foto, termoDigitalizado,
+					funcionario.getName());
+			// RF04, passo 6: "Aluno Ana Teste cadastrado. Imprima a carteirinha.", na impressão
+			redirecionamento.addFlashAttribute("alunoCadastrado", true);
+			return "redirect:/carteirinhas/" + blocos.idCarteirinha() + "/imprimir";
 		} catch (MatriculaJaCadastrada repetida) {
 			erros.rejectValue(CAMPO_MATRICULA, "repetida", MATRICULA_REPETIDA);
+		} catch (CarteirinhaNaoEmitida naoEmitida) {
+			// RF06, exceções: todas as tentativas de código colidiram. Nada foi salvo
+			erros.reject("carteirinha", "Não foi possível emitir a carteirinha. Tente novamente.");
 		} catch (IOException | DataAccessException falha) {
 			LOG.error("Falha ao gravar o cadastro de um aluno", falha);
 			erros.reject("falha", "Não foi possível salvar o cadastro. Tente novamente.");

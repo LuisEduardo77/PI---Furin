@@ -44,11 +44,12 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
   "Foto indisponível" quando não carrega) estão concluídas, antecipadas. T-18 (área
   privada em `arquivo/AreaPrivada`, entrega em `GET /arquivos/{chave}`) está concluída,
   e teste que grava arquivo usa um diretório temporário em `furin.arquivos.diretorio`.
-  T-19 (formulário em `aluno/AlunoController`) está concluída, **sem salvar**: até a T-22,
-  `CadastroIncompleto` desfaz a transação (DEC-44). T-20 (termo no cadastro e revogação em
-  `aluno/RevogacaoDoTermo`) está concluída; a carteirinha é o único bloco que falta. T-21
-  (duplicidade; a emissão com colisão está em `carteirinha/EmissaoDeCarteirinha`, que a
-  T-22 deve usar) está concluída. O
+  T-19 (formulário em `aluno/AlunoController`), T-20 (termo no cadastro e revogação em
+  `aluno/RevogacaoDoTermo`), T-21 (duplicidade; emissão com colisão em
+  `carteirinha/EmissaoDeCarteirinha`) e T-22 (carteirinha no cadastro, QR Code em
+  `carteirinha/QrCodeDaCarteirinha`, impressão e segunda via em `carteirinha/Carteirinhas`)
+  estão concluídas: **o cadastro de aluno é salvo** com os cinco blocos (RN16). Teste que
+  grava aluno de verdade usa `aluno/LimpezaDeAlunos` para apagar. O
   perfil `test` usa pools de 4 conexões. Teste que precisa do
   `prototipo` usa `furin.carga.ativa=false` para não rodar a carga V2, e teste com
   JavaScript que faz pedidos não usa a transação do teste (grava e apaga a cena). RF02 e RF03 estão `Implementada`. RF01 e RNF03 estão

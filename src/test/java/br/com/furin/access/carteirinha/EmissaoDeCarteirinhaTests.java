@@ -70,8 +70,9 @@ class EmissaoDeCarteirinhaTests {
 	@Test
 	void bancoRecusaCodigoDeCarteirinhaRevogada() {
 		// CA-RF06-06: teste direto na restrição uk_carteirinha_codigo
+		LocalDateTime emitidaEm = LocalDateTime.now(ZoneOffset.UTC);
 		assertThatThrownBy(() -> jdbc.update("INSERT INTO carteirinha (id_aluno, codigo, emitida_em) VALUES (?, ?, ?)",
-				aluno, CODIGO_REVOGADO, LocalDateTime.now(ZoneOffset.UTC)))
+				aluno, CODIGO_REVOGADO, emitidaEm))
 				.isInstanceOf(DuplicateKeyException.class);
 	}
 
