@@ -62,7 +62,10 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
 em `presenca/PainelDePresentes`, tela com `static/js/presentes.js`; pedido automático da
 tela vai com o cabeçalho `X-Furin-Atualizacao-Automatica`, que o filtro
 `autenticacao/AtualizacaoAutomatica` não conta como atividade; contador da portaria pela
-resposta do giro) está concluída. `CenaDaPortaria` é pública para os testes de outros
+resposta do giro) está concluída. T-38 (notificação `PENDENTE` criada por
+`notificacao/Notificacoes.criarParaConfirmada`, `Propagation.MANDATORY`, chamada no giro e no
+registro manual; conteúdo montado na hora por `notificacao/MensagemDaNotificacao`, que a T-39
+usa no envio) está concluída. `CenaDaPortaria` é pública para os testes de outros
 pacotes. Teste que
   grava aluno de verdade usa `aluno/LimpezaDeAlunos` para apagar. O
   perfil `test` usa pools de 4 conexões. Teste que precisa do

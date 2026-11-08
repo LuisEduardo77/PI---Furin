@@ -115,7 +115,7 @@ Vale para todo cartão:
 
 | ID | Tarefa | RF/RNF | Depende de | Pronto quando | Segurança e acessibilidade |
 |---|---|---|---|---|---|
-| T-38 | Criar a notificação `PENDENTE` na transação da confirmação, seguindo as regras de destinatário e preferência | RF21 | T-28, T-32 | Critérios de aceitação do RF21 sobre destinatário e preferência atendidos | RN11. Conteúdo mínimo (A10 §5.34) |
+| T-38 | Criar a notificação `PENDENTE` na transação da confirmação, seguindo as regras de destinatário e preferência | RF21 | T-28, T-32 | Critérios de aceitação do RF21 sobre destinatário e preferência atendidos. **Concluída em 08/11/2026:** `notificacao/Notificacoes`, chamada por `Giros.confirmar` e `RegistroManual.registrar` na mesma transação (`Propagation.MANDATORY`); conteúdo montado na hora por `notificacao/MensagemDaNotificacao`, para a T-39; CA-RF21-02, 03, 05 e 08 em `NotificacaoTests` | RN11. Conteúdo mínimo (A10 §5.34) |
 | T-39 | Fazer o envio assíncrono depois do commit: sempre `SIMULADA` (DEC-32), com o serviço de envio atrás de uma interface | RF21 | T-38 | Uma falha não altera a movimentação (critérios do RF21). A tela indica "Simulação — nenhum e-mail foi enviado" | TLS no perfil `smtp` (A10 §8.24) |
 
 ### Fase 7: contas da equipe

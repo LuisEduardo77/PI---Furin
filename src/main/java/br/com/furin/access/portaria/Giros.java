@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.com.furin.access.notificacao.Notificacoes;
+
 /**
  * Giro da catraca (T-28; RF09, RF14, passo 7; RN02, passo 3): numa transação, com o
  * aluno bloqueado (RN08), a liberação ainda {@code AGUARDANDO_GIRO} passa a
@@ -22,7 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
  * mudou nada.
  * <p>
  * No protótipo, o giro é simulado (DEC-18): só o {@link GiroSimuladoController} chama
- * este serviço. Fica para depois a notificação (RF21, Fase 6).
+ * este serviço. A confirmação cria, na mesma transação, a notificação ao contato principal
+ * (T-38; RN11), por {@link Notificacoes}; um reenvio ou um giro recusado não cria nada.
  */
 @Service
 public class Giros {
@@ -56,9 +59,12 @@ public class Giros {
 
 	private final Expiracoes expiracoes;
 
-	public Giros(RegistrosDaPortaria registros, Expiracoes expiracoes) {
+	private final Notificacoes notificacoes;
+
+	public Giros(RegistrosDaPortaria registros, Expiracoes expiracoes, Notificacoes notificacoes) {
 		this.registros = registros;
 		this.expiracoes = expiracoes;
+		this.notificacoes = notificacoes;
 	}
 
 	/**
@@ -83,6 +89,8 @@ public class Giros {
 		if (!registros.confirmar(idLiberacao, giro, chaveRequisicao, expiracoes.limite(giro))) {
 			throw new GiroRecusado(MotivoDoGiroRecusado.LIBERACAO_ENCERRADA);
 		}
+		// RN11, item 1: na mesma transação da confirmação (T-38)
+		notificacoes.criarParaConfirmada(idLiberacao, giro);
 		return registros.liberacao(idLiberacao).orElseThrow();
 	}
 

@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import br.com.furin.access.auditoria.Auditoria;
 import br.com.furin.access.auditoria.EventoAuditoria;
+import br.com.furin.access.notificacao.Notificacoes;
 import br.com.furin.access.portaria.RegistrosDaPortaria.AlunoDoManual;
 import br.com.furin.access.portaria.RegistrosDaPortaria.Manual;
 import br.com.furin.access.portaria.RegistrosDaPortaria.Vinculo;
@@ -29,8 +30,9 @@ import br.com.furin.access.portaria.TipoAutomatico.UltimaMovimentacao;
  * aluno bloqueado (RN08), e é recusada se houver uma liberação pendente para ele (RN07,
  * item 6). Um reenvio com a mesma {@code chaveRequisicao} devolve o registro original.</li>
  * </ul>
- * As duas operações começam pela expiração das liberações sem giro (T-29). A notificação
- * (RF12, passo 6.4) é da T-38.
+ * As duas operações começam pela expiração das liberações sem giro (T-29). A gravação cria,
+ * na mesma transação, a notificação ao contato principal (T-38; RF12, passo 6.4; RN11), que
+ * diz "registro manual" e o horário informado (DEC-28, B3); o reenvio não cria outra.
  */
 @Service
 public class RegistroManual {
@@ -100,12 +102,15 @@ public class RegistroManual {
 
 	private final Auditoria auditoria;
 
+	private final Notificacoes notificacoes;
+
 	public RegistroManual(RegistrosDaPortaria registros, TipoAutomatico tipoAutomatico, Expiracoes expiracoes,
-			Auditoria auditoria) {
+			Auditoria auditoria, Notificacoes notificacoes) {
 		this.registros = registros;
 		this.tipoAutomatico = tipoAutomatico;
 		this.expiracoes = expiracoes;
 		this.auditoria = auditoria;
+		this.notificacoes = notificacoes;
 	}
 
 	/** A situação atual do aluno, para o formulário e a revisão. Vazia se ele não existe. */
@@ -176,6 +181,8 @@ public class RegistroManual {
 		// Só IDs e o tipo: o motivo é texto livre e não vai para o log (A10 §8.15)
 		auditoria.registrar(EventoAuditoria.REGISTRO_MANUAL,
 				detalhes().id("registro", id).id("aluno", idAluno).texto("tipo", ficha.tipo().name()));
+		// RN11, itens 1 e 7: o manual também notifica, na mesma transação (T-38; DEC-28, B3)
+		notificacoes.criarParaConfirmada(id, agora);
 		return new Registrado(id, idAluno, ficha.tipo(), ficha.primeiroNome(), ocorrido);
 	}
 
