@@ -19,6 +19,8 @@
  *   GET /portaria/liberacoes/{id} e, se o servidor cancelou a liberação, mostra "Liberação
  *   expirada — Ana não passou". "Cancelar liberação de Ana Teste" faz
  *   POST /portaria/liberacoes/{id}/cancelar (RN02, item 5).
+ * - Leitura inválida (T-31; RF23): o motivo vai para a região role="alert" do funcionário,
+ *   com o rótulo "Leitura recusada:", e o monitor do aluno mostra sempre a mesma mensagem.
  * - Os dois painéis são regiões role="status" separadas: anunciam sem mover o foco, e o
  *   foco volta sempre ao campo de leitura (A11 §5.1.13, §5.13.8).
  */
@@ -45,10 +47,20 @@
   // RF09, fluxos A1 e A2 e exceções (T-29)
   var GIRO_FORA_DO_PRAZO = 'Liberação expirada. Leia a carteirinha novamente.';
   var JA_CONFIRMADA = 'A passagem já foi registrada e não pode ser cancelada.';
+  // RF23, passo 1 (T-31): o motivo para o funcionário. O aluno vê sempre MONITOR_RECUSA
+  var MOTIVOS_DA_RECUSA = {
+    LEITURA_NAO_RECONHECIDA: 'Leitura não reconhecida. Tente novamente.',
+    CODIGO_NAO_RECONHECIDO: 'Código não reconhecido.',
+    CARTEIRINHA_REVOGADA: 'Carteirinha revogada. Emitir segunda via.',
+    CARTEIRINHA_EXPIRADA: 'Carteirinha expirada. Emitir segunda via.',
+    ALUNO_INATIVO: 'Aluno inativo.',
+    SEM_TURMA_VIGENTE: 'Aluno sem turma vigente.'
+  };
 
   var formulario = document.getElementById('form-leitura');
   var campo = document.getElementById('campo-leitura');
   var painel = document.getElementById('painel-funcionario');
+  var alerta = document.getElementById('alerta-funcionario');
   var monitor = document.getElementById('monitor-aluno');
   var avisoDoLeitor = document.getElementById('aviso-leitor');
   var botaoGiro = document.getElementById('botao-giro');
@@ -153,6 +165,8 @@
     if (limpo === '') {
       return;
     }
+    // Esvaziar antes faz o leitor de tela anunciar de novo uma recusa igual à anterior
+    limparAlerta();
     enviar(raiz.getAttribute('data-leituras'), { codigo: limpo, chaveRequisicao: novaChave() },
       function (status, dados) {
         if ((status === 201 || status === 200 || status === 202) && dados) {
@@ -164,9 +178,9 @@
           // RN05; RN09: o aluno vê só "Aguarde"
           mostrarRecusa(AGUARDE_O_ANTERIOR, MONITOR_AGUARDE);
         } else if (status === 422 && dados) {
-          mostrarRecusa('Leitura recusada: ' + dados.motivo + '.', MONITOR_RECUSA);
+          mostrarLeituraInvalida(textoDaRecusa(dados));
         } else {
-          mostrarRecusa(ERRO_INESPERADO);
+          mostrarLeituraInvalida(ERRO_INESPERADO);
         }
         campo.focus();
       });
@@ -175,6 +189,7 @@
   function mostrarLiberacao(liberacao, desfecho) {
     var registrada = liberacao.situacao === 'CONFIRMADA';
     liberacaoEmCurso = registrada ? null : liberacao;
+    limparAlerta();
     preencherPainel(liberacao, situacaoNoPainel(liberacao, desfecho));
     mostrarNoMonitor(mensagemDoMonitor(liberacao, desfecho !== 'nova'), registrada);
     if (botaoGiro) {
@@ -250,6 +265,7 @@
       botaoGiro.disabled = true;
     }
     atualizarCancelamento();
+    limparAlerta();
     painel.textContent = '';
     paragrafo(painel, texto);
     mostrarNoMonitor(MONITOR_EM_ESPERA, false);
@@ -292,6 +308,50 @@
     return liberacao.primeiroNome + ', ' + nomeDoTipo(liberacao.tipo) + ' liberada. Pode passar.';
   }
 
+  // --- Leitura inválida (T-31; RF23, RN09, RN17) ---
+
+  /** O motivo em texto. A saída pendente leva o dia da entrada (RN06). */
+  function textoDaRecusa(recusa) {
+    if (recusa.motivo === 'SAIDA_PENDENTE' && recusa.saidaPendenteDe) {
+      var dia = recusa.saidaPendenteDe.split('-');
+      return 'Saída pendente de ' + dia[2] + '/' + dia[1]
+        + ': registre a saída manual antes da nova entrada.';
+    }
+    return MOTIVOS_DA_RECUSA[recusa.motivo] || ERRO_INESPERADO;
+  }
+
+  /**
+   * RF23, passos 1 a 3: o motivo vai para a região role="alert" do funcionário, e o aluno vê
+   * sempre a mesma mensagem, sem saber se o código existe (CA-RF23-01, 06). O foco fica no
+   * campo de leitura. Uma liberação em curso continua no painel, com o giro disponível.
+   */
+  function mostrarLeituraInvalida(texto) {
+    if (botaoGiro) {
+      botaoGiro.disabled = !liberacaoEmCurso;
+    }
+    if (!liberacaoEmCurso) {
+      painel.textContent = '';
+      paragrafo(painel, 'Nenhuma leitura em andamento.');
+    }
+    alerta.textContent = '';
+    alerta.className = 'aviso aviso--erro';
+    var p = document.createElement('p');
+    var rotulo = document.createElement('strong');
+    // CA-RF23-08: o estado está no texto, não só na cor
+    rotulo.textContent = 'Leitura recusada:';
+    p.appendChild(rotulo);
+    p.appendChild(document.createTextNode(' ' + texto));
+    alerta.appendChild(p);
+    mostrarNoMonitor(MONITOR_RECUSA, true);
+    reiniciarLimpezaDoPainel();
+  }
+
+  function limparAlerta() {
+    alerta.textContent = '';
+    alerta.className = '';
+  }
+
+  /** RN05: não é falha (RF23, exceções); o aviso fica no painel, sem alerta. */
   function mostrarRecusa(texto, textoDoMonitor) {
     // A recusa de uma leitura não encerra a liberação em curso: o giro continua disponível
     if (botaoGiro) {
@@ -388,6 +448,7 @@
         if (!liberacaoEmCurso) {
           painel.textContent = '';
           paragrafo(painel, 'Nenhuma leitura em andamento.');
+          limparAlerta();
         }
       }, tempoDoPainel);
     }

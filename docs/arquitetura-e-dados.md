@@ -801,7 +801,11 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   valida (RN09, RN06), calcula o tipo e grava `AGUARDANDO_GIRO`. A resposta traz só o ID
   da liberação, tipo, nome, primeiro nome, turma e a referência da foto em `fotoChave`
   (CA-RNF05-03, DEC-43), com 201. Uma recusa responde 422 com um motivo técnico (`MotivoDaRecusa`) e vai para o
-  log como `LEITURA_RECUSADA`, com o código mascarado; os textos são da T-31. As
+  log como `LEITURA_RECUSADA`, com o código mascarado. Os textos (T-31, 08/11/2026; RF23)
+  ficam em `static/js/portaria.js`: o motivo vai para a região `#alerta-funcionario`
+  (`role="alert"`, vazia desde o carregamento), com o rótulo "Leitura recusada:", e o
+  monitor do aluno mostra sempre a mensagem do RF23. O conteúdo fora do formato tem o
+  motivo `LEITURA_NAO_RECONHECIDA` [PROP] e é recusado antes de consultar a carteirinha. As
   repetições (T-27, 07/11/2026; RF15) seguem a ordem do fluxo principal do RF15, depois
   do bloqueio do aluno e da conferência da chave: a leitura da mesma carteirinha com
   `lancado_em` nos últimos `furin.portaria.janela-repeticao` e ainda não `CONFIRMADA` é
@@ -1091,3 +1095,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 07/11/2026 | T-24: busca por nome ou matrícula (§6, "Busca"), na tela Alunos, com a situação "Saída pendente" [PROP] |
 | 07/11/2026 | T-27: janela de 2 s, RN04 e RN05 (§6, "Portaria, leitura e giro"); DEC-46: coluna gerada `pendente_ponto` com `uk_registro_pendente_ponto` (§5, migração V4), status 202 e motivo `OUTRA_LIBERACAO_PENDENTE` [PROP] |
 | 07/11/2026 | T-29: expiração e cancelamento (§6, "Expiração e cancelamento"), com `furin.portaria.verificacao-expiracao` (§4), `furin.agendamentos.ativos`, a rota `GET /portaria/liberacoes/{id}` (§4) e os eventos `LIBERACAO_EXPIRADA` e `LIBERACAO_CANCELADA` [PROP] |
+| 08/11/2026 | T-31: textos da leitura inválida (§6, "Portaria, leitura e giro"), com a região `#alerta-funcionario`, o motivo `LEITURA_NAO_RECONHECIDA` e os textos separados de revogada/expirada e inativo/sem turma [PROP] |

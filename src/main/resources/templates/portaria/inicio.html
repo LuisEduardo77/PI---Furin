@@ -59,6 +59,13 @@
           <p data-vazio>Nenhuma leitura em andamento.</p>
         </div>
         <!--
+          RF23, passo 3; CA-RF23-05 (A11 §5.13.8): o motivo da leitura recusada é anunciado
+          como alerta, sem mover o foco do campo de leitura. A região existe vazia desde o
+          carregamento, para o leitor de tela anunciar o texto quando ele entra. O motivo
+          está sempre em texto, com o rótulo "Leitura recusada:" (CA-RF23-08)
+        -->
+        <div id="alerta-funcionario" role="alert"></div>
+        <!--
           RF09, fluxo A2; RN02, item 5 (DEC-28, A2): fora da região role="status", para o
           anúncio não repetir o botão. Aparece só com uma liberação pendente, com o nome do
           aluno no texto ("Cancelar liberação de Ana Teste")

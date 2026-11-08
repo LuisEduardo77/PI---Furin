@@ -39,8 +39,8 @@ import br.com.furin.access.portaria.TipoAutomatico.Decisao;
  * mesma liberação, sem renovar o prazo (RN04); com outro aluno aguardando, é recusada
  * (RN05). A janela é calculada no banco, e o giro a encerra porque deixa a liberação
  * {@code CONFIRMADA} (DEC-02). A leitura começa pela expiração das liberações sem giro
- * (T-29): passado o prazo de 15 s, a pendente não segura mais a portaria. Ficam para
- * depois os textos das recusas (T-31).
+ * (T-29): passado o prazo de 15 s, a pendente não segura mais a portaria. Os textos das
+ * recusas ficam na tela (T-31; RF23).
  */
 @Service
 public class Leituras {
@@ -105,8 +105,9 @@ public class Leituras {
 		// DATETIME(6) guarda microssegundos: o instante gravado é o mesmo que volta
 		Instant agora = relogio.instant().truncatedTo(ChronoUnit.MICROS);
 		String normalizado = codigo.strip().toLowerCase(Locale.ROOT);
+		// CA-RF23-04: fora do formato, nem a carteirinha nem o aluno são consultados
 		if (!formatoDoCodigo.matcher(normalizado).matches()) {
-			throw recusar(normalizado, MotivoDaRecusa.CODIGO_NAO_RECONHECIDO, null);
+			throw recusar(normalizado, MotivoDaRecusa.LEITURA_NAO_RECONHECIDA, null);
 		}
 		Carteirinha carteirinha = registros.carteirinhaPorCodigo(normalizado)
 				.orElseThrow(() -> recusar(normalizado, MotivoDaRecusa.CODIGO_NAO_RECONHECIDO, null));

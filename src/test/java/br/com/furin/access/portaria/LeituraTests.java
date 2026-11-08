@@ -179,9 +179,16 @@ class LeituraTests {
 	// --- Recusas (RN09, RN06): nada é gravado ---
 
 	@ParameterizedTest
-	@ValueSource(strings = { "nao-e-um-codigo", "a1b2c3d4", "ffffffffffffffffffffffffffffffff" })
-	void codigoForaDoFormatoOuDesconhecidoEhRecusado(String codigo) throws Exception {
-		ler(codigo, UUID.randomUUID()).andExpect(recusa("CODIGO_NAO_RECONHECIDO"));
+	@ValueSource(strings = { "nao-e-um-codigo", "a1b2c3d4" })
+	void codigoForaDoFormatoEhLeituraNaoReconhecida(String codigo) throws Exception {
+		// RF23, passo 1 (T-31): motivo próprio, diferente do código que não existe
+		ler(codigo, UUID.randomUUID()).andExpect(recusa("LEITURA_NAO_RECONHECIDA"));
+		assertThat(quantidadeDeRegistrosDaAna()).isZero();
+	}
+
+	@Test
+	void codigoNoFormatoQueNaoExisteEhRecusado() throws Exception {
+		ler("ffffffffffffffffffffffffffffffff", UUID.randomUUID()).andExpect(recusa("CODIGO_NAO_RECONHECIDO"));
 		assertThat(quantidadeDeRegistrosDaAna()).isZero();
 	}
 
