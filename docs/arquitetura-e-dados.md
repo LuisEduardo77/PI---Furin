@@ -218,6 +218,7 @@ atualizada.
 | `furin.portaria.prazo-giro` | 15 s | PEND-01 → DEC-28 (A1) |
 | `furin.portaria.monitor-exibicao` | 4 s | PEND-12 → DEC-28 (A6) |
 | `furin.portaria.painel-limpeza` | 60 s sem leitura | RF10; DEC-28 (A7) |
+| `furin.portaria.verificacao-expiracao` | 1 s: intervalo da tarefa agendada que cancela as liberações sem giro | T-29; RN02 [PROP: nome e valor] |
 | `furin.carteirinha.tentativas-colisao` | 3 | RF06; DEC-28 (D7) |
 | `furin.carteirinha.tamanho-codigo` | 32 (par) | A14 p.6; RN15 [PROP: nome] |
 | `furin.presentes.intervalo-atualizacao` | 30 s | RF16; DEC-28 (C2) |
@@ -269,6 +270,7 @@ inválido (Bean Validation). Qualquer valor pode ser trocado pelo ambiente, por 
 | `POST /portaria/leituras` | FUNCIONARIO | RF09, RF13–RF15 |
 | `POST /portaria/giros` (só no perfil `prototipo`) | FUNCIONARIO | RF09, RF14 |
 | `POST /portaria/liberacoes/{id}/cancelar` | FUNCIONARIO | RN02 (DEC-28, A2) |
+| `GET /portaria/liberacoes/{id}` | FUNCIONARIO | RF09, fluxo A1: situação da liberação, para a tela mostrar a expiração [PROP] |
 | `GET/POST /portaria/manual` | FUNCIONARIO | RF11, RF12 |
 | `GET /alunos` (busca, com `termo` e `inativos`), `POST /alunos`, `GET /alunos/novo` [PROP], `GET/POST /alunos/{id}/editar` e `POST /alunos/{id}/editar/revisar` [PROP] (inclui o aviso por e-mail, DEC-38), `GET/POST /alunos/{id}/inativacao` [PROP] | FUNCIONARIO | RF04–RF06, RF08 |
 | `POST /alunos/{id}/carteirinhas`, `GET /carteirinhas/{id}/imprimir`, `GET /carteirinhas/{id}/qr-code` [PROP] e `GET /alunos/{id}/carteirinhas/segunda-via` (confirmação, até a página do aluno) [PROP] | FUNCIONARIO | RF07 |
@@ -819,9 +821,27 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   `LocalDateTime`, sem a conversão de fuso do Hibernate. Os testes que precisam do
   perfil `prototipo` desligam a carga V2 com `furin.carga.ativa=false` (padrão: ligada).
   Ainda não há:
-  expiração de 15 s (T-29), mensagens (T-31) e notificações (Fase 6). Até a T-29, uma
-  liberação sem giro segura a portaria inteira (RN05); no protótipo, "Simular passagem"
-  a encerra.
+  mensagens (T-31) e notificações (Fase 6).
+- **Expiração e cancelamento (T-29, 07/11/2026):** `Expiracoes.expirarVencidas()` cancela
+  com `SEM_GIRO` as liberações `AGUARDANDO_GIRO` lançadas há `furin.portaria.prazo-giro` ou
+  mais, cada uma com o aluno bloqueado (RN08), e registra `LIBERACAO_EXPIRADA` [PROP] no
+  log. Roda pela tarefa `ExpiracaoAgendada` (`@Scheduled`, a cada
+  `furin.portaria.verificacao-expiracao`) e no começo da leitura, do giro, do cancelamento e
+  da consulta, na transação de cada um. Como só há uma pendente por vez (DEC-46), os
+  bloqueios seguem sempre a mesma ordem: o aluno da pendente, depois o da operação. A
+  leitura e o giro não desfazem a transação quando recusam (`noRollbackFor`), para a
+  expiração ficar gravada; nenhuma recusa grava outra coisa. O giro só confirma uma
+  liberação lançada dentro do prazo. `furin.agendamentos.ativos=false` desliga a tarefa;
+  o perfil `test` faz isso, porque cada contexto de teste guardado pelo Spring teria a
+  sua, com o próprio relógio. `POST /portaria/liberacoes/{id}/cancelar`
+  (`LiberacaoController`, `Liberacoes`) cancela com `FUNCIONARIO` e registra
+  `LIBERACAO_CANCELADA` [PROP]; cancelar de novo devolve a mesma situação, e a confirmada é
+  recusada com `LIBERACAO_CONFIRMADA`. `GET /portaria/liberacoes/{id}` [PROP] devolve só o
+  ID, a situação, o motivo do cancelamento e o primeiro nome. A tela consulta essa rota
+  quando passa o prazo e mostra "Liberação expirada — Ana não passou"; o botão "Cancelar
+  liberação de Ana Teste" fica fora da região `role="status"` e só aparece com uma
+  liberação pendente; o giro fora do prazo mostra "Liberação expirada. Leia a carteirinha
+  novamente." (RF09, exceções).
 - **Tela da portaria (T-30, 02/11/2026, antecipada):** `portaria/inicio.html` e
   `static/js/portaria.js`, o segundo script do projeto (arquivo próprio por causa da
   CSP). O campo de leitura manda o código com Enter; o painel "Simular leitura
@@ -1070,3 +1090,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 07/11/2026 | T-23: edição do aluno (§6, "Edição do aluno"), com as rotas [PROP] da revisão e da inativação e a sessão guardando a revisão |
 | 07/11/2026 | T-24: busca por nome ou matrícula (§6, "Busca"), na tela Alunos, com a situação "Saída pendente" [PROP] |
 | 07/11/2026 | T-27: janela de 2 s, RN04 e RN05 (§6, "Portaria, leitura e giro"); DEC-46: coluna gerada `pendente_ponto` com `uk_registro_pendente_ponto` (§5, migração V4), status 202 e motivo `OUTRA_LIBERACAO_PENDENTE` [PROP] |
+| 07/11/2026 | T-29: expiração e cancelamento (§6, "Expiração e cancelamento"), com `furin.portaria.verificacao-expiracao` (§4), `furin.agendamentos.ativos`, a rota `GET /portaria/liberacoes/{id}` (§4) e os eventos `LIBERACAO_EXPIRADA` e `LIBERACAO_CANCELADA` [PROP] |

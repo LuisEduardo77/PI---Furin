@@ -40,6 +40,9 @@ public class PortariaController {
 		model.addAttribute("carteirinhasFicticias", ficticias == null ? List.of() : ficticias.ativas());
 		model.addAttribute("monitorExibicaoMs", tempos.monitorExibicao().toMillis());
 		model.addAttribute("painelLimpezaMs", tempos.painelLimpeza().toMillis());
+		// T-29: quando passa o prazo do giro, a tela consulta a situação da liberação
+		model.addAttribute("prazoGiroMs", tempos.prazoGiro().toMillis());
+		model.addAttribute("verificacaoExpiracaoMs", tempos.verificacaoExpiracao().toMillis());
 		return "portaria/inicio";
 	}
 

@@ -9,3 +9,10 @@ spring:
     hikari:
       maximum-pool-size: 4
       minimum-idle: 1
+
+furin:
+  agendamentos:
+    # T-29: sem a tarefa agendada nos testes. Cada contexto guardado pelo Spring teria a
+    # sua, com o próprio relógio, e cancelaria as liberações de outro teste. A expiração
+    # continua conferida antes de cada operação da portaria, e os testes a chamam direto
+    ativos: false

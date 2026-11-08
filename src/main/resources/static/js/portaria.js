@@ -15,6 +15,10 @@
  *   liberação é nova (201), se já estava pendente (200; RN04) ou se a leitura foi ignorada
  *   na janela de 2 s (202; RN03). Com outro aluno aguardando, a recusa mostra "Aguarde a
  *   passagem do aluno anterior" (RN05).
+ * - Expiração e cancelamento (T-29): passado o prazo do giro, a tela consulta
+ *   GET /portaria/liberacoes/{id} e, se o servidor cancelou a liberação, mostra "Liberação
+ *   expirada — Ana não passou". "Cancelar liberação de Ana Teste" faz
+ *   POST /portaria/liberacoes/{id}/cancelar (RN02, item 5).
  * - Os dois painéis são regiões role="status" separadas: anunciam sem mover o foco, e o
  *   foco volta sempre ao campo de leitura (A11 §5.1.13, §5.13.8).
  */
@@ -38,6 +42,9 @@
   var MONITOR_AGUARDE = 'Aguarde.';
   // 201: liberação nova; 200: já pendente (RN04); 202: ignorada na janela de 2 s (RN03)
   var DESFECHO_POR_STATUS = { 201: 'nova', 200: 'aguardando', 202: 'ja-recebida' };
+  // RF09, fluxos A1 e A2 e exceções (T-29)
+  var GIRO_FORA_DO_PRAZO = 'Liberação expirada. Leia a carteirinha novamente.';
+  var JA_CONFIRMADA = 'A passagem já foi registrada e não pode ser cancelada.';
 
   var formulario = document.getElementById('form-leitura');
   var campo = document.getElementById('campo-leitura');
@@ -45,16 +52,22 @@
   var monitor = document.getElementById('monitor-aluno');
   var avisoDoLeitor = document.getElementById('aviso-leitor');
   var botaoGiro = document.getElementById('botao-giro');
+  var botaoCancelar = document.getElementById('botao-cancelar');
   var token = document.querySelector('meta[name="_csrf"]');
   var cabecalhoDoToken = document.querySelector('meta[name="_csrf_header"]');
 
   var tempoDoMonitor = Number(raiz.getAttribute('data-monitor-ms'));
   var tempoDoPainel = Number(raiz.getAttribute('data-painel-ms'));
+  var tempoDoPrazo = Number(raiz.getAttribute('data-prazo-giro-ms'));
+  var tempoDaVerificacao = Number(raiz.getAttribute('data-verificacao-ms'));
 
   var liberacaoEmCurso = null;
   var giroEmCurso = null;
   var esperaDoMonitor = null;
   var esperaDoPainel = null;
+  // T-29: consulta da situação quando passa o prazo do giro, e o ID que ela acompanha
+  var esperaDaExpiracao = null;
+  var liberacaoAcompanhada = null;
 
   // --- Pedidos ao servidor ---
 
@@ -104,6 +117,33 @@
     pedido.send(JSON.stringify(corpo));
   }
 
+  /**
+   * GET da situação de uma liberação (T-29). Não conta como atividade do funcionário: é a
+   * tela que pergunta sozinha, e o aviso de expiração da sessão não deve recomeçar.
+   */
+  function consultar(endereco, aoResponder) {
+    var pedido = new XMLHttpRequest();
+    pedido.open('GET', endereco);
+    pedido.setRequestHeader('Accept', 'application/json');
+    pedido.onload = function () {
+      if (pedido.responseURL && pedido.responseURL.indexOf('/login') >= 0) {
+        window.location.assign(pedido.responseURL);
+        return;
+      }
+      var dados = null;
+      try {
+        dados = JSON.parse(pedido.responseText);
+      } catch (erro) {
+        dados = null;
+      }
+      aoResponder(pedido.status, dados);
+    };
+    pedido.onerror = function () {
+      aoResponder(0, null);
+    };
+    pedido.send();
+  }
+
   // --- Leitura (RF09, RF14) ---
 
   function ler(codigo) {
@@ -140,7 +180,105 @@
     if (botaoGiro) {
       botaoGiro.disabled = registrada;
     }
+    atualizarCancelamento();
+    if (registrada) {
+      pararDeAcompanhar();
+    } else if (liberacaoAcompanhada !== liberacao.idLiberacao) {
+      // A repetida (RN03, RN04) mantém a contagem que já corria para a mesma liberação
+      acompanharExpiracao(liberacao.idLiberacao, tempoDoPrazo + tempoDaVerificacao);
+    }
     reiniciarLimpezaDoPainel();
+  }
+
+  // --- Expiração e cancelamento (T-29; RF09, fluxos A1 e A2) ---
+
+  function atualizarCancelamento() {
+    if (!botaoCancelar) {
+      return;
+    }
+    botaoCancelar.hidden = !liberacaoEmCurso;
+    if (liberacaoEmCurso) {
+      botaoCancelar.textContent = 'Cancelar liberação de ' + liberacaoEmCurso.nome;
+    }
+  }
+
+  function acompanharExpiracao(idLiberacao, espera) {
+    clearTimeout(esperaDaExpiracao);
+    liberacaoAcompanhada = idLiberacao;
+    esperaDaExpiracao = setTimeout(function () {
+      consultar(raiz.getAttribute('data-liberacoes') + idLiberacao, function (status, dados) {
+        if (liberacaoAcompanhada !== idLiberacao) {
+          return;
+        }
+        if (status === 200 && dados) {
+          mostrarSituacao(dados);
+        } else {
+          // Sem resposta: tenta de novo, sem encerrar a liberação na tela
+          acompanharExpiracao(idLiberacao, tempoDaVerificacao);
+        }
+      });
+    }, espera);
+  }
+
+  function pararDeAcompanhar() {
+    clearTimeout(esperaDaExpiracao);
+    liberacaoAcompanhada = null;
+  }
+
+  /** A resposta da consulta ou do cancelamento: só a cancelada muda a tela. */
+  function mostrarSituacao(situacao) {
+    if (situacao.situacao === 'AGUARDANDO_GIRO') {
+      // O servidor ainda não cancelou (relógios diferentes): pergunta de novo em seguida
+      acompanharExpiracao(situacao.idLiberacao, tempoDaVerificacao);
+    } else if (situacao.situacao === 'CANCELADA') {
+      encerrarLiberacao(situacao.motivoCancelamento === 'SEM_GIRO'
+        ? 'Liberação expirada — ' + situacao.primeiroNome + ' não passou'
+        : 'Liberação de ' + situacao.primeiroNome + ' cancelada');
+    } else {
+      // Confirmada por outra tela: nada a encerrar aqui
+      liberacaoEmCurso = null;
+      pararDeAcompanhar();
+      atualizarCancelamento();
+    }
+  }
+
+  /** A liberação acabou sem passagem: o painel diz por quê, e o monitor volta à espera. */
+  function encerrarLiberacao(texto) {
+    liberacaoEmCurso = null;
+    pararDeAcompanhar();
+    if (botaoGiro) {
+      botaoGiro.disabled = true;
+    }
+    atualizarCancelamento();
+    painel.textContent = '';
+    paragrafo(painel, texto);
+    mostrarNoMonitor(MONITOR_EM_ESPERA, false);
+    reiniciarLimpezaDoPainel();
+  }
+
+  function cancelar() {
+    if (!liberacaoEmCurso) {
+      return;
+    }
+    var idLiberacao = liberacaoEmCurso.idLiberacao;
+    botaoCancelar.disabled = true;
+    // O botão some com o cancelamento: o foco volta ao campo de leitura (DEC-28, A8)
+    campo.focus();
+    enviar(raiz.getAttribute('data-liberacoes') + idLiberacao + '/cancelar', {},
+      function (status, dados) {
+        botaoCancelar.disabled = false;
+        if (status === 200 && dados) {
+          mostrarSituacao(dados);
+        } else if (status === 422 && dados && dados.motivo === 'LIBERACAO_CONFIRMADA') {
+          liberacaoEmCurso = null;
+          pararDeAcompanhar();
+          atualizarCancelamento();
+          paragrafo(painel, JA_CONFIRMADA);
+        } else {
+          paragrafo(painel, ERRO_INESPERADO);
+        }
+        campo.focus();
+      });
   }
 
   function mensagemDoMonitor(liberacao, repetida) {
@@ -182,10 +320,11 @@
       function (status, dados) {
         if (status === 200 && dados) {
           mostrarLiberacao(dados, 'nova');
+        } else if (status === 422 && dados && dados.motivo === 'LIBERACAO_ENCERRADA') {
+          // RF09, exceções: giro depois do prazo ou de uma liberação cancelada
+          encerrarLiberacao(GIRO_FORA_DO_PRAZO);
         } else if (status === 422 && dados) {
-          liberacaoEmCurso = null;
-          paragrafo(painel, 'Giro recusado: ' + dados.motivo + '.');
-          mostrarNoMonitor(MONITOR_EM_ESPERA, false);
+          encerrarLiberacao('Giro recusado: ' + dados.motivo + '.');
         } else {
           botaoGiro.disabled = false;
           paragrafo(painel, ERRO_INESPERADO);
@@ -326,6 +465,9 @@
   });
   if (botaoGiro) {
     botaoGiro.addEventListener('click', girar);
+  }
+  if (botaoCancelar) {
+    botaoCancelar.addEventListener('click', cancelar);
   }
   // O campo já tem autofocus; isto cobre navegadores que não o aplicam
   campo.focus();

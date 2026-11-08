@@ -57,6 +57,7 @@ furin:
     prazo-giro: 15s            # DEC-28 (A1)
     monitor-exibicao: 4s       # DEC-28 (A6)
     painel-limpeza: 60s        # RF10; DEC-28 (A7)
+    verificacao-expiracao: 1s  # T-29: intervalo da tarefa que cancela as liberações sem giro [PROP]
   carteirinha:
     tentativas-colisao: 3      # RF06; DEC-28 (D7)
     tamanho-codigo: 32         # A14 p.6: caracteres hexadecimais

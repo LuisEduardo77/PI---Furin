@@ -404,6 +404,58 @@ class PortariaTelaTests {
 		confirmarOGiro(recarregada);
 	}
 
+	// --- Expiração e cancelamento (T-29; RF09, fluxos A1 e A2) ---
+
+	@Test
+	void funcionarioCancelaALiberacaoPeloBotao() throws Exception {
+		HtmlPage portaria = abrir();
+		HtmlButton cancelar = (HtmlButton) portaria.getElementById("botao-cancelar");
+		assertThat(cancelar.isDisplayed()).as("sem liberação, não há o que cancelar").isFalse();
+		simularLeituraDaAna(portaria);
+		assertThat(cancelar.isDisplayed()).isTrue();
+		assertThat(cancelar.getTextContent()).isEqualTo("Cancelar liberação de Ana Teste");
+
+		cancelar.click();
+		esperar(Duration.ofMillis(800));
+
+		assertThat(texto(portaria, "painel-funcionario")).isEqualTo("Liberação de Ana cancelada");
+		assertThat(texto(portaria, "monitor-aluno")).isEqualTo(ESPERA);
+		assertThat(cancelar.isDisplayed()).isFalse();
+		assertThat(((HtmlButton) portaria.getElementById("botao-giro")).isDisabled()).isTrue();
+		assertThat(portaria.getFocusedElement().getId()).isEqualTo("campo-leitura");
+		assertThat(jdbc.queryForObject("SELECT motivo_cancelamento FROM registro_acesso r JOIN carteirinha c "
+				+ "ON c.id_carteirinha = r.id_carteirinha WHERE c.codigo = ?", String.class, CODIGO_ANA))
+				.isEqualTo("FUNCIONARIO");
+	}
+
+	@Test
+	void liberacaoVencidaMostraQueAAlunaNaoPassou() throws Exception {
+		// O relógio avança no servidor; a resposta do cancelamento diz que ela já tinha expirado
+		HtmlPage portaria = abrir();
+		simularLeituraDaAna(portaria);
+		((RelogioAjustavel) relogio).avancar(propriedades.portaria().prazoGiro().plusSeconds(1));
+
+		((HtmlButton) portaria.getElementById("botao-cancelar")).click();
+		esperar(Duration.ofMillis(800));
+
+		assertThat(texto(portaria, "painel-funcionario")).isEqualTo("Liberação expirada — Ana não passou");
+		assertThat(texto(portaria, "monitor-aluno")).isEqualTo(ESPERA);
+	}
+
+	@Test
+	void giroDepoisDoPrazoPedeUmaNovaLeitura() throws Exception {
+		HtmlPage portaria = abrir();
+		simularLeituraDaAna(portaria);
+		((RelogioAjustavel) relogio).avancar(propriedades.portaria().prazoGiro().plusSeconds(1));
+
+		((HtmlButton) portaria.getElementById("botao-giro")).click();
+		esperar(Duration.ofMillis(800));
+
+		assertThat(texto(portaria, "painel-funcionario")).isEqualTo("Liberação expirada. Leia a carteirinha novamente.");
+		assertThat(((HtmlButton) portaria.getElementById("botao-giro")).isDisabled()).isTrue();
+		assertThat(portaria.getElementById("botao-cancelar").isDisplayed()).isFalse();
+	}
+
 	// --- Apoio ---
 
 	private void confirmarOGiro(HtmlPage portaria) throws Exception {

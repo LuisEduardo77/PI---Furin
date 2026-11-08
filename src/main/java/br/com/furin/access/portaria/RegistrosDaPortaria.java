@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -30,6 +31,13 @@ public class RegistrosDaPortaria {
 
 	static final String AGUARDANDO_GIRO = "AGUARDANDO_GIRO";
 	static final String CONFIRMADA = "CONFIRMADA";
+	static final String CANCELADA = "CANCELADA";
+	static final String SEM_GIRO = "SEM_GIRO";
+	static final String FUNCIONARIO = "FUNCIONARIO";
+
+	/** Uma liberação que passou do prazo do giro, com o aluno para bloquear (RN08). */
+	public record Vencida(long idLiberacao, long idAluno) {
+	}
 
 	/** A carteirinha lida. */
 	public record Carteirinha(long id, long idAluno, Instant expiraEm, Instant revogadaEm) {
@@ -163,11 +171,47 @@ public class RegistrosDaPortaria {
 				chaveDoGiro.toString()).stream().findFirst();
 	}
 
-	/** RN02, passo 3: só uma liberação ainda pendente vira CONFIRMADA. A chave fica gravada (DEC-41). */
-	boolean confirmar(long idRegistro, Instant giro, UUID chaveDoGiro) {
+	/**
+	 * RN02, passo 3: só uma liberação ainda pendente e lançada depois de {@code limite}
+	 * (dentro do prazo do giro; RF09, passo 7.2) vira CONFIRMADA. A chave fica gravada (DEC-41).
+	 */
+	boolean confirmar(long idRegistro, Instant giro, UUID chaveDoGiro, Instant limite) {
 		return jdbc.update("UPDATE registro_acesso SET situacao = ?, ocorrido_em = ?, chave_giro = ? "
+				+ "WHERE id_registro = ? AND situacao = ? AND lancado_em > ?",
+				CONFIRMADA, utc(giro), chaveDoGiro.toString(), idRegistro, AGUARDANDO_GIRO, utc(limite)) == 1;
+	}
+
+	/** RN02, item 4: as liberações ainda pendentes lançadas até {@code limite}. */
+	List<Vencida> vencidas(Instant limite) {
+		return jdbc.query("SELECT r.id_registro, v.id_aluno FROM registro_acesso r "
+				+ "JOIN vinculo_turma v ON v.id_vinculo = r.id_vinculo WHERE r.situacao = ? AND r.lancado_em <= ? "
+				+ "ORDER BY r.id_registro",
+				(rs, linha) -> new Vencida(rs.getLong("id_registro"), rs.getLong("id_aluno")),
+				AGUARDANDO_GIRO, utc(limite));
+	}
+
+	/** RN02, item 4: cancela com SEM_GIRO, se ela ainda estiver pendente e vencida. */
+	boolean cancelarVencida(long idRegistro, Instant agora, Instant limite) {
+		return jdbc.update("UPDATE registro_acesso SET situacao = ?, cancelado_em = ?, motivo_cancelamento = ? "
+				+ "WHERE id_registro = ? AND situacao = ? AND lancado_em <= ?",
+				CANCELADA, utc(agora), SEM_GIRO, idRegistro, AGUARDANDO_GIRO, utc(limite)) == 1;
+	}
+
+	/** RN02, item 5 (DEC-28, A2): só uma liberação pendente é cancelada; a confirmada nunca muda. */
+	boolean cancelarPeloFuncionario(long idRegistro, Instant agora) {
+		return jdbc.update("UPDATE registro_acesso SET situacao = ?, cancelado_em = ?, motivo_cancelamento = ? "
 				+ "WHERE id_registro = ? AND situacao = ?",
-				CONFIRMADA, utc(giro), chaveDoGiro.toString(), idRegistro, AGUARDANDO_GIRO) == 1;
+				CANCELADA, utc(agora), FUNCIONARIO, idRegistro, AGUARDANDO_GIRO) == 1;
+	}
+
+	/** A situação de uma liberação, para a tela saber se ela expirou ou foi cancelada. */
+	Optional<SituacaoDaLiberacao> situacao(long idRegistro) {
+		return jdbc.query("SELECT r.id_registro, r.situacao, r.motivo_cancelamento, a.nome FROM registro_acesso r "
+				+ "JOIN vinculo_turma v ON v.id_vinculo = r.id_vinculo JOIN aluno a ON a.id_aluno = v.id_aluno "
+				+ "WHERE r.id_registro = ?",
+				(rs, linha) -> new SituacaoDaLiberacao(rs.getLong("id_registro"), rs.getString("situacao"),
+						rs.getString("motivo_cancelamento"), Liberacao.primeiroNomeDe(rs.getString("nome"))),
+				idRegistro).stream().findFirst();
 	}
 
 	private Liberacao liberacaoDaLinha(ResultSet rs, int linha) throws SQLException {

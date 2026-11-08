@@ -43,6 +43,10 @@ public enum EventoAuditoria {
 	REGISTRO_MANUAL,
 	/** RF23: só os 4 primeiros caracteres do código lido (DEC-28, A12). */
 	LEITURA_RECUSADA,
+	/** RF09, fluxo A1; RN02, item 4: liberação sem giro no prazo, cancelada com SEM_GIRO. Só o ID. [PROP: nome] */
+	LIBERACAO_EXPIRADA,
+	/** RF09, fluxo A2; RN02, item 5 (DEC-28, A2): cancelada pelo funcionário. Só o ID. [PROP: nome] */
+	LIBERACAO_CANCELADA,
 	/** RF10; DEC-28, A9: foto ou termo que não pôde ser entregue. Só a chave. [PROP: nome] */
 	ARQUIVO_INDISPONIVEL,
 	/** RF20. */
