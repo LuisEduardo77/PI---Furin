@@ -67,6 +67,8 @@ class PortariaTelaTests {
 
 	private static final String CODIGO_ANA = "c1b2c3d4e5f60718293a4b5c6d7e8f92";
 	private static final String CODIGO_REVOGADO = "d1b2c3d4e5f60718293a4b5c6d7e8f93";
+	private static final String MATRICULA_BIA = "T30-002";
+	private static final String CODIGO_BIA = "e1b2c3d4e5f60718293a4b5c6d7e8f94";
 	private static final String ESPERA = "Aproxime sua carteirinha do leitor.";
 	private static final String MONITOR_RECUSA = "Não foi possível ler sua carteirinha. Tente de novo ou procure "
 			+ "o funcionário da portaria.";
@@ -127,6 +129,10 @@ class PortariaTelaTests {
 		cena.carteirinha(ana, CODIGO_ANA, ontem, null, null);
 		// Uma carteirinha revogada da mesma aluna (segunda via): não aparece no painel
 		cena.carteirinha(ana, CODIGO_REVOGADO, ontem.minus(Duration.ofDays(10)), null, ontem);
+		// Outra aluna, para a RN05
+		long bia = cena.aluno(MATRICULA_BIA, "Bia Teste", true, ontem);
+		cena.vinculo(bia, turma, ontem.minus(Duration.ofDays(30)), null);
+		cena.carteirinha(bia, CODIGO_BIA, ontem, null, null);
 		navegador.getOptions().setCssEnabled(false);
 		navegador.getOptions().setJavaScriptEnabled(true);
 		navegador.getOptions().setThrowExceptionOnScriptError(true);
@@ -143,12 +149,12 @@ class PortariaTelaTests {
 	/** Também no começo: uma execução interrompida não deixa a cena pela metade. */
 	private void apagarACena() {
 		jdbc.update("DELETE r FROM registro_acesso r JOIN vinculo_turma v ON v.id_vinculo = r.id_vinculo "
-				+ "JOIN aluno a ON a.id_aluno = v.id_aluno WHERE a.matricula = ?", MATRICULA);
-		jdbc.update("DELETE c FROM carteirinha c JOIN aluno a ON a.id_aluno = c.id_aluno WHERE a.matricula = ?",
-				MATRICULA);
-		jdbc.update("DELETE v FROM vinculo_turma v JOIN aluno a ON a.id_aluno = v.id_aluno WHERE a.matricula = ?",
-				MATRICULA);
-		jdbc.update("DELETE FROM aluno WHERE matricula = ?", MATRICULA);
+				+ "JOIN aluno a ON a.id_aluno = v.id_aluno WHERE a.matricula IN (?, ?)", MATRICULA, MATRICULA_BIA);
+		jdbc.update("DELETE c FROM carteirinha c JOIN aluno a ON a.id_aluno = c.id_aluno WHERE a.matricula IN (?, ?)",
+				MATRICULA, MATRICULA_BIA);
+		jdbc.update("DELETE v FROM vinculo_turma v JOIN aluno a ON a.id_aluno = v.id_aluno "
+				+ "WHERE a.matricula IN (?, ?)", MATRICULA, MATRICULA_BIA);
+		jdbc.update("DELETE FROM aluno WHERE matricula IN (?, ?)", MATRICULA, MATRICULA_BIA);
 		jdbc.update("DELETE FROM turma WHERE nome = ?", TURMA);
 		jdbc.update("DELETE FROM usuario WHERE login = ?", FUNCIONARIO);
 	}
@@ -335,17 +341,40 @@ class PortariaTelaTests {
 		assertThat(texto(portaria, "aviso-leitor")).isEmpty();
 	}
 
-	// --- Leitura repetida (RN04): a liberação pendente nunca fica sem saída pela tela ---
+	// --- Leitura repetida (RN03, RN04): a liberação pendente nunca fica sem saída pela tela ---
 
 	@Test
 	void leituraRepetidaMantemOGiroDisponivel() throws Exception {
 		HtmlPage portaria = abrir();
 		simularLeituraDaAna(portaria);
 
+		// RN03: o relógio está parado, então a segunda leitura cai na janela de 2 s
 		simularLeituraDaAna(portaria);
+		assertThat(texto(portaria, "painel-funcionario")).contains("Ana Teste", "Leitura já recebida");
+		assertThat(texto(portaria, "monitor-aluno")).isEqualTo("Ana, pode passar.");
 
+		// RN04: passada a janela, sem giro, continua a mesma liberação
+		((RelogioAjustavel) relogio).avancar(Duration.ofSeconds(5));
+		simularLeituraDaAna(portaria);
 		assertThat(texto(portaria, "painel-funcionario")).contains("Ana Teste", "Aguardando passagem");
 		assertThat(texto(portaria, "monitor-aluno")).isEqualTo("Ana, pode passar.");
+		confirmarOGiro(portaria);
+	}
+
+	@Test
+	void comAnaAguardandoALeituraDeOutroAlunoPedeParaAguardar() throws Exception {
+		// RN05: o funcionário vê o motivo; o aluno vê só "Aguarde" (RN09)
+		HtmlPage portaria = abrir();
+		simularLeituraDaAna(portaria);
+		HtmlInput campo = (HtmlInput) portaria.getElementById("campo-leitura");
+
+		campo.type(CODIGO_BIA);
+		campo.type('\n');
+		esperar(Duration.ofMillis(800));
+
+		assertThat(texto(portaria, "painel-funcionario")).isEqualTo("Aguarde a passagem do aluno anterior");
+		assertThat(texto(portaria, "monitor-aluno")).isEqualTo("Aguarde.");
+		assertThat(portaria.getFocusedElement()).isEqualTo(campo);
 		confirmarOGiro(portaria);
 	}
 

@@ -88,13 +88,13 @@ class EsquemaInicialTests {
 				SELECT version, description, success FROM flyway_schema_history
 				WHERE version IS NOT NULL ORDER BY installed_rank
 				""");
-		assertThat(migracoes).hasSize(2).allSatisfy(migracao -> assertThat(migracao).containsEntry("success", true));
+		assertThat(migracoes).hasSize(3).allSatisfy(migracao -> assertThat(migracao).containsEntry("success", true));
 		assertThat(migracoes.getFirst())
 				.containsEntry("version", "1")
 				.containsEntry("description", "esquema inicial");
 		assertThat(migracoes.getLast())
-				.containsEntry("version", "3")
-				.containsEntry("description", "chave do giro");
+				.containsEntry("version", "4")
+				.containsEntry("description", "uma liberacao por vez");
 	}
 
 }

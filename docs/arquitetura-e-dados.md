@@ -390,6 +390,7 @@ perfil `FUNCIONARIO` (DEC-37).
 | chave_giro | CHAR(36) | Cond. | UK. UUID do giro que confirmou a liberação (V3, DEC-41) |
 | motivo_manual | VARCHAR(200) | Cond. | Obrigatório em MANUAL |
 | pendente_vinculo | gerada | — | `id_vinculo` se `AGUARDANDO_GIRO`. UNIQUE |
+| pendente_ponto | gerada | — | `1` se `AGUARDANDO_GIRO`. UNIQUE: uma liberação pendente por vez no ponto de leitura (V4, DEC-46; RN05) |
 
 As telas comuns usam **somente** `situacao = 'CONFIRMADA'`. Os registros cancelados
 ficam guardados para rastreabilidade (A10 §8.15).
@@ -553,10 +554,13 @@ CREATE TABLE registro_acesso (
   motivo_manual        VARCHAR(200)    NULL,
   pendente_vinculo     BIGINT UNSIGNED
       GENERATED ALWAYS AS (CASE WHEN situacao = 'AGUARDANDO_GIRO' THEN id_vinculo END) STORED,
+  pendente_ponto       TINYINT UNSIGNED  -- V4, DEC-46
+      GENERATED ALWAYS AS (CASE WHEN situacao = 'AGUARDANDO_GIRO' THEN 1 END) STORED,
   PRIMARY KEY (id_registro),
   UNIQUE KEY uk_registro_chave (chave_requisicao),
   UNIQUE KEY uk_registro_chave_giro (chave_giro),  -- V3, DEC-41
   UNIQUE KEY uk_registro_pendente (pendente_vinculo),
+  UNIQUE KEY uk_registro_pendente_ponto (pendente_ponto),  -- V4, DEC-46
   KEY ix_registro_vinculo (id_vinculo, situacao, ocorrido_em),
   KEY ix_registro_ocorrido (situacao, ocorrido_em),
   CONSTRAINT fk_registro_vinculo     FOREIGN KEY (id_vinculo) REFERENCES vinculo_turma (id_vinculo),
@@ -606,7 +610,9 @@ CREATE TABLE notificacao (
   - uma carteirinha válida por aluno (RN15);
   - um vínculo de turma aberto por aluno;
   - sequência de movimentações (RN01);
-  - uma liberação por vez no ponto de leitura (RN05).
+  - uma liberação por vez no ponto de leitura (RN05), conferida no serviço e garantida
+    também pela `uk_registro_pendente_ponto` (V4, DEC-46), porque o bloqueio de cada
+    aluno não serializa leituras de alunos diferentes.
 
 ### 5.6 Carga fictícia do protótipo (DEC-28, G2)
 
@@ -793,10 +799,19 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   valida (RN09, RN06), calcula o tipo e grava `AGUARDANDO_GIRO`. A resposta traz só o ID
   da liberação, tipo, nome, primeiro nome, turma e a referência da foto em `fotoChave`
   (CA-RNF05-03, DEC-43), com 201. Uma recusa responde 422 com um motivo técnico (`MotivoDaRecusa`) e vai para o
-  log como `LEITURA_RECUSADA`, com o código mascarado; os textos são da T-31. Uma
-  leitura repetida com liberação pendente (RN04) não grava nada e devolve a mesma
-  liberação, com 200 no lugar do 201, o que permite confirmar o giro mesmo depois de
-  recarregar a página. `POST /portaria/giros` (`GiroSimuladoController`, `@Profile("prototipo")`)
+  log como `LEITURA_RECUSADA`, com o código mascarado; os textos são da T-31. As
+  repetições (T-27, 07/11/2026; RF15) seguem a ordem do fluxo principal do RF15, depois
+  do bloqueio do aluno e da conferência da chave: a leitura da mesma carteirinha com
+  `lancado_em` nos últimos `furin.portaria.janela-repeticao` e ainda não `CONFIRMADA` é
+  ignorada com 202 [PROP], com a liberação pendente no corpo ou sem corpo, e a tela mostra
+  "Leitura já recebida" (RN03); a leitura com a liberação do aluno ainda pendente não grava
+  nada e devolve a mesma liberação com 200, "Aguardando passagem" (RN04), o que permite
+  confirmar o giro mesmo depois de recarregar a página; com a liberação de outro aluno
+  pendente, a recusa é `OUTRA_LIBERACAO_PENDENTE` [PROP], e a tela mostra "Aguarde a
+  passagem do aluno anterior" ao funcionário e "Aguarde." ao aluno (RN05). A RN05 é
+  conferida no serviço e garantida no banco pela `uk_registro_pendente_ponto` (DEC-46,
+  migração V4): duas leituras de alunos diferentes ao mesmo tempo não se bloqueiam pelo
+  aluno, e a que perder a corrida recebe a mesma recusa. `POST /portaria/giros` (`GiroSimuladoController`, `@Profile("prototipo")`)
   recebe o ID da liberação e uma `chaveRequisicao` própria e confirma uma liberação ainda
   pendente, com `ocorrido_em` do servidor; um reenvio com a mesma chave devolve o
   resultado original (`chave_giro`, DEC-41). As consultas
@@ -804,8 +819,9 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   `LocalDateTime`, sem a conversão de fuso do Hibernate. Os testes que precisam do
   perfil `prototipo` desligam a carga V2 com `furin.carga.ativa=false` (padrão: ligada).
   Ainda não há:
-  janela de 2 s (T-27), expiração de 15 s (T-29), mensagens (T-31) e notificações
-  (Fase 6).
+  expiração de 15 s (T-29), mensagens (T-31) e notificações (Fase 6). Até a T-29, uma
+  liberação sem giro segura a portaria inteira (RN05); no protótipo, "Simular passagem"
+  a encerra.
 - **Tela da portaria (T-30, 02/11/2026, antecipada):** `portaria/inicio.html` e
   `static/js/portaria.js`, o segundo script do projeto (arquivo próprio por causa da
   CSP). O campo de leitura manda o código com Enter; o painel "Simular leitura
@@ -1053,3 +1069,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 07/11/2026 | T-22: carteirinha no cadastro, QR Code, impressão e segunda via (§6, "Carteirinha"), com as rotas [PROP] do QR Code e da confirmação |
 | 07/11/2026 | T-23: edição do aluno (§6, "Edição do aluno"), com as rotas [PROP] da revisão e da inativação e a sessão guardando a revisão |
 | 07/11/2026 | T-24: busca por nome ou matrícula (§6, "Busca"), na tela Alunos, com a situação "Saída pendente" [PROP] |
+| 07/11/2026 | T-27: janela de 2 s, RN04 e RN05 (§6, "Portaria, leitura e giro"); DEC-46: coluna gerada `pendente_ponto` com `uk_registro_pendente_ponto` (§5, migração V4), status 202 e motivo `OUTRA_LIBERACAO_PENDENTE` [PROP] |

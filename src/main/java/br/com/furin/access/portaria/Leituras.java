@@ -3,6 +3,7 @@ package br.com.furin.access.portaria;
 import static br.com.furin.access.auditoria.DetalhesAuditoria.detalhes;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -11,6 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,16 +34,38 @@ import br.com.furin.access.portaria.TipoAutomatico.Decisao;
  * liberação {@code AGUARDANDO_GIRO}. A transação é {@code READ_COMMITTED}: depois do
  * bloqueio, cada consulta vê o que outra operação sobre o mesmo aluno acabou de gravar.
  * <p>
- * Com o aluno já aguardando o giro, a leitura repetida devolve a mesma liberação (RN04).
- * Ficam para depois: a janela de 2 s e a RN05 (T-27), a expiração de 15 s (T-29) e os
- * textos das recusas (T-31).
+ * Repetições (T-27; RF15, na ordem do fluxo principal): a leitura do mesmo código na
+ * janela de 2 s é ignorada (RN03); com o aluno já aguardando o giro, a leitura devolve a
+ * mesma liberação, sem renovar o prazo (RN04); com outro aluno aguardando, é recusada
+ * (RN05). A janela é calculada no banco, e o giro a encerra porque deixa a liberação
+ * {@code CONFIRMADA} (DEC-02). Ficam para depois a expiração de 15 s (T-29) e os textos
+ * das recusas (T-31).
  */
 @Service
 public class Leituras {
 
-	/** {@code repetida}: o aluno já tinha esta liberação pendente, e nada foi gravado (RN04). */
-	public record ResultadoDaLeitura(Liberacao liberacao, boolean repetida) {
+	/** O que aconteceu com a leitura. Só {@link #NOVA} grava alguma coisa. */
+	public enum Desfecho {
+		/** Liberação criada agora, ou reenvio com a mesma chave (RN08). */
+		NOVA,
+		/** RN03: o mesmo código foi lido há até 2 s, sem giro depois. "Leitura já recebida". */
+		JA_RECEBIDA,
+		/** RN04: o aluno já tem esta liberação pendente. "Aguardando passagem". */
+		AGUARDANDO_PASSAGEM
 	}
+
+	/**
+	 * @param liberacao a liberação criada ou a que já estava pendente. Só falta (é
+	 *                  {@code null}) em {@link Desfecho#JA_RECEBIDA} quando a leitura da
+	 *                  janela já não está pendente (cancelada)
+	 */
+	public record ResultadoDaLeitura(Liberacao liberacao, Desfecho desfecho) {
+	}
+
+	/** DEC-46: a restrição que garante uma liberação pendente por vez no ponto de leitura. */
+	static final String UMA_LIBERACAO_POR_VEZ = "uk_registro_pendente_ponto";
+
+	private final Duration janelaDeRepeticao;
 
 	/** RN15: {@code furin.carteirinha.tamanho-codigo} caracteres hexadecimais (A14 p.6). */
 	private final Pattern formatoDoCodigo;
@@ -57,6 +81,7 @@ public class Leituras {
 	public Leituras(RegistrosDaPortaria registros, TipoAutomatico tipoAutomatico, Auditoria auditoria, Clock relogio,
 			FurinProperties propriedades) {
 		this.formatoDoCodigo = Pattern.compile("[0-9a-f]{" + propriedades.carteirinha().tamanhoCodigo() + "}");
+		this.janelaDeRepeticao = propriedades.portaria().janelaRepeticao();
 		this.registros = registros;
 		this.tipoAutomatico = tipoAutomatico;
 		this.auditoria = auditoria;
@@ -84,7 +109,15 @@ public class Leituras {
 		// RN08: reenvio com a mesma chave devolve a liberação original, sem criar outra
 		Optional<Long> jaRegistrada = registros.registroPorChave(chaveRequisicao);
 		if (jaRegistrada.isPresent()) {
-			return new ResultadoDaLeitura(registros.liberacao(jaRegistrada.get()).orElseThrow(), false);
+			return new ResultadoDaLeitura(registros.liberacao(jaRegistrada.get()).orElseThrow(), Desfecho.NOVA);
+		}
+
+		// RN03 (DEC-02): o mesmo código há até 2 s, sem giro depois, é ignorado. Nada é gravado
+		Optional<Liberacao> naJanela = registros.leituraNaJanela(carteirinha.id(), agora.minus(janelaDeRepeticao));
+		if (naJanela.isPresent()) {
+			Liberacao recebida = naJanela.get();
+			return new ResultadoDaLeitura(RegistrosDaPortaria.AGUARDANDO_GIRO.equals(recebida.situacao()) ? recebida : null,
+					Desfecho.JA_RECEBIDA);
 		}
 
 		if (carteirinha.revogadaEm() != null) {
@@ -102,7 +135,11 @@ public class Leituras {
 		// liberação permite confirmar o giro mesmo se a tela a perdeu (página recarregada)
 		Optional<Liberacao> pendente = registros.liberacaoPendente(aluno.id());
 		if (pendente.isPresent()) {
-			return new ResultadoDaLeitura(pendente.get(), true);
+			return new ResultadoDaLeitura(pendente.get(), Desfecho.AGUARDANDO_PASSAGEM);
+		}
+		// RN05: um ponto de leitura, uma liberação por vez. A pendente só pode ser de outro aluno
+		if (registros.existeLiberacaoPendente()) {
+			throw recusar(normalizado, MotivoDaRecusa.OUTRA_LIBERACAO_PENDENTE, null);
 		}
 
 		Decisao decisao = tipoAutomatico.decidir(registros.ultimaConfirmada(aluno.id()));
@@ -110,9 +147,18 @@ public class Leituras {
 			throw recusar(normalizado, MotivoDaRecusa.SAIDA_PENDENTE, decisao.saidaPendenteDe());
 		}
 
-		long id = registros.gravarLiberacao(vinculo, registros.idDoUsuario(login), carteirinha.id(), decisao.tipo(),
-				agora, chaveRequisicao);
-		return new ResultadoDaLeitura(registros.liberacao(id).orElseThrow(), false);
+		long id;
+		try {
+			id = registros.gravarLiberacao(vinculo, registros.idDoUsuario(login), carteirinha.id(), decisao.tipo(),
+					agora, chaveRequisicao);
+		} catch (DuplicateKeyException corrida) {
+			// DEC-46: outro aluno gravou a liberação dele entre a conferência e esta gravação
+			if (String.valueOf(corrida.getMessage()).contains(UMA_LIBERACAO_POR_VEZ)) {
+				throw recusar(normalizado, MotivoDaRecusa.OUTRA_LIBERACAO_PENDENTE, null);
+			}
+			throw corrida;
+		}
+		return new ResultadoDaLeitura(registros.liberacao(id).orElseThrow(), Desfecho.NOVA);
 	}
 
 	/** RN09: nada é gravado, e a recusa vai para o log só com os 4 primeiros caracteres do código. */

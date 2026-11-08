@@ -17,5 +17,7 @@ public enum MotivoDaRecusa {
 	/** Aluno sem vínculo de turma vigente (RN09). */
 	SEM_TURMA_VIGENTE,
 	/** Entrada de dia anterior sem saída (RN01, linha 3; RN06). */
-	SAIDA_PENDENTE
+	SAIDA_PENDENTE,
+	/** Outro aluno aguarda o giro: uma liberação por vez (RN05; DEC-46). */
+	OUTRA_LIBERACAO_PENDENTE
 }

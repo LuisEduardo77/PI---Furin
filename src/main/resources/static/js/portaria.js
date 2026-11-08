@@ -12,7 +12,9 @@
  * - "Simular passagem (giro)" faz POST /portaria/giros com o ID da liberação e uma
  *   chaveRequisicao. Depois de uma falha, a tentativa repete a mesma chave (RN08; DEC-41).
  * - A resposta da leitura tem só o que o CA-RNF05-03 lista (DEC-43). O status diz se a
- *   liberação é nova (201) ou se já estava pendente (200; RN04).
+ *   liberação é nova (201), se já estava pendente (200; RN04) ou se a leitura foi ignorada
+ *   na janela de 2 s (202; RN03). Com outro aluno aguardando, a recusa mostra "Aguarde a
+ *   passagem do aluno anterior" (RN05).
  * - Os dois painéis são regiões role="status" separadas: anunciam sem mover o foco, e o
  *   foco volta sempre ao campo de leitura (A11 §5.1.13, §5.13.8).
  */
@@ -30,6 +32,12 @@
   var LEITOR_NAO_PRONTO = 'Leitor não está pronto. Clique no campo de leitura.';
   var ESPERA_DO_AVISO_DO_LEITOR_MS = 200;
   var ERRO_INESPERADO = 'Não foi possível registrar. Tente novamente ou use o registro manual.';
+  // RF15, exceções (T-27)
+  var LEITURA_JA_RECEBIDA = 'Leitura já recebida';
+  var AGUARDE_O_ANTERIOR = 'Aguarde a passagem do aluno anterior';
+  var MONITOR_AGUARDE = 'Aguarde.';
+  // 201: liberação nova; 200: já pendente (RN04); 202: ignorada na janela de 2 s (RN03)
+  var DESFECHO_POR_STATUS = { 201: 'nova', 200: 'aguardando', 202: 'ja-recebida' };
 
   var formulario = document.getElementById('form-leitura');
   var campo = document.getElementById('campo-leitura');
@@ -107,10 +115,16 @@
     }
     enviar(raiz.getAttribute('data-leituras'), { codigo: limpo, chaveRequisicao: novaChave() },
       function (status, dados) {
-        if ((status === 201 || status === 200) && dados) {
-          mostrarLiberacao(dados, status === 200);
+        if ((status === 201 || status === 200 || status === 202) && dados) {
+          mostrarLiberacao(dados, DESFECHO_POR_STATUS[status]);
+        } else if (status === 202) {
+          // RN03: a leitura da janela já não está pendente; nada muda na tela além do aviso
+          paragrafo(painel, LEITURA_JA_RECEBIDA);
+        } else if (status === 422 && dados && dados.motivo === 'OUTRA_LIBERACAO_PENDENTE') {
+          // RN05; RN09: o aluno vê só "Aguarde"
+          mostrarRecusa(AGUARDE_O_ANTERIOR, MONITOR_AGUARDE);
         } else if (status === 422 && dados) {
-          mostrarRecusa('Leitura recusada: ' + dados.motivo + '.');
+          mostrarRecusa('Leitura recusada: ' + dados.motivo + '.', MONITOR_RECUSA);
         } else {
           mostrarRecusa(ERRO_INESPERADO);
         }
@@ -118,11 +132,11 @@
       });
   }
 
-  function mostrarLiberacao(liberacao, repetida) {
+  function mostrarLiberacao(liberacao, desfecho) {
     var registrada = liberacao.situacao === 'CONFIRMADA';
     liberacaoEmCurso = registrada ? null : liberacao;
-    preencherPainel(liberacao, situacaoNoPainel(liberacao, repetida));
-    mostrarNoMonitor(mensagemDoMonitor(liberacao, repetida), registrada);
+    preencherPainel(liberacao, situacaoNoPainel(liberacao, desfecho));
+    mostrarNoMonitor(mensagemDoMonitor(liberacao, desfecho !== 'nova'), registrada);
     if (botaoGiro) {
       botaoGiro.disabled = registrada;
     }
@@ -133,14 +147,14 @@
     if (liberacao.situacao === 'CONFIRMADA') {
       return liberacao.primeiroNome + ', ' + nomeDoTipo(liberacao.tipo) + ' registrada.';
     }
-    // RN04: leitura repetida com a liberação pendente (RF09, exceções)
+    // RN03, RN04: leitura repetida com a liberação pendente (RF09, exceções)
     if (repetida) {
       return liberacao.primeiroNome + ', pode passar.';
     }
     return liberacao.primeiroNome + ', ' + nomeDoTipo(liberacao.tipo) + ' liberada. Pode passar.';
   }
 
-  function mostrarRecusa(texto) {
+  function mostrarRecusa(texto, textoDoMonitor) {
     // A recusa de uma leitura não encerra a liberação em curso: o giro continua disponível
     if (botaoGiro) {
       botaoGiro.disabled = !liberacaoEmCurso;
@@ -148,7 +162,7 @@
     painel.textContent = '';
     paragrafo(painel, texto);
     // O motivo nunca vai para o monitor do aluno (RF22; RN17)
-    mostrarNoMonitor(MONITOR_RECUSA, true);
+    mostrarNoMonitor(textoDoMonitor, true);
     reiniciarLimpezaDoPainel();
   }
 
@@ -167,7 +181,7 @@
     enviar(raiz.getAttribute('data-giros'), giroEmCurso,
       function (status, dados) {
         if (status === 200 && dados) {
-          mostrarLiberacao(dados, false);
+          mostrarLiberacao(dados, 'nova');
         } else if (status === 422 && dados) {
           liberacaoEmCurso = null;
           paragrafo(painel, 'Giro recusado: ' + dados.motivo + '.');
@@ -215,13 +229,16 @@
     return aviso;
   }
 
-  function situacaoNoPainel(liberacao, repetida) {
+  function situacaoNoPainel(liberacao, desfecho) {
     var tipo = nomeDoTipoComMaiuscula(liberacao.tipo);
     if (liberacao.situacao === 'CONFIRMADA') {
       // O horário já vem no fuso da escola (RN10), formatado pelo servidor
       return tipo + ' registrada às ' + liberacao.horarioNaEscola;
     }
-    return repetida ? 'Aguardando passagem' : tipo + ' liberada — aguardando passagem';
+    if (desfecho === 'ja-recebida') {
+      return LEITURA_JA_RECEBIDA;
+    }
+    return desfecho === 'aguardando' ? 'Aguardando passagem' : tipo + ' liberada — aguardando passagem';
   }
 
   function reiniciarLimpezaDoPainel() {
