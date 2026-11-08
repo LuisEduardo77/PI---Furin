@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: pagina(|Inativar ${aluno.nome()}|, 'alunos', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Inativar Ana Teste | Furin Access</title>
+</head>
+<body>
+<th:block th:fragment="conteudo">
+  <h1 th:text="|Inativar ${aluno.nome()}|">Inativar Ana Teste</h1>
+
+  <div id="resumo-erros" class="aviso aviso--erro" tabindex="-1" th:if="${erro}">
+    <p><strong>Erro:</strong> <span th:text="${erro}">Registre a saída de Ana antes de inativar o cadastro.</span></p>
+  </div>
+
+  <!-- RF08, fluxo A2; DEC-28, D10. Textos [PROP] -->
+  <th:block th:if="${aluno.ativo()}">
+    <p><strong>Inativar este aluno? Novas leituras da carteirinha serão recusadas.</strong></p>
+    <p>O histórico de entradas e saídas continua guardado e consultável.</p>
+    <form th:action="@{/alunos/{id}/inativacao(id=${aluno.idAluno()})}" method="post">
+      <div class="acoes">
+        <button type="submit" class="botao">Confirmar inativação</button>
+        <a class="botao botao--secundario" th:href="@{/alunos/{id}/editar(id=${aluno.idAluno()})}">Cancelar</a>
+      </div>
+    </form>
+  </th:block>
+  <p th:unless="${aluno.ativo()}">
+    Este aluno já está inativo. <a th:href="@{/alunos/{id}/editar(id=${aluno.idAluno()})}">Voltar ao cadastro</a>
+  </p>
+
+  <script th:src="@{/js/resumo-de-erros.js}" defer></script>
+</th:block>
+</body>
+</html>

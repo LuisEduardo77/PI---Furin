@@ -48,7 +48,9 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
   `aluno/RevogacaoDoTermo`), T-21 (duplicidade; emissão com colisão em
   `carteirinha/EmissaoDeCarteirinha`) e T-22 (carteirinha no cadastro, QR Code em
   `carteirinha/QrCodeDaCarteirinha`, impressão e segunda via em `carteirinha/Carteirinhas`)
-  estão concluídas: **o cadastro de aluno é salvo** com os cinco blocos (RN16). Teste que
+  estão concluídas: **o cadastro de aluno é salvo** com os cinco blocos (RN16). T-23
+  (edição em `aluno/EdicaoController` e `EdicaoDoAluno`; conferências comuns do cadastro e
+  da edição em `aluno/ConferenciasDoAluno`) está concluída. Teste que
   grava aluno de verdade usa `aluno/LimpezaDeAlunos` para apagar. O
   perfil `test` usa pools de 4 conexões. Teste que precisa do
   `prototipo` usa `furin.carga.ativa=false` para não rodar a carga V2, e teste com

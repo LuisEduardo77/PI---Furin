@@ -47,9 +47,10 @@
     </div>
   </th:block>
 
-  <p class="sem-impressao">
+  <p class="sem-impressao acoes">
     <a class="botao botao--secundario"
        th:href="@{/alunos/{id}/carteirinhas/segunda-via(id=${carteirinha.idAluno()})}">Emitir segunda via</a>
+    <a class="botao botao--secundario" th:href="@{/alunos/{id}/editar(id=${carteirinha.idAluno()})}">Editar aluno</a>
   </p>
 </th:block>
 </body>

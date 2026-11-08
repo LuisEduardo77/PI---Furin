@@ -54,6 +54,8 @@
         <label for="matricula">Matrícula (obrigatório)</label>
         <p id="matricula-erro" class="campo__erro" th:if="${#fields.hasErrors('matricula')}">
           <span>Erro:</span> <span th:errors="*{matricula}">Informe a matrícula do aluno.</span>
+          <!-- RF06; DEC-45: o link para o cadastro existente -->
+          <a th:if="${matriculaEmUso != null}" th:href="@{/alunos/{id}/editar(id=${matriculaEmUso})}">Abrir cadastro existente</a>
         </p>
         <input id="matricula" type="text" maxlength="30" required autocomplete="off" th:field="*{matricula}"
                th:attr="aria-invalid=${#fields.hasErrors('matricula')} ? 'true',
