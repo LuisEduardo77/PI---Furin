@@ -41,7 +41,6 @@ import jakarta.validation.Valid;
 /**
  * Telas de alunos (T-19, T-20, T-22; RF04, RF05):
  * <ul>
- * <li>{@code GET /alunos}: a entrada do menu, com o link "Novo aluno". A busca é da T-24;</li>
  * <li>{@code GET /alunos/novo}: o formulário;</li>
  * <li>{@code POST /alunos}: confere tudo e grava o cadastro completo.</li>
  * </ul>
@@ -97,11 +96,6 @@ public class AlunoController {
 	@InitBinder("aluno")
 	void limparEspacos(WebDataBinder binder) {
 		binder.registerCustomEditor(String.class, new StringTrimmerEditor(false));
-	}
-
-	@GetMapping("/alunos")
-	public String inicio() {
-		return "alunos/inicio";
 	}
 
 	@GetMapping("/alunos/novo")

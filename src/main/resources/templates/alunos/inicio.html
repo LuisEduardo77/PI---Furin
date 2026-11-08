@@ -8,8 +8,73 @@
 <body>
 <th:block th:fragment="conteudo">
   <h1>Alunos</h1>
-  <!-- RF04, passo 1. A busca por nome ou matrícula é da T-24 -->
+  <!-- RF04, passo 1 -->
   <p><a class="botao" th:href="@{/alunos/novo}">Novo aluno</a></p>
+
+  <!-- RF11 (T-24). GET: a busca não muda nada. Textos do RF11; os marcados [PROP] lá são sugestões -->
+  <section aria-labelledby="titulo-busca">
+    <h2 id="titulo-busca">Buscar aluno</h2>
+    <form th:action="@{/alunos}" method="get" role="search" novalidate>
+      <div class="campo">
+        <label for="termo">Buscar aluno por nome ou matrícula</label>
+        <p id="termo-dica" class="campo__dica">
+          Parte do nome (pelo menos 2 letras) ou o começo da matrícula, com os zeros à esquerda.
+        </p>
+        <p id="termo-erro" class="campo__erro" th:if="${erroDoTermo}">
+          <span>Erro:</span> <span th:text="${erroDoTermo}">Digite o nome ou a matrícula do aluno.</span>
+        </p>
+        <input id="termo" name="termo" type="search" maxlength="150" autocomplete="off" th:value="${termo}"
+               th:attr="aria-invalid=${erroDoTermo} ? 'true',
+                        aria-describedby=${erroDoTermo} ? 'termo-erro termo-dica' : 'termo-dica'">
+      </div>
+      <div class="campo campo--caixa">
+        <input id="inativos" name="inativos" type="checkbox" value="true" th:checked="${inativos}">
+        <label for="inativos">Incluir inativos</label>
+      </div>
+      <button type="submit" class="botao">Buscar</button>
+    </form>
+  </section>
+
+  <!-- CA-RF11-07; A11 §5.13.8: a quantidade é anunciada sem mover o foco -->
+  <div role="status">
+    <th:block th:if="${resultado != null}">
+      <p th:if="${resultado.alunos().isEmpty()}"
+         th:text="|Nenhum aluno encontrado para '${termo}'. Confira o nome ou a matrícula.|">Nenhum aluno encontrado.</p>
+      <p th:if="${resultado.alunos().size() == 1}">1 aluno encontrado.</p>
+      <p th:if="${resultado.alunos().size() > 1 and !resultado.limiteAtingido()}"
+         th:text="|${resultado.alunos().size()} alunos encontrados.|">3 alunos encontrados.</p>
+      <p th:if="${resultado.limiteAtingido()}"
+         th:text="|Mostrando os ${maxResultados} primeiros resultados. Refine a busca.|">Mostrando os 20 primeiros resultados.</p>
+    </th:block>
+  </div>
+
+  <!-- CA-RF11-05: sem foto e sem dados do responsável. CA-RF11-06: ações com o nome do aluno -->
+  <div class="tabela-rolavel" th:if="${resultado != null and !resultado.alunos().isEmpty()}">
+    <table>
+      <caption>Alunos encontrados</caption>
+      <thead>
+        <tr>
+          <th scope="col">Nome</th>
+          <th scope="col">Matrícula</th>
+          <th scope="col">Turma</th>
+          <th scope="col">Situação</th>
+          <th scope="col">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="aluno : ${resultado.alunos()}">
+          <th scope="row" th:text="${aluno.nome()}">Ana Teste</th>
+          <td th:text="${aluno.matricula()}">000123</td>
+          <td th:text="${aluno.turma() ?: '—'}">6A — Manhã</td>
+          <td th:text="${aluno.situacao().texto()}">Fora da escola</td>
+          <td>
+            <a th:href="@{/alunos/{id}/editar(id=${aluno.id()})}"
+               th:text="|Editar aluno ${aluno.nome()}|">Editar aluno Ana Teste</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </th:block>
 </body>
 </html>
