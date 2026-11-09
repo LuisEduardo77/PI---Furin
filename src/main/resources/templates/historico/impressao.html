@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: pagina('Relatório de entradas e saídas', 'historico', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Relatório de entradas e saídas | Furin Access</title>
+</head>
+<body>
+<th:block th:fragment="conteudo">
+  <!--
+    T-36 (RF20). Na tela: "Imprimir" e "Voltar ao histórico". Na impressão (@media print):
+    sem menu, sem o link de pular blocos, sem botões; o cabeçalho da tabela se repete em cada
+    página. A tabela não tem a coluna "Aviso ao responsável" (RF19, RF21). Sem exportação para
+    CSV ou planilha (CA-RF20-07). Textos [PROP], menos os do RF
+  -->
+  <div class="acoes sem-impressao">
+    <!-- A11 §5.8.6: botão de verdade, com 44 × 44 px (.botao) e operável por teclado -->
+    <button type="button" id="botao-imprimir" class="botao" th:if="${relatorio != null and !relatorio.excedeu()}">Imprimir</button>
+    <a class="botao botao--secundario"
+       th:href="@{/historico(inicio=${formulario.inicio()}, fim=${formulario.fim()}, turma=${formulario.turma()}, aluno=${formulario.aluno()})}">Voltar ao histórico</a>
+  </div>
+  <p class="campo__dica sem-impressao" th:if="${relatorio != null and !relatorio.excedeu()}">
+    O botão abre a impressão do navegador, que também permite salvar em PDF.
+  </p>
+
+  <header class="relatorio__cabecalho">
+    <h1>Furin Access — Relatório de entradas e saídas</h1>
+    <!-- DEC-28, C7: furin.escola.nome, fictício no repositório -->
+    <p id="nome-da-escola" th:text="${nomeDaEscola}">Escola Exemplo</p>
+    <th:block th:if="${relatorio != null}">
+      <p id="filtros-do-relatorio">Filtros: <span th:text="${filtros}">de 19/10/2026, todas as turmas</span></p>
+      <p id="emissao" th:text="${emitido}">Emitido em 19/10/2026 às 15:40 por Gestão Demo</p>
+      <p id="total-do-relatorio" th:text="${total}">Total: 128 registros</p>
+    </th:block>
+  </header>
+
+  <!-- Filtros inválidos: o relatório não sai; o histórico mostra cada erro no campo -->
+  <div id="erros-do-relatorio" class="aviso aviso--erro" role="alert" th:unless="${#maps.isEmpty(erros)}">
+    <p><strong>Erro:</strong> não foi possível montar o relatório com estes filtros.</p>
+    <ul>
+      <li th:each="erro : ${erros.values()}" th:text="${erro}">A data final precisa ser igual ou posterior à data inicial.</li>
+    </ul>
+  </div>
+
+  <!-- RF20, exceções: acima de furin.relatorio.max-registros, nada é listado -->
+  <div id="excedeu" class="aviso aviso--erro" role="alert" th:if="${excedeu}">
+    <p><strong>Erro:</strong> <span th:text="${excedeu}">O relatório tem mais de 1.000 registros. Refine os filtros para imprimir.</span></p>
+  </div>
+
+  <div class="tabela-rolavel" th:if="${relatorio != null and !relatorio.excedeu() and relatorio.total() > 0}">
+    <table id="tabela-relatorio" class="relatorio__tabela">
+      <caption th:text="|Entradas e saídas ${filtros}|">Entradas e saídas de 19/10/2026, todas as turmas</caption>
+      <thead>
+        <tr>
+          <th scope="col">Data</th>
+          <th scope="col">Hora</th>
+          <th scope="col">Aluno</th>
+          <th scope="col">Turma</th>
+          <th scope="col">Tipo</th>
+          <th scope="col">Forma</th>
+          <th scope="col">Observação</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="linha : ${relatorio.linhas()}">
+          <td th:text="${linha.data()}">19/10/2026</td>
+          <td th:text="${linha.hora()}">07:02</td>
+          <th scope="row" th:text="${linha.aluno()}">Ana Teste (000123)</th>
+          <td th:text="${linha.turma()}">6A — Manhã</td>
+          <td th:text="${linha.tipo()}">Entrada</td>
+          <td th:text="${linha.forma()}">Leitura</td>
+          <td th:text="${linha.observacao()}"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- DEC-28, C6 -->
+  <footer class="relatorio__rodape">
+    <p id="uso-restrito">Documento com dados pessoais de alunos. Uso restrito da escola.</p>
+  </footer>
+
+  <script th:src="@{/js/impressao.js}" defer></script>
+</th:block>
+</body>
+</html>

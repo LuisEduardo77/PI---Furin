@@ -386,7 +386,7 @@ class HistoricoTests {
 			assertThat(pagina.todos("main form[method=post]")).isEmpty();
 			assertThat(pagina.textos("main button")).containsExactly("Filtrar");
 			assertThat(pagina.atributos("main a", "href")).allSatisfy(href -> assertThat(href)
-					.matches("#.*|/historico\\?.*"));
+					.matches("#.*|/historico(/impressao)?\\?.*"));
 		}
 	}
 

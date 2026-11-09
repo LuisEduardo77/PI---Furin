@@ -63,6 +63,13 @@ public class ConsultaDoHistorico {
 	public record Turma(long id, String nome) {
 	}
 
+	/**
+	 * O relatório para impressão (T-36; RF20): todas as linhas do filtro, sem paginação. Acima
+	 * de {@code furin.relatorio.max-registros}, {@code excedeu} e nenhuma linha.
+	 */
+	public record Relatorio(List<Linha> linhas, long total, boolean excedeu) {
+	}
+
 	/** O caractere de escape do LIKE; ele mesmo também é escapado. */
 	private static final char ESCAPE = '!';
 
@@ -96,6 +103,8 @@ public class ConsultaDoHistorico {
 
 	private final int tamanhoDaPagina;
 
+	private final int maximoDoRelatorio;
+
 	private final DateTimeFormatter data;
 
 	private final DateTimeFormatter hora;
@@ -104,6 +113,7 @@ public class ConsultaDoHistorico {
 		this.jdbc = jdbc;
 		this.fusoDaEscola = propriedades.escola().fuso();
 		this.tamanhoDaPagina = propriedades.historico().tamanhoPagina();
+		this.maximoDoRelatorio = propriedades.relatorio().maxRegistros();
 		this.data = DateTimeFormatter.ofPattern("dd/MM/yyyy").withZone(fusoDaEscola);
 		this.hora = DateTimeFormatter.ofPattern("HH:mm").withZone(fusoDaEscola);
 	}
@@ -128,6 +138,31 @@ public class ConsultaDoHistorico {
 		valores.add((atual - 1) * tamanhoDaPagina);
 		List<Linha> linhas = jdbc.query(PAGINA, this::linha, valores.toArray());
 		return new Pagina(linhas, total, atual, totalDePaginas);
+	}
+
+	/**
+	 * RF20, passo 2 (DEC-28, C6): as mesmas linhas da consulta, todas de uma vez, até
+	 * {@code furin.relatorio.max-registros}.
+	 */
+	public Relatorio paraImpressao(Filtros filtros) {
+		List<Object> valores = valores(filtros);
+		long total = jdbc.queryForObject(CONTAGEM, Long.class, valores.toArray());
+		if (total > maximoDoRelatorio) {
+			return new Relatorio(List.of(), total, true);
+		}
+		valores.add(maximoDoRelatorio);
+		valores.add(0);
+		return new Relatorio(jdbc.query(PAGINA, this::linha, valores.toArray()), total, false);
+	}
+
+	/** RF20, dados utilizados: o emissor é o nome do funcionário logado. */
+	public String nomeDoUsuario(String login) {
+		return jdbc.queryForList("SELECT nome FROM usuario WHERE login = ?", String.class, login).stream().findFirst()
+				.orElse(login);
+	}
+
+	public int maximoDoRelatorio() {
+		return maximoDoRelatorio;
 	}
 
 	/** Os parâmetros na ordem de {@link #ORIGEM}; um filtro vazio vai como {@code NULL}. */
