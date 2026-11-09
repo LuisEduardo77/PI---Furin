@@ -871,8 +871,8 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   `type="date"` manda aaaa-mm-dd, e dd/mm/aaaa digitado também vale (`ResolverStyle.STRICT`).
   Data final antes da inicial e período acima de `furin.historico.periodo-max-dias` (contando
   os dois dias) dão erro no campo da data final; data inválida, no próprio campo. Turma ou
-  página manipuladas são ignoradas. `ConsultaDoHistorico` monta o SQL só com fragmentos fixos
-  e parâmetros: `CONFIRMADA`, `ocorrido_em` de 00:00 da data inicial até 00:00 do dia seguinte
+  página manipuladas são ignoradas. `ConsultaDoHistorico` usa um SQL constante, com os filtros
+  opcionais como `? IS NULL OR …` (Sonar S2077), e só parâmetros: `CONFIRMADA`, `ocorrido_em` de 00:00 da data inicial até 00:00 do dia seguinte
   à final, no fuso da escola convertido para UTC, turma do `id_vinculo` do registro, aluno por
   parte do nome (LIKE com `%` e `_` escapados) ou matrícula inteira [PROP], ordem
   `ocorrido_em DESC, id_registro DESC`, `furin.historico.tamanho-pagina` por página (página

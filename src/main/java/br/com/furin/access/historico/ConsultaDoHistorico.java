@@ -66,25 +66,29 @@ public class ConsultaDoHistorico {
 	/** O caractere de escape do LIKE; ele mesmo também é escapado. */
 	private static final char ESCAPE = '!';
 
+	/**
+	 * O SQL é sempre o mesmo texto constante (A10 §8.28): os filtros opcionais são
+	 * {@code ? IS NULL OR …}, e um filtro vazio vai como {@code NULL}. Parâmetros, na ordem:
+	 * início e fim do período (UTC), a turma duas vezes, o aluno, o padrão do LIKE e o aluno de
+	 * novo (parte do nome ou a matrícula inteira, CA-RF18-03).
+	 */
 	private static final String ORIGEM = " FROM registro_acesso r "
 			+ "JOIN vinculo_turma v ON v.id_vinculo = r.id_vinculo "
 			+ "JOIN aluno a ON a.id_aluno = v.id_aluno "
 			+ "JOIN turma t ON t.id_turma = v.id_turma "
 			+ "JOIN usuario u ON u.id_usuario = r.id_usuario "
-			+ "WHERE r.situacao = 'CONFIRMADA' AND r.ocorrido_em >= ? AND r.ocorrido_em < ?";
+			+ "WHERE r.situacao = 'CONFIRMADA' AND r.ocorrido_em >= ? AND r.ocorrido_em < ? "
+			+ "AND (? IS NULL OR v.id_turma = ?) "
+			+ "AND (? IS NULL OR a.nome LIKE ? ESCAPE '!' OR a.matricula = ?)";
 
-	private static final String POR_TURMA = " AND v.id_turma = ?";
-
-	/** Parte do nome ou a matrícula inteira ("Ana Teste" ou "000123", CA-RF18-03). */
-	private static final String POR_ALUNO = " AND (a.nome LIKE ? ESCAPE '" + ESCAPE + "' OR a.matricula = ?)";
+	private static final String CONTAGEM = "SELECT COUNT(*)" + ORIGEM;
 
 	/** O aviso da T-38/T-39: há no máximo uma notificação por movimentação (o contato principal). */
-	private static final String COLUNAS = "SELECT r.id_registro, r.tipo, r.forma, r.ocorrido_em, r.lancado_em, "
+	private static final String PAGINA = "SELECT r.id_registro, r.tipo, r.forma, r.ocorrido_em, r.lancado_em, "
 			+ "r.motivo_manual, a.nome, a.matricula, t.nome AS turma, t.turno, u.nome AS autor, "
 			+ "(SELECT n.status FROM notificacao n WHERE n.id_registro = r.id_registro "
-			+ "ORDER BY n.id_notificacao LIMIT 1) AS aviso";
-
-	private static final String ORDEM = " ORDER BY r.ocorrido_em DESC, r.id_registro DESC LIMIT ? OFFSET ?";
+			+ "ORDER BY n.id_notificacao LIMIT 1) AS aviso" + ORIGEM
+			+ " ORDER BY r.ocorrido_em DESC, r.id_registro DESC LIMIT ? OFFSET ?";
 
 	private final JdbcTemplate jdbc;
 
@@ -115,34 +119,30 @@ public class ConsultaDoHistorico {
 	 * @param pagina a página pedida; fora do intervalo, vale a mais próxima
 	 */
 	public Pagina consultar(Filtros filtros, int pagina) {
-		List<Object> valores = new ArrayList<>();
-		String condicoes = condicoes(filtros, valores);
-		long total = jdbc.queryForObject("SELECT COUNT(*)" + ORIGEM + condicoes, Long.class, valores.toArray());
+		List<Object> valores = valores(filtros);
+		long total = jdbc.queryForObject(CONTAGEM, Long.class, valores.toArray());
 		int totalDePaginas = (int) Math.max(1, (total + tamanhoDaPagina - 1) / tamanhoDaPagina);
 		int atual = Math.clamp(pagina, 1, totalDePaginas);
 
 		valores.add(tamanhoDaPagina);
 		valores.add((atual - 1) * tamanhoDaPagina);
-		List<Linha> linhas = jdbc.query(COLUNAS + ORIGEM + condicoes + ORDEM, this::linha, valores.toArray());
+		List<Linha> linhas = jdbc.query(PAGINA, this::linha, valores.toArray());
 		return new Pagina(linhas, total, atual, totalDePaginas);
 	}
 
-	/** Só fragmentos fixos entram no SQL; os valores vão sempre como parâmetros. */
-	private String condicoes(Filtros filtros, List<Object> valores) {
+	/** Os parâmetros na ordem de {@link #ORIGEM}; um filtro vazio vai como {@code NULL}. */
+	private List<Object> valores(Filtros filtros) {
+		List<Object> valores = new ArrayList<>();
 		// RN10: o dia local inteiro, de 00:00 até o começo do dia seguinte, em UTC
 		valores.add(utc(filtros.inicio().atStartOfDay(fusoDaEscola).toInstant()));
 		valores.add(utc(filtros.fim().plusDays(1).atStartOfDay(fusoDaEscola).toInstant()));
-		StringBuilder sql = new StringBuilder();
-		if (filtros.idTurma() != null) {
-			sql.append(POR_TURMA);
-			valores.add(filtros.idTurma());
-		}
-		if (filtros.aluno() != null) {
-			sql.append(POR_ALUNO);
-			valores.add("%" + escapar(filtros.aluno()) + "%");
-			valores.add(filtros.aluno());
-		}
-		return sql.toString();
+		valores.add(filtros.idTurma());
+		valores.add(filtros.idTurma());
+		String aluno = filtros.aluno();
+		valores.add(aluno);
+		valores.add(aluno == null ? null : "%" + escapar(aluno) + "%");
+		valores.add(aluno);
+		return valores;
 	}
 
 	private Linha linha(ResultSet rs, int numero) throws SQLException {

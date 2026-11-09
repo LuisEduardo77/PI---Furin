@@ -150,8 +150,8 @@ class HistoricoTests {
 		assertThat(pagina.texto("#turma option[selected]")).isEqualTo("Todas");
 		assertThat(pagina.textos("#turma option")).contains("6A-T35 — Manhã (2026)", "6B-T35 — Manhã (2026)");
 		assertThat(pagina.atributo("#aluno", "value")).isEmpty();
-		// RF18, passo 6: o total é anunciado sem mover o foco
-		assertThat(pagina.atributo("#total-historico", "role")).isEqualTo("status");
+		// RF18, passo 6: o total é anunciado sem mover o foco. <output> tem o papel status implícito
+		assertThat(pagina.todos("output#total-historico")).hasSize(1);
 		assertThat(pagina.texto("#total-historico")).isEqualTo("4 registros encontrados");
 	}
 

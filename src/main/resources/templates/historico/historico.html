@@ -70,8 +70,11 @@
     </div>
   </form>
 
-  <!-- RF18, passo 6 (A11 §5.13.8): o total é anunciado sem mover o foco -->
-  <p id="total-historico" role="status" th:text="${total}">128 registros encontrados</p>
+  <!--
+    RF18, passo 6 (A11 §5.13.8): o total é anunciado sem mover o foco. <output> já tem o papel
+    status, sem precisar de role="status" (Sonar Web:S6819)
+  -->
+  <p><output id="total-historico" th:text="${total}">128 registros encontrados</output></p>
 
   <th:block th:if="${resultado != null and resultado.total() > 0}">
     <!--
