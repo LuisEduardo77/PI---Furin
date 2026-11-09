@@ -3,183 +3,577 @@
 > **Identificação simples, acesso seguro!**
 > Projeto Integrador da equipe FURIN — TADS, Centro Universitário Senac Santo Amaro, 2026.
 
-## Sobre o projeto
+Este guia ensina a colocar o sistema para rodar no seu computador e a usá-lo, tela por
+tela. Ele foi escrito para quem nunca viu o projeto. O estado detalhado do trabalho, as
+convenções e o índice de todos os documentos estão em
+[`docs/README-documentacao.md`](docs/README-documentacao.md).
 
-O Furin Access é uma aplicação web que registra a entrada e a saída dos alunos da
-EMEF Eng. José Amadei, que tem mais de 800 alunos no Ensino Fundamental I e II.
-O aluno apresenta uma carteirinha com QR Code a um leitor USB na portaria. Cada
-leitura válida libera a passagem, e a movimentação é registrada depois da passagem
-pela catraca. No protótipo, a leitura e o giro são **simulados** pelas telas, porque
-o grupo não tem leitor nem catraca (DEC-18, DEC-25). Com esses registros, o sistema:
+## Sumário
 
-- mostra quantos alunos estão presentes, no total e por turma, para apoiar a merenda;
-- mantém um histórico consultável e imprimível para a Gestão Escolar;
-- avisa por e-mail o contato principal de cada aluno.
+1. [O que é o Furin Access](#1-o-que-é-o-furin-access)
+2. [O que precisa ter instalado](#2-o-que-precisa-ter-instalado)
+3. [Como rodar](#3-como-rodar)
+4. [Como usar, tela por tela](#4-como-usar-tela-por-tela)
+5. [Roteiro de demonstração em 5 minutos](#5-roteiro-de-demonstração-em-5-minutos)
+6. [Problemas comuns e soluções](#6-problemas-comuns-e-soluções)
+7. [Documentação do projeto](#7-documentação-do-projeto)
 
-Só os **funcionários** da escola têm conta, todos com o mesmo perfil `FUNCIONARIO`: o
-ATE e a Gestão Escolar são cargos diferentes, mas no sistema usam tudo. Os **alunos** só
-apresentam a carteirinha, e os **pais/responsáveis** só recebem o e-mail (DEC-37).
+## 1. O que é o Furin Access
 
-Tecnologias: Java 21, Spring Boot 4.1.x, MySQL 8.4, Thymeleaf, HTML, CSS, JavaScript e
-Spring Security. O Spring Mail fica previsto, mas o envio de e-mail é sempre simulado
-(DEC-32). Versionamento no GitHub, com GitHub Actions, Maven e
-SonarCloud como apoio à qualidade.
+O Furin Access é uma aplicação web que registra a entrada e a saída dos alunos de uma
+escola pública. Só os **funcionários** da escola têm conta, todos com o mesmo perfil
+`FUNCIONARIO`: o ATE e a Gestão Escolar são cargos diferentes, mas no sistema usam
+todas as telas (DEC-37). O **aluno** só apresenta a carteirinha com QR Code na portaria.
+Os **pais ou responsáveis** só recebem um e-mail a cada entrada e saída, sem conta nem
+tela; no protótipo esse e-mail é **simulado** (nenhuma mensagem sai do computador,
+DEC-32). O grupo não tem leitor de QR Code nem catraca, então, no protótipo, a
+**leitura da carteirinha** (DEC-25) e a **passagem pela catraca** (DEC-18) também são
+simuladas por botões na tela, sempre marcados com "(protótipo)".
 
-## Estado atual do trabalho
+## 2. O que precisa ter instalado
 
-Atualizado em 21/10/2026.
+| Programa | Versão | Como conferir (no terminal) | O que deve aparecer |
+|---|---|---|---|
+| Java (JDK) | 21 | `java -version` | uma linha com `21` (por exemplo, `openjdk version "21.0.5"`) |
+| MySQL Server | 8.4 | `mysql --version` | uma linha com `8.4` (por exemplo, `Ver 8.4.3`) |
+| Git (opcional) | qualquer | `git --version` | só se for baixar com `git clone` |
 
-| Item | Estado | Observação |
-|---|---|---|
-| Atividades 1 a 14 (fontes) | Entregues | Analisadas: A01–A05, A07–A11, A13 e A14. As Atividades 6 e 12 não foram recebidas para análise |
-| Decisões do grupo | Registradas | ATU-01 a ATU-07 (18/10/2026), DEC-01 a DEC-23 e, na revisão T-00, DEC-24 a DEC-29, mais as complementares DEC-30 a DEC-36 (19/10/2026), **confirmadas pelo grupo**. Em 21/10/2026, DEC-37 a DEC-39 (perfil único `FUNCIONARIO`), pedidas por Luis Eduardo Belo Silva e **ainda sem a confirmação dos demais integrantes**. Tudo em [`docs/rastreabilidade.md`](docs/rastreabilidade.md) |
-| Pendências | **Todas resolvidas** | PEND-01 a PEND-16 resolvidas ou obsoletas (DEC-28 a DEC-39). Guarda de dados por 5 anos (DEC-36). As atividades entregues não serão reenviadas; onde divergirem, valem estes Markdown (DEC-35) ([`rastreabilidade.md`](docs/rastreabilidade.md) §3) |
-| Documentação Markdown | **Revisada em 19/10/2026** (T-00) e **atualizada em 21/10/2026** (DEC-37 a DEC-39) | Os 46 arquivos foram escritos com apoio de IA (ver [`docs/registro-de-ia.md`](docs/registro-de-ia.md)). Os 41 de requisitos e documentação e o `CLAUDE.md` foram revisados pelo grupo. Os 4 resumos (20/10/2026) estão em `Rascunho`, aguardando a leitura do grupo. **Conferência de consistência** em 10 itens feita em 19/10/2026, com as correções aplicadas. Em 21/10/2026, o perfil único foi aplicado a todos os arquivos. RF17, RF24 e RF25 ficaram **fora do escopo**, com os arquivos mantidos para não perder os IDs |
-| Repositório no GitHub | **Criado** (DEC-24) | `https://github.com/LuisEduardo77/PI---Furin.git` |
-| Código-fonte | **Projeto gerado** (T-04, 29/10/2026) | Spring Boot 4.1.2 e Java 21, com os perfis `prototipo` e `test`. Esquema do banco criado pelo Flyway na partida (`V1__esquema_inicial.sql`, T-06). Parâmetros `furin.*` no `application.yml`, validados na partida (T-07). Layout-base acessível e página temporária `/exemplo/layout` (T-08). Spring Security base: negar por padrão, CSRF, bcrypt e cabeçalhos (T-09). Log de auditoria mascarado em `logs/auditoria.log` (T-10). Carga fictícia no perfil `prototipo` (T-11): antes da primeira partida, defina `FURIN_SENHA_ATE_DEMO` e `FURIN_SENHA_GESTAO_DEMO` (pelo menos 8 caracteres), senão a aplicação não sobe. Tela "Login \| Furin Access" com as contas do banco (`ate.demo` e `gestao.demo`), portaria provisória com o menu único e "Sair" (T-12). Mensagem única para credencial inválida e conta inativa, campo vazio sem consultar a conta e `LOGIN_FALHA` no log (T-13). Bloqueio do login depois de 5 falhas seguidas, por 15 minutos (`furin.login.*`), igual para logins inexistentes (T-14). Troca obrigatória da senha temporária, senha temporária vencida recusada e "Alterar senha" (T-15). Sessão que expira depois de 30 minutos sem uso, com aviso acessível 60 s antes e "Continuar conectado" (T-16). Conta desativada durante a sessão encerra a sessão, página 403 acessível e teste de autorização de todas as rotas (T-17). Portaria antecipada: tipo automático (T-25), `POST /portaria/leituras` (T-26), giro simulado `POST /portaria/giros`, só no perfil `prototipo` (T-28), e a tela `/portaria` com o painel do funcionário, o monitor do aluno e as simulações identificadas (T-30). Área privada de fotos e termos fora do projeto, com tipo validado pelo conteúdo e entrega em `GET /arquivos/{chave}` só para funcionário autenticado; a portaria mostra a foto real (T-18). Formulário "Novo aluno" (T-19). Conferência do termo de consentimento no cadastro e registro da revogação, que inativa o aluno, revoga a carteirinha e inativa os contatos (T-20). Matrícula repetida recusada, inclusive de aluno inativo, e código de carteirinha sem repetição, com novas tentativas na colisão (T-21). O cadastro passou a ser salvo com a carteirinha emitida; QR Code, página de impressão de 85,6 × 54 mm e segunda via com confirmação (T-22). Edição do aluno com resumo "antes → depois", troca de turma sem mudar o histórico, substituição do contato principal, aviso por e-mail a pedido do responsável e inativação (T-23). Busca por nome ou matrícula na tela Alunos, com o filtro "Incluir inativos" (T-24). Painel Presentes com o total de hoje, a contagem por turma (todas as turmas ativas, inclusive com zero), as saídas pendentes de dias anteriores com "Registrar saída de …", atualização a cada 30 s e botão "Atualizar"; o contador da portaria muda a cada giro confirmado (T-34). Notificação `PENDENTE` ao contato principal criada na mesma transação do giro e do registro manual, respeitando a opção "receber" (T-38). Envio simulado depois do commit, em outra thread: a notificação fica `SIMULADA`, uma falha conta até 3 tentativas sem mudar a movimentação, e a portaria mostra "Simulação — nenhum e-mail foi enviado" com o texto do e-mail (T-39). Histórico `/historico`, só de consulta, com filtros de período (padrão hoje, até 31 dias), turma e aluno, 50 por página, a turma do dia do evento, os dois horários e o motivo dos registros manuais e o status do aviso ao responsável (T-35). Versão para impressão do histórico, com os mesmos filtros, até 1.000 registros, cabeçalho com a escola, a emissão e o total, rodapé de uso restrito, botão "Imprimir" e registro no log, sem exportação (T-36). Para rodar localmente, copie `application-local.yml.example` para `application-local.yml` e coloque a senha do usuário `furin` |
-| Pipeline de CI (GitHub Actions + SonarCloud) | GitHub Actions **configurado e verde** (T-05, PR #4). SonarCloud **planejado** (T-44) | A13 p.6 |
-| Notificação por e-mail | **Simulada** (DEC-32): criação na confirmação (T-38) e envio simulado depois do commit, com o aviso na tela (T-39) | Nenhuma mensagem real é enviada. Não há WhatsApp (DEC-37) |
-| Leitura do QR Code | **Planejada como função simulada** no protótipo | Sem leitor físico (DEC-25): campo de leitura (digitar ou colar) e painel "Simular leitura" |
-| Giro da catraca | **Planejado como função simulada** no protótipo | A integração física fica fora do MVP |
-| Hospedagem | **Local** (DEC-31) | A aplicação roda no computador da equipe. O GitHub Pages pode publicar só a documentação |
-| HTTPS | **Planejado** | Não verificado, porque a aplicação roda local com HTTP (RNF04) |
-| Backup | **Planejado** (T-47, DEC-30) | Script simples com o banco e os arquivos, 7 cópias e restauração testada |
-| Proteção de logs | **Planejada** | Só será "verificada" depois de configurada e testada |
+O **Maven não precisa ser instalado**: o projeto traz o Maven Wrapper (`mvnw` e
+`mvnw.cmd`), que baixa a versão certa do Maven na primeira execução. Para isso, a
+primeira execução precisa de internet.
 
-### Como ler o estado de cada requisito
+Precisa ser o **JDK** (o kit de desenvolvimento), não só o "Java" de navegador. Uma
+opção gratuita é o Eclipse Temurin 21, em `https://adoptium.net`. O MySQL 8.4 LTS
+(*MySQL Community Server*) está em `https://dev.mysql.com/downloads/mysql/`.
 
-Cada RF e RNF tem dois campos de estado: o da documentação e o da implementação.
+Não tem permissão de administrador no Windows? Veja
+[3.8 Alternativa sem permissão de administrador](#38-alternativa-sem-permissão-de-administrador-windows).
 
-| Campo | Valores | Significado |
-|---|---|---|
-| **Documentação** | `Rascunho` | Texto preparado, ainda não aprovado pelo grupo |
-| | `Revisada` | Conferida e aprovada pelo grupo, com data |
-| **Implementação** | `Planejada` | Descrita para ser construída. Ainda não há código |
-| | `Simulada` | O protótipo mostra o comportamento, mas sem o efeito real (por exemplo, nenhum e-mail sai), **com indicação visível de simulação** |
-| | `Implementada` | O código executa a função de verdade |
-| | `Verificada` | Um teste ou inspeção registrada comprovou o funcionamento |
+## 3. Como rodar
 
-Uma tela que mostra um comportamento não prova o controle técnico por trás dela
-(A10 p.4). **Hoje todos os requisitos estão em `Documentação: Revisada` e
-`Implementação: Planejada`**, menos RF17, RF24 e RF25, que estão **fora do escopo**
-(não implementar). RF02 (T-13 e T-14) e RF03 (T-12 e T-17) estão `Implementada`;
-falta a conferência manual com teclado e leitor de tela. RF13 (T-25 a T-30) e RF15 (T-27) estão `Implementada`;
-falta a demonstração do RF15. RF23 (T-31) está `Implementada`; falta a conferência com leitor de
-tela e sem cores. RF16 (T-34) está `Implementada`; falta a conferência com 320 px e com
-leitor de tela. RF21 (T-38, T-39 e a coluna do histórico da T-35) está `Simulada`: nenhum
-e-mail sai. RF12 (T-32), RF18 e RF19 (T-35) e RF20 (T-36) estão `Implementada`; falta a
-conferência com leitor de tela e, no RF20, na visualização de impressão dos três navegadores.
-A Fase 5 (consultas) está fechada. RF01 e RNF03 estão em andamento
-(login da T-12, senha da T-15 e sessão da T-16; ver o campo **Implementação** de cada um).
+Os comandos aparecem primeiro para o **Windows (Prompt de Comando, `cmd`)** e depois
+para **Linux e macOS (Terminal)**. Rode todos eles **na pasta do projeto**, a que tem o
+arquivo `pom.xml`.
 
-## Organização dos documentos
+### 3.1 Baixar o projeto
 
-Os arquivos de requisitos e de documentação estão em `Documentação: Revisada`, com as
-decisões da T-00 aplicadas. Em 21/10/2026 entrou o perfil único (DEC-37 a DEC-39), que
-ainda precisa ser confirmado pelos demais integrantes. "Atualizada" na tabela abaixo
-indica os arquivos alterados nessa data. Os quatro **resumos** são um atalho para quem quer uma visão
-geral: eles não trazem decisões novas e, se discordarem dos arquivos detalhados, valem
-os arquivos detalhados.
+**Com o Git:**
 
-| Caminho | Conteúdo | Situação |
-|---|---|---|
-| `README.md` | Este arquivo | Atualizada (21/10/2026) |
-| [`CLAUDE.md`](CLAUDE.md) | Instruções para o Claude Code: fontes da verdade, como trabalhar, regras invioláveis e o que fica fora do MVP | Atualizada (21/10/2026) |
-| [`docs/escopo-e-perfis.md`](docs/escopo-e-perfis.md) | Contexto, solução escolhida, escopo do MVP, perfil único, permissões e glossário | Atualizada (21/10/2026) |
-| [`docs/regras-de-negocio.md`](docs/regras-de-negocio.md) | Regras RN01–RN17 (RN13 obsoleta), medidas definidas e o que fica para a implantação | Atualizada (21/10/2026) |
-| [`docs/arquitetura-e-dados.md`](docs/arquitetura-e-dados.md) | Componentes, versões, fluxos, parâmetros, modelo relacional, dicionário, DDL de referência (validado na T-03) e CI | Atualizada (27/10/2026) |
-| [`docs/rastreabilidade.md`](docs/rastreabilidade.md) | Fontes, decisões (ATU, DEC), pendências (PEND), propostas, matriz requisito → fonte → arquivo → verificação, alterações aprovadas | Atualizada (21/10/2026) |
-| [`docs/plano-de-implementacao.md`](docs/plano-de-implementacao.md) | Tarefas T-00 a T-47, ordenadas por dependência, prontas para cartões do Trello (T-37, T-40 a T-42 canceladas) | Atualizada (21/10/2026) |
-| [`docs/registro-de-ia.md`](docs/registro-de-ia.md) | Ferramentas, modelos, datas, finalidades e prompts de IA usados | Atualizada (21/10/2026) |
-| [`requirements/rf/`](requirements/rf/) `RF01.md` … `RF26.md` | Um arquivo por requisito funcional (26; RF17, RF24 e RF25 fora do escopo) | Atualizada (21/10/2026) |
-| [`requirements/rnf/`](requirements/rnf/) `RNF01.md` … `RNF08.md` | Um arquivo por requisito não funcional (8) | Atualizada (21/10/2026) |
-| [`docs/resumo-ferramentas.md`](docs/resumo-ferramentas.md) | Resumo das ferramentas: o que é cada uma, para que serve e em que estado está | Rascunho (resumo, atualizado em 21/10/2026) |
-| [`docs/resumo-funcionamento.md`](docs/resumo-funcionamento.md) | Como o sistema vai funcionar no dia a dia, em linguagem simples | Rascunho (resumo, atualizado em 21/10/2026) |
-| [`docs/resumo-rf.md`](docs/resumo-rf.md) | Os 26 RF em tabelas por área, com o que fazem e a meta no protótipo | Rascunho (resumo, atualizado em 21/10/2026) |
-| [`docs/resumo-rnf.md`](docs/resumo-rnf.md) | Os 8 RNF em uma página, com o que cada um exige | Rascunho (resumo, atualizado em 21/10/2026) |
+```bat
+git clone https://github.com/LuisEduardo77/PI---Furin.git
+cd PI---Furin
+```
 
-### Antes de começar a programar
+**Sem o Git:** abra `https://github.com/LuisEduardo77/PI---Furin`, clique em **Code** →
+**Download ZIP**, extraia o arquivo e entre na pasta extraída (ela se chama
+`PI---Furin-main`):
 
-1. ~~**Revisão em grupo (T-00)**~~ — **concluída em 19/10/2026** (DEC-24 a DEC-36, confirmadas pelo grupo).
-   **Falta:** os demais integrantes confirmarem a DEC-37 a DEC-39 (perfil único).
-   Uma decisão nova recebe o próximo ID DEC e vai para `docs/rastreabilidade.md`.
-2. **Repositório:** já criado (DEC-24). Falta copiar esta documentação para a raiz e
-   conferir a proteção da `main` e o `.gitignore` (T-01).
-3. ~~**Validação do DDL (T-03)**~~ — **DDL validado em 27/10/2026** no MySQL 8.4.13,
-   sem alteração (evidência em [`docs/evidencias/t-03/`](docs/evidencias/t-03/README.md)).
-   Usuário do banco exclusivo do projeto (`furin`, sem `root`) criado por
-   [`scripts/criar-usuario-banco.sql`](scripts/criar-usuario-banco.sql). Cada integrante
-   roda esse script uma vez no próprio computador.
-4. **Desenvolvimento com o Claude Code:** ele começa pelo [`CLAUDE.md`](CLAUDE.md) e
-   segue o plano a partir da T-01.
-5. **Atualizar o estado:** quando uma função for simulada, implementada ou verificada,
-   mudar o campo **Implementação** do RF ou RNF e registrar a evidência no cartão do
-   Trello.
+```bat
+cd %USERPROFILE%\Downloads\PI---Furin-main
+```
 
-## Ordem recomendada de leitura
+No Linux ou macOS, o `git clone` é igual. Para o ZIP: `cd ~/Downloads/PI---Furin-main`.
 
-**Para uma visão rápida:** [`resumo-funcionamento.md`](docs/resumo-funcionamento.md),
-depois [`resumo-rf.md`](docs/resumo-rf.md), [`resumo-rnf.md`](docs/resumo-rnf.md) e
-[`resumo-ferramentas.md`](docs/resumo-ferramentas.md).
+### 3.2 Criar o banco e o usuário
 
-**Para trabalhar no projeto:**
+O script [`scripts/criar-usuario-banco.sql`](scripts/criar-usuario-banco.sql) cria dois
+bancos, `furin` (o do protótipo) e `furin_test` (o dos testes automatizados), e o
+usuário `furin`, com acesso só a esses dois bancos. Rode **uma vez por computador**, com
+o MySQL ligado e com o usuário administrador do MySQL (`root`):
 
-1. **Este README**: projeto, estado e convenções.
-2. **`docs/escopo-e-perfis.md`**: o que entra no MVP e quem faz o quê.
-3. **`docs/regras-de-negocio.md`**: como a leitura, o giro, o registro manual e as
-   notificações funcionam.
-4. **`requirements/rf/`**, na ordem do fluxo:
-   - acesso: RF01–RF03;
-   - cadastro: RF04–RF08;
-   - portaria: RF09–RF15, RF22, RF23;
-   - consultas: RF16–RF20;
-   - notificação: RF21 (RF24 e RF25 fora do escopo);
-   - contas da equipe: RF26 (RF17 fora do escopo).
-5. **`requirements/rnf/`**: RNF01–RNF08.
-6. **`docs/arquitetura-e-dados.md`**: como o sistema será construído.
-7. **`docs/rastreabilidade.md`**: de onde vem cada requisito e o que mudou.
-8. **`docs/plano-de-implementacao.md`**: por onde começar o código.
-9. **`docs/registro-de-ia.md`**: uso de IA na documentação.
+**Windows e Linux/macOS (o comando é o mesmo):**
 
-Quem vai programar pode ir direto do item 3 para os itens 6 e 8, consultando os RF
-conforme as tarefas.
+```bat
+mysql -u root -p --table -e "source scripts/criar-usuario-banco.sql"
+```
 
-## Convenções
+Digite a senha do `root` do MySQL quando ela for pedida. No fim, aparece uma tabela com a
+coluna **`generated password`**: é a senha do usuário `furin`, **gerada pelo MySQL e
+mostrada uma única vez**. Copie essa senha para um lugar seguro: ela vai para o arquivo
+do próximo passo.
 
-### Marcas de origem
+Perdeu a senha? Gere outra (com o `root`) e use a nova:
 
-| Marca | Significado |
+```bat
+mysql -u root -p --table -e "ALTER USER 'furin'@'localhost' IDENTIFIED BY RANDOM PASSWORD"
+```
+
+[print: tabela com a coluna generated password]
+
+### 3.3 Criar o `application-local.yml`
+
+As senhas ficam num arquivo só seu, o `application-local.yml`, na pasta do projeto. Esse
+arquivo está no `.gitignore` e **nunca vai para o Git**. Comece pelo modelo:
+
+**Windows:**
+
+```bat
+copy application-local.yml.example application-local.yml
+notepad application-local.yml
+```
+
+**Linux/macOS:**
+
+```bash
+cp application-local.yml.example application-local.yml
+nano application-local.yml
+```
+
+Deixe o arquivo assim, trocando cada `TROQUE_AQUI` pelo valor real (sem aspas e sem o
+`#` no começo da linha):
+
+```yaml
+spring:
+  datasource:
+    password: TROQUE_AQUI        # a "generated password" do passo 3.2
+
+FURIN_SENHA_ATE_DEMO: TROQUE_AQUI     # senha que você escolhe para a conta ate.demo
+FURIN_SENHA_GESTAO_DEMO: TROQUE_AQUI  # senha que você escolhe para a conta gestao.demo
+```
+
+- As duas senhas das contas de demonstração são **inventadas por você** e precisam ter
+  **pelo menos 8 caracteres**. Sem elas, a aplicação não sobe.
+- Elas só são usadas **na primeira vez** que o sistema sobe com o banco vazio: nesse
+  momento, a carga fictícia cria as contas `ate.demo` e `gestao.demo` com essas senhas.
+  Mudar o arquivo depois não muda as contas (para recomeçar, veja a seção 3.6).
+- Em vez do arquivo, os mesmos valores podem vir das variáveis de ambiente
+  `SPRING_DATASOURCE_PASSWORD`, `FURIN_SENHA_ATE_DEMO` e `FURIN_SENHA_GESTAO_DEMO`.
+
+### 3.4 Subir o sistema (perfil `prototipo`)
+
+Com o MySQL ligado, na pasta do projeto:
+
+**Windows:**
+
+```bat
+mvnw spring-boot:run -Dspring-boot.run.profiles=prototipo
+```
+
+**Linux/macOS:**
+
+```bash
+./mvnw spring-boot:run -Dspring-boot.run.profiles=prototipo
+```
+
+O `prototipo` já é o perfil padrão, então `mvnw spring-boot:run` sozinho também funciona.
+É nesse perfil que existem as simulações (leitura, catraca e e-mail) e os dados
+fictícios.
+
+A primeira vez demora mais (o Maven baixa as dependências). O sistema está pronto quando
+o terminal mostra uma linha parecida com `Started FurinAccessApplication in 8.5 seconds`.
+Na primeira partida, o sistema também cria as tabelas do banco e grava os dados
+fictícios (seção 4). Deixe essa janela aberta enquanto usar o sistema.
+
+Abra no navegador: **<http://localhost:8080/login>**
+
+[print: tela de login]
+
+### 3.5 Desligar
+
+Na janela onde o sistema está rodando, tecle **Ctrl+C**. No Windows, se aparecer
+"Deseja finalizar o arquivo em lotes (S/N)?", digite `S` e Enter. Os dados continuam
+gravados no banco para a próxima vez.
+
+### 3.6 Recomeçar o banco do protótipo
+
+Ainda **não há um script de reset**. Para voltar aos dados fictícios do início (por
+exemplo, antes de uma apresentação), com o sistema **desligado**:
+
+1. Apague e recrie o banco `furin` com o `root` (o comando é o mesmo no Windows e no
+   Linux/macOS). **Isso apaga todos os registros do protótipo e não tem volta.** O banco
+   dos testes (`furin_test`) e o usuário `furin` não são afetados.
+
+   ```bat
+   mysql -u root -p -e "DROP DATABASE furin; CREATE DATABASE furin CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;"
+   ```
+
+2. Confira as senhas das contas de demonstração no `application-local.yml` (elas valem de
+   novo, porque a carga fictícia vai rodar outra vez).
+3. Suba o sistema de novo (seção 3.4). As tabelas e os dados fictícios são recriados, e as
+   carteirinhas fictícias recebem **códigos novos** (as impressas antes deixam de valer).
+
+As fotos e os termos ficam fora do projeto, na pasta `furin-access/arquivos` dentro da sua
+pasta de usuário (`%USERPROFILE%\furin-access\arquivos` no Windows,
+`~/furin-access/arquivos` no Linux/macOS). Depois do reset, os arquivos antigos ficam
+sobrando nessa pasta; se quiser, apague-os com o sistema desligado.
+
+### 3.7 Rodar os testes automatizados
+
+Os testes usam o banco `furin_test` e a mesma senha do `application-local.yml`. Com o
+MySQL ligado:
+
+**Windows:**
+
+```bat
+mvnw -B verify
+```
+
+**Linux/macOS:**
+
+```bash
+./mvnw -B verify
+```
+
+O resultado esperado, no fim, é `BUILD SUCCESS`. São centenas de testes, e a execução
+leva alguns minutos. Os relatórios ficam em `target/surefire-reports/`.
+
+### 3.8 Alternativa sem permissão de administrador (Windows)
+
+Dá para usar o JDK e o MySQL em arquivo **ZIP**, sem instalar nada. O exemplo usa a pasta
+`%USERPROFILE%\ferramentas`; ajuste os nomes das pastas para os que aparecerem depois de
+extrair.
+
+**JDK em ZIP**
+
+1. Em `https://adoptium.net`, baixe o **Temurin 21 (JDK)** para Windows x64 no formato
+   **.zip** e extraia em `%USERPROFILE%\ferramentas`. Renomeie a pasta extraída (algo
+   como `jdk-21.0.5+11`) para `jdk-21`.
+2. Em **cada** janela do Prompt de Comando que for usar o projeto, rode antes:
+
+   ```bat
+   set "JAVA_HOME=%USERPROFILE%\ferramentas\jdk-21"
+   set "PATH=%JAVA_HOME%\bin;%PATH%"
+   java -version
+   ```
+
+**MySQL em ZIP**
+
+1. Em `https://dev.mysql.com/downloads/mysql/`, escolha **MySQL Community Server 8.4
+   LTS**, Windows (x86, 64-bit), **ZIP Archive**, e extraia em
+   `%USERPROFILE%\ferramentas`. Renomeie a pasta extraída para `mysql-8.4`.
+2. Só na primeira vez, prepare a pasta de dados. O `root` fica sem senha por enquanto:
+
+   ```bat
+   cd /d %USERPROFILE%\ferramentas\mysql-8.4\bin
+   mysqld --initialize-insecure --console
+   ```
+
+3. Ligue o servidor e **deixe essa janela aberta** (ela é o MySQL rodando):
+
+   ```bat
+   cd /d %USERPROFILE%\ferramentas\mysql-8.4\bin
+   mysqld --console
+   ```
+
+4. Em **outra** janela, ponha o MySQL no caminho e defina uma senha para o `root`
+   (escolha a sua no lugar de `TROQUE_AQUI`):
+
+   ```bat
+   set "PATH=%USERPROFILE%\ferramentas\mysql-8.4\bin;%PATH%"
+   mysql -u root --skip-password -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'TROQUE_AQUI'"
+   ```
+
+5. Nessa mesma janela, siga a partir da seção 3.2.
+6. Para desligar o MySQL: `mysqladmin -u root -p shutdown` (ou Ctrl+C na janela do
+   `mysqld`).
+
+O MySQL para Windows precisa do *Microsoft Visual C++ Redistributable*. Se o `mysqld`
+reclamar de um arquivo como `VCRUNTIME140.dll` ou `MSVCP140.dll`, esse pacote falta no
+computador, e a instalação dele precisa de alguém com permissão de administrador.
+
+### 3.9 Linux e macOS: instalação dos programas
+
+- **macOS (Homebrew):** `brew install openjdk@21 mysql@8.4` e, para ligar o MySQL,
+  `brew services start mysql@8.4`. Siga as instruções que o Homebrew mostra para pôr o
+  `java` e o `mysql` no caminho.
+- **Linux:** instale o JDK 21 pelo gerenciador de pacotes da distribuição (por exemplo,
+  o pacote `openjdk-21-jdk` no Ubuntu) e o MySQL 8.4 pelo repositório oficial do MySQL
+  (*MySQL APT Repository* ou *MySQL Yum Repository*), porque muitas distribuições trazem
+  outra versão.
+
+## 4. Como usar, tela por tela
+
+### Dados fictícios do protótipo
+
+Na primeira partida, o sistema grava só dados inventados:
+
+| O quê | Dados |
 |---|---|
-| **[DOC]** | Está escrito em um documento entregue. A fonte aparece como `A08 p.3` (tabela abaixo) |
-| **[ATU-nn]** | Atualização de escopo informada pelo grupo em 18/10/2026 |
-| **[DEC-nn]** | Decisão do grupo, de 19/10/2026 (DEC-37 a DEC-39: 21/10/2026). DEC-28 aprova os itens da pauta T-00, citados como "DEC-28, A1", "DEC-28, E4" e assim por diante |
-| **[PROP]** | Sugestão de detalhe (texto de tela, nome de propriedade, detalhe de implementação) que não precisou de decisão do grupo. Pode ser ajustada na implementação, registrando no PR. As propostas de comportamento foram aprovadas na T-00 (DEC-28) |
-| **[PEND-nn]** | Ponto que estava indefinido. Os que ficam para a implantação aparecem como **"a definir"** |
+| Contas | `ate.demo` (ATE Demo) e `gestao.demo` (Gestão Demo), com as senhas do seu `application-local.yml` |
+| Turmas | 3B e 6A, turno da manhã |
+| Alunos | **Ana Teste** (matrícula 000123, 6A) e **Davi Teste** (000124, 3B), irmãos, com a responsável Carla Teste (`carla.teste@example.com`); **Bia Exemplo** (000200, 6A), com o responsável Bruno Exemplo (`bruno.pai@example.com`), que **pediu para não receber** o e-mail |
+| Carteirinhas | uma válida para cada aluno, com código gerado na hora |
 
-### Códigos das fontes
+Todas as telas, menos a de login, têm o mesmo menu no topo: **Portaria · Alunos ·
+Presentes · Histórico · Contas da equipe · Alterar senha · Sair**. O primeiro item da
+página, que aparece com a tecla Tab, é o link **"Ir para o conteúdo principal"**.
 
-A paginação conta a capa como p.1.
+### 4.1 Login
 
-| Código | Arquivo | Conteúdo |
+1. Abra <http://localhost:8080/login>.
+2. Em **Usuário (obrigatório)**, digite `ate.demo` ou `gestao.demo`. As duas contas podem
+   usar todas as telas.
+3. Em **Senha (obrigatório)**, digite a senha que **você** definiu no
+   `application-local.yml` (seção 3.3). Este guia não traz senhas: elas vêm da
+   configuração local de cada computador.
+4. Clique em **Entrar**. O sistema abre a tela **Portaria**.
+
+O que pode aparecer:
+
+- "Usuário ou senha inválidos. Confira os dados e tente novamente." — a mesma mensagem
+  para usuário que não existe, senha errada e conta inativa.
+- "Muitas tentativas sem sucesso. Aguarde alguns minutos e tente novamente." — depois de
+  5 erros seguidos, o login fica bloqueado por 15 minutos.
+- Depois de **30 minutos sem uso**, a sessão termina. Um minuto antes, aparece o aviso
+  "Sua sessão vai expirar" com o botão **Continuar conectado**.
+
+[print: tela de login]
+
+### 4.2 Portaria
+
+É a tela de trabalho do funcionário na entrada da escola. No topo, um aviso lembra:
+"Protótipo: não há leitor nem catraca."
+
+**Simulado nesta tela:** a leitura da carteirinha (painel "Simular leitura (protótipo)"),
+a passagem pela catraca (botão "Simular passagem (giro)") e o e-mail ao responsável
+(seção "Aviso ao responsável (protótipo)").
+
+**Registrar uma entrada ou saída (leitura + passagem):**
+
+1. No painel **Simular leitura (protótipo)**, clique em **Ler carteirinha de Ana Teste**.
+   (Também dá para colar o código de uma carteirinha no campo **Código da carteirinha** e
+   teclar Enter ou clicar em **Registrar leitura**: é o que o leitor USB faria.)
+2. O **Painel do funcionário** mostra a foto, o nome, a turma, o tipo e a situação
+   "Entrada liberada — aguardando passagem". O **Monitor do aluno** mostra só o primeiro
+   nome: "Ana, entrada liberada. Pode passar."
+3. Em **Catraca (protótipo)**, clique em **Simular passagem (giro)** em até 15 segundos.
+4. A situação muda para "Entrada registrada às …", o contador **Presentes agora** aumenta
+   e aparece a seção **Aviso ao responsável (protótipo)**, com "Simulação — nenhum e-mail
+   foi enviado", o destinatário mascarado, o assunto e o texto do e-mail que teria saído.
+
+O **tipo é sempre calculado pelo sistema**: não há botão de "entrada" ou "saída". Se Ana
+entrou, a próxima leitura dela é uma **saída**.
+
+**Se a passagem não acontecer:**
+
+- Sem o giro em 15 segundos, a liberação é cancelada sozinha: "Liberação expirada — Ana
+  não passou".
+- Para cancelar antes, clique em **Cancelar liberação de Ana Teste** (o botão só aparece
+  enquanto há uma liberação pendente). O painel mostra "Liberação de Ana cancelada".
+- Uma liberação cancelada não gera registro nem e-mail.
+
+**Mensagens que podem aparecer:**
+
+| Mensagem no Painel do funcionário | Quando |
+|---|---|
+| Leitura já recebida | a mesma carteirinha foi lida de novo em menos de 2 segundos |
+| Aguardando passagem | a carteirinha foi lida de novo com a liberação ainda pendente |
+| Aguarde a passagem do aluno anterior | outro aluno foi lido antes de o anterior passar |
+| Leitura recusada: Leitura não reconhecida. Tente novamente. | o texto lido não tem o formato de um código de carteirinha |
+| Leitura recusada: Código não reconhecido. | o formato está certo, mas a carteirinha não existe |
+| Leitura recusada: Carteirinha revogada. Emitir segunda via. | a carteirinha foi substituída por uma segunda via |
+| Leitura recusada: Aluno inativo. | o aluno foi inativado |
+| Leitura recusada: Saída pendente de dd/mm: registre a saída manual antes da nova entrada. | o aluno entrou num dia anterior e ficou sem saída |
+| Leitor não está pronto. Clique no campo de leitura. | o cursor saiu do campo de leitura |
+
+Nas recusas, o Monitor do aluno mostra sempre a mesma frase, sem o motivo: "Não foi
+possível ler sua carteirinha. Tente de novo ou procure o funcionário da portaria."
+
+**Registro manual** (quando a leitura não é possível, ou para fechar uma saída pendente):
+
+1. Clique em **Registro manual**.
+2. Em **Buscar aluno por nome ou matrícula**, digite parte do nome (pelo menos 2 letras)
+   ou o começo da matrícula e clique em **Buscar**. Só aparecem alunos ativos.
+3. Na linha do aluno, clique em **Registrar manualmente para Ana Teste**.
+4. Confira o tipo, que o sistema calculou. Em **Data e hora reais da movimentação**, o
+   campo já vem com o momento atual (mude se foi em outro horário, nunca no futuro). Em
+   **Motivo**, escreva por que o registro é manual (por exemplo, "Aluno esqueceu a
+   carteirinha").
+5. Clique em **Revisar**, confira o resumo e clique em **Confirmar** (ou **Corrigir** para
+   voltar).
+6. Aparece "Entrada manual registrada para Ana às …" e, se o responsável recebe avisos, a
+   seção **Aviso ao responsável (protótipo)** com o e-mail simulado.
+
+[print: tela da portaria com uma liberação]
+
+### 4.3 Alunos
+
+Na tela **Alunos** ficam o botão **Novo aluno** e a busca.
+
+**Buscar:**
+
+1. Em **Buscar aluno por nome ou matrícula**, digite parte do nome (pelo menos 2 letras)
+   ou o começo da matrícula, com os zeros à esquerda (por exemplo, `0001`).
+2. Marque **Incluir inativos** se quiser ver também os alunos inativados.
+3. Clique em **Buscar**. Aparecem até 20 alunos, com nome, matrícula, turma e situação.
+
+**Cadastrar um aluno (com o termo de consentimento):**
+
+1. Clique em **Novo aluno**. Todos os blocos são obrigatórios.
+2. Bloco **Aluno**: **Nome do aluno**, **Matrícula** (não pode repetir a de outro aluno,
+   nem de um inativo), **Turma** e **Foto do aluno** (JPEG ou PNG, até 2 MB). Use só
+   imagens fictícias, nunca a foto de uma pessoa real.
+3. Bloco **Contato principal**: **Nome do responsável**, **Telefone com DDD** e
+   **E-mail**. Use e-mails `@example.com`.
+4. Bloco **Termo de consentimento**: **Signatário**, **Versão do termo** (já vem
+   preenchida) e **Data da assinatura**. Depois, informe o **Protocolo ou localização do
+   termo físico** *ou* envie a **Cópia digitalizada do termo** (PDF, JPEG ou PNG, até
+   5 MB). Por fim, marque **Confirmo que conferi o termo de consentimento assinado pelo
+   responsável**.
+5. Clique em **Salvar**. Se algo estiver errado, um resumo no topo lista cada erro, com
+   link para o campo, e nada é salvo (a foto e o termo precisam ser escolhidos de novo).
+
+**Carteirinha e impressão:** ao salvar, a carteirinha é emitida na hora e o sistema abre a
+página **Carteirinha de …**, com "Aluno … cadastrado. Imprima a carteirinha." O cartão tem
+o nome, a turma e o QR Code, no tamanho 85,6 × 54 mm. Use a impressão do navegador
+(**Ctrl+P**): só o cartão sai no papel. O novo aluno também passa a ter um botão no painel
+"Simular leitura (protótipo)" da portaria.
+
+**Segunda via:**
+
+1. Na página da carteirinha (ou em **Editar aluno**), clique em **Emitir segunda via**.
+2. A tela avisa: "A carteirinha atual deixará de funcionar. Confirmar?" Clique em
+   **Confirmar segunda via**.
+3. A nova carteirinha abre para impressão. A antiga passa a ser recusada na portaria com
+   "Carteirinha revogada. Emitir segunda via."
+
+**Editar:**
+
+1. Busque o aluno e clique em **Editar aluno Ana Teste**.
+2. Mude o que precisar: dados do aluno, turma (o histórico antigo continua na turma
+   anterior), **Nova foto (opcional)** e os dados do contato. Para trocar o responsável,
+   marque **Substituir o contato principal por outra pessoa**.
+3. Clique em **Revisar alterações**. Uma tabela mostra cada campo "Antes" e "Depois".
+4. Clique em **Confirmar** (ou **Corrigir**). Aparece "Cadastro de Ana Teste atualizado."
+
+**Aviso por e-mail:** na edição, a caixa **Enviar avisos de entrada e saída por e-mail ao
+contato principal** liga ou desliga o aviso, só a pedido do responsável. Ao revisar,
+o sistema pede confirmação ("Os avisos de … deixarão de ser enviados a …"). O e-mail é
+sempre **simulado** no protótipo.
+
+**Outras ações** (no fim da tela de edição): **Imprimir carteirinha**, **Emitir segunda
+via**, **Registrar revogação do termo** (informe a data e clique em **Registrar
+revogação**: o aluno é inativado e a carteirinha deixa de valer) e **Inativar aluno**
+(clique em **Confirmar inativação**). Nada é apagado: o histórico do aluno continua.
+
+[print: formulário Novo aluno]
+
+### 4.4 Presentes
+
+Mostra quantos alunos estão na escola agora, para apoiar a merenda.
+
+- **Presentes agora**: alunos com entrada registrada hoje e sem saída. A tela avisa que
+  "Este número não comprova presença em sala de aula."
+- **Por turma**: todas as turmas ativas, inclusive as que têm zero.
+- **Saídas pendentes**: entradas de dias anteriores que ficaram sem saída. O botão
+  **Registrar saída de …** abre o registro manual já com a saída.
+- A tela se atualiza sozinha a cada 30 segundos. Para atualizar na hora, clique em
+  **Atualizar**.
+
+### 4.5 Histórico e impressão
+
+1. Abra **Histórico**. Ele mostra as entradas e saídas confirmadas de hoje. A tela é só
+   de consulta: nada pode ser editado nela.
+2. Para filtrar, use **Data inicial**, **Data final** (período de até 31 dias),
+   **Turma** e **Aluno** (nome ou matrícula) e clique em **Filtrar**.
+3. A tabela mostra data, hora, aluno, turma, tipo, forma (leitura ou manual),
+   observação (o motivo dos registros manuais) e **Aviso ao responsável** ("Simulada",
+   "Pendente" ou "Não enviado"). São 50 registros por página, com **Próxima página** e
+   **Página anterior**.
+4. Para imprimir, clique em **Versão para impressão** e depois em **Imprimir** (abre a
+   impressão do navegador, que também salva em PDF). O relatório usa os mesmos filtros,
+   aceita até 1.000 registros e traz o nome da escola configurado (no protótipo,
+   "Escola Exemplo"). **Voltar ao histórico** retorna à consulta.
+
+### 4.6 Alterar senha
+
+1. Clique em **Alterar senha** no menu.
+2. Preencha **Senha atual**, **Nova senha** (pelo menos 8 caracteres, diferente da atual)
+   e **Confirme a nova senha**.
+3. Clique em **Alterar senha**. Aparece "sua senha foi alterada."
+
+A senha nova fica só no banco. O `application-local.yml` não muda, e a senha antiga dele
+deixa de funcionar para essa conta (até um reset, seção 3.6).
+
+### 4.7 Sair
+
+Clique em **Sair**, no fim do menu. O sistema volta para o login com "você saiu do
+sistema."
+
+### Em desenvolvimento
+
+Ainda não está pronto (não aparece no protótipo ou aparece incompleto):
+
+- **Contas da equipe** (RF26): o item está no menu, mas a página ainda não existe e
+  mostra "Página não encontrada". Por isso também não há, por enquanto, como criar
+  contas novas nem gerar senhas temporárias (a tela **Definir nova senha** só aparece
+  para quem entra com uma senha temporária).
+- **Backup** do banco e dos arquivos (T-47): os scripts `scripts/backup.ps1` e
+  `scripts/backup.sh` ainda não existem.
+- **Script de reset** do banco do protótipo: por enquanto, o reset é manual (seção 3.6).
+- **HTTPS**: o protótipo roda só em `http://localhost` (RNF04).
+- **Medição de desempenho na tela** da portaria (RNF02): só o servidor foi medido.
+
+Fora do escopo, de propósito (não serão feitos no protótipo): leitor USB, catraca e
+envio real de e-mail, WhatsApp, contas para alunos e pais e perfis separados para ATE e
+Gestão.
+
+## 5. Roteiro de demonstração em 5 minutos
+
+Antes de começar: sistema rodando (seção 3.4), de preferência com o banco recomeçado
+(seção 3.6), e o navegador em <http://localhost:8080/login>.
+
+1. **Login (30 s).** Entre com `ate.demo` e a senha do seu `application-local.yml`.
+   Mostre o menu único: todos os funcionários usam as mesmas telas.
+2. **Entrada com aviso (1 min).** Na Portaria, clique em **Ler carteirinha de Ana Teste**.
+   Mostre o Painel do funcionário (foto, turma, "Entrada liberada — aguardando
+   passagem") e o Monitor do aluno (só "Ana"). Clique em **Simular passagem (giro)**.
+   Mostre "Entrada registrada", o contador **Presentes agora** e o **Aviso ao responsável
+   (protótipo)** para Carla Teste, com "Simulação — nenhum e-mail foi enviado".
+3. **Entrada sem aviso (30 s).** Clique em **Ler carteirinha de Bia Exemplo** e em
+   **Simular passagem (giro)**. Não aparece o aviso: o responsável pediu para não
+   receber e-mail.
+4. **Expiração e uma liberação por vez (1 min).** Clique em **Ler carteirinha de Davi
+   Teste** e logo em **Ler carteirinha de Ana Teste**: aparece "Aguarde a passagem do
+   aluno anterior". Não clique no giro e espere 15 segundos: "Liberação expirada — Davi
+   não passou".
+5. **Saída e recusa (40 s).** Clique em **Ler carteirinha de Ana Teste**: agora o tipo é
+   **Saída**, calculado pelo sistema. Clique em **Simular passagem (giro)**. Depois,
+   digite `abc` no campo **Código da carteirinha** e tecle Enter: "Leitura recusada:
+   Leitura não reconhecida. Tente novamente."
+6. **Registro manual (40 s).** Clique em **Registro manual**, busque `Davi`, clique em
+   **Registrar manualmente para Davi Teste**, escreva o motivo "Aluno esqueceu a
+   carteirinha", clique em **Revisar** e em **Confirmar**.
+7. **Presentes e histórico (40 s).** Abra **Presentes**: Davi aparece na turma 3B e Bia
+   na 6A. Abra **Histórico**: estão as leituras, o registro manual com o motivo e a
+   coluna **Aviso ao responsável** ("Simulada" para Ana e Davi, "Não enviado" para Bia).
+   Clique em **Versão para impressão**.
+8. **Sair.** Clique em **Sair**.
+
+Se der tempo, mostre o cadastro em **Alunos** → **Novo aluno**, com dados fictícios
+(por exemplo, "Caio Teste", responsável "Rita Teste", `rita.teste@example.com`, uma
+imagem qualquer como foto e um protocolo fictício para o termo), até a página da
+carteirinha.
+
+## 6. Problemas comuns e soluções
+
+| Problema | O que aparece | Solução |
 |---|---|---|
-| A01 | `atividade01.pdf` | Contexto e comunidade externa |
-| A02 | `atividade02.pdf` | Demandas da comunidade |
-| A03 | `atividade03.pdf` | Planilha de hipóteses |
-| A04 | `atividade04.pdf` | Comparativo de soluções |
-| A05 | `Atividade05.pdf` | MVP do sistema |
-| A07 | `atividade07.pdf` | User stories |
-| A08 | `atividade08.pdf` | Requisitos funcionais e não funcionais |
-| A09 | `atividade09.pdf` | Requisitos legais (LGPD, ECA) |
-| A10 | `atividade10.pdf` | Segurança da informação (ISO/IEC 27002) |
-| A11 | `atividade11.pdf` | Acessibilidade (ABNT NBR 17225, WCAG 2.2) |
-| A13 | `atividade13.pdf` | Arquitetura da solução |
-| A14 | `atividade14.pdf` | Modelo relacional e dicionário de dados |
+| **MySQL desligado** | Ao subir, erros como `Communications link failure` ou `Connection refused`, e a aplicação para | Ligue o MySQL. No Windows com instalador, abra **Serviços** e inicie o serviço **MySQL84** (ou o nome escolhido na instalação). Com o ZIP, rode `mysqld --console` (seção 3.8). No macOS, `brew services start mysql@8.4`. No Linux, `sudo systemctl start mysql` (ou `mysqld`, conforme a distribuição) |
+| **`java` não é reconhecido** | "'java' não é reconhecido como um comando interno ou externo" ou `JAVA_HOME not found` ao rodar o `mvnw` | Instale o JDK 21 ou, com o ZIP, rode os dois comandos `set` da seção 3.8 na mesma janela. Confira com `java -version`. Se aparecer outra versão (por exemplo, 17), o `JAVA_HOME` e o `PATH` apontam para outro Java |
+| **`mysql` não é reconhecido** | "'mysql' não é reconhecido…" ao rodar o script do banco | Ponha a pasta `bin` do MySQL no `PATH` (seção 3.8, passo 4) ou rode o comando de dentro dessa pasta, com o caminho completo do script |
+| **Porta 8080 ocupada** | `Port 8080 was already in use` | Feche o outro programa (pode ser outra cópia do Furin Access aberta em outra janela) ou mude a porta: acrescente `server:` e, na linha de baixo, `  port: 8081` ao `application-local.yml` e abra `http://localhost:8081/login` |
+| **`application-local.yml` ausente ou incompleto** | `Access denied for user 'furin'@'localhost'` ou "Carga fictícia: defina a variável de ambiente FURIN_SENHA_ATE_DEMO…" | Crie o arquivo na pasta do projeto, ao lado do `pom.xml` (seção 3.3), com a senha do usuário `furin` e as duas senhas de demonstração (pelo menos 8 caracteres). Confira se o nome não ficou `application-local.yml.txt` (no Windows, ative "Extensões de nomes de arquivos" no Explorador) |
+| **Senha das contas de demonstração não funciona** | "Usuário ou senha inválidos…" | As senhas só valem na primeira partida com o banco vazio. Se você mudou o `application-local.yml` depois, ou alterou a senha pela tela, use a senha atual ou recomece o banco (seção 3.6). Depois de 5 erros, espere 15 minutos |
+| **"Leitura não reconhecida"** | "Leitura recusada: Leitura não reconhecida. Tente novamente." | O campo recebeu algo que não é um código de carteirinha (o código tem 32 letras e números, de 0 a 9 e de a a f). Use os botões **Ler carteirinha de …** do painel "Simular leitura (protótipo)". Se a mensagem for "Código não reconhecido.", o código tem o formato certo mas não existe neste banco (por exemplo, de uma carteirinha impressa antes de um reset) |
+| **Testes falham ao conectar** | Erros de conexão no `mvnw -B verify` | O MySQL precisa estar ligado e o banco `furin_test` criado pelo script da seção 3.2, com a senha do usuário `furin` no `application-local.yml` |
 
-### Dados fictícios
+## 7. Documentação do projeto
 
-Exemplos, testes e cargas iniciais usam **somente dados fictícios**, com e-mails no
-domínio `example.com` (A10 §8.33). Nunca coloque dados reais de alunos, responsáveis
-ou funcionários no repositório nem em ferramentas de IA.
+- [`docs/README-documentacao.md`](docs/README-documentacao.md): índice de toda a
+  documentação, estado do trabalho, significado dos estados de cada requisito
+  (Planejada, Simulada, Implementada, Verificada) e convenções.
+- [`requirements/rf/`](requirements/rf/): requisitos funcionais (RF01 a RF26).
+- [`requirements/rnf/`](requirements/rnf/): requisitos não funcionais (RNF01 a RNF08).
+- [`docs/regras-de-negocio.md`](docs/regras-de-negocio.md): regras de negócio (RN01 a
+  RN17).
+- [`docs/arquitetura-e-dados.md`](docs/arquitetura-e-dados.md): arquitetura, rotas,
+  parâmetros e modelo de dados.
+- [`docs/plano-de-implementacao.md`](docs/plano-de-implementacao.md): plano de
+  implementação (tarefas T-00 a T-47).
+- [`docs/rastreabilidade.md`](docs/rastreabilidade.md): decisões do grupo (DEC) e
+  rastreabilidade.
+- [`docs/registro-de-ia.md`](docs/registro-de-ia.md): registro do uso de IA.
 
 ## Equipe
 
