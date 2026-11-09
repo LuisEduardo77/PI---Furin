@@ -15,7 +15,7 @@
     inicial, data final, turma, aluno e Filtrar. GET: os filtros ficam na URL e continuam
     preenchidos depois da consulta e dos erros
   -->
-  <form id="filtros" class="filtros" th:action="@{/historico}" method="get" novalidate>
+  <form id="filtros" class="filtros sem-impressao" th:action="@{/historico}" method="get" novalidate>
     <!-- A11 §5.9.9: o resumo recebe o foco (resumo-de-erros.js) e leva a cada campo -->
     <div id="resumo-erros" class="aviso aviso--erro" tabindex="-1" aria-labelledby="resumo-erros-titulo"
          th:unless="${#maps.isEmpty(erros)}">
@@ -76,6 +76,12 @@
   -->
   <p><output id="total-historico" th:text="${total}">128 registros encontrados</output></p>
 
+  <!-- RF18, passo 5; RF20 (T-36): os mesmos filtros, sem a página -->
+  <p class="sem-impressao" th:if="${resultado != null}">
+    <a id="link-impressao" class="botao botao--secundario"
+       th:href="@{/historico/impressao(inicio=${formulario.inicio()}, fim=${formulario.fim()}, turma=${formulario.turma()}, aluno=${formulario.aluno()})}">Versão para impressão</a>
+  </p>
+
   <th:block th:if="${resultado != null and resultado.total() > 0}">
     <!--
       RF19 (A11 §5.6.3): caption com os filtros, th scope="col" em todas as colunas e o aluno
@@ -94,7 +100,8 @@
             <th scope="col">Tipo</th>
             <th scope="col">Forma</th>
             <th scope="col">Observação</th>
-            <th scope="col">Aviso ao responsável</th>
+            <!-- RF19, passo 1: só na tela; some na impressão (RF20) -->
+            <th scope="col" class="coluna-aviso">Aviso ao responsável</th>
           </tr>
         </thead>
         <tbody>
@@ -106,14 +113,14 @@
             <td th:text="${linha.tipo()}">Entrada</td>
             <td th:text="${linha.forma()}">Leitura</td>
             <td th:text="${linha.observacao()}"></td>
-            <td th:text="${linha.aviso()}">Simulada</td>
+            <td class="coluna-aviso" th:text="${linha.aviso()}">Simulada</td>
           </tr>
         </tbody>
       </table>
     </div>
 
     <!-- RF18, passo 4: 50 por página. Os links levam os mesmos filtros -->
-    <nav class="paginacao" aria-label="Páginas do histórico" th:if="${resultado.totalDePaginas() > 1}">
+    <nav class="paginacao sem-impressao" aria-label="Páginas do histórico" th:if="${resultado.totalDePaginas() > 1}">
       <a class="botao botao--secundario" th:if="${resultado.temAnterior()}"
          th:href="@{/historico(inicio=${formulario.inicio()}, fim=${formulario.fim()}, turma=${formulario.turma()}, aluno=${formulario.aluno()}, pagina=${resultado.pagina() - 1})}">Página anterior</a>
       <span th:text="|Página ${resultado.pagina()} de ${resultado.totalDePaginas()}|">Página 1 de 3</span>

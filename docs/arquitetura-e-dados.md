@@ -278,6 +278,7 @@ inválido (Bean Validation). Qualquer valor pode ser trocado pelo ambiente, por 
 | `GET /arquivos/{chave}` | FUNCIONARIO | DEC-08 |
 | `GET /presentes` | FUNCIONARIO | RF16. Na T-34, a tela pede a mesma rota de novo a cada `furin.presentes.intervalo-atualizacao`, com o cabeçalho `X-Furin-Atualizacao-Automatica` [PROP]: o filtro `autenticacao/AtualizacaoAutomatica` não conta esse pedido como atividade, e a sessão expira por inatividade do mesmo jeito (T-16). A resposta de `POST /portaria/giros` traz também `presentes` (total e turma) para o contador da portaria [PROP] |
 | `GET /historico` | FUNCIONARIO | RF18–RF20 |
+| `GET /historico/impressao` [PROP] | FUNCIONARIO | RF20 (T-36) |
 | `/contas/equipe/**` | FUNCIONARIO | RF26 (DEC-39) |
 
 Não existem as rotas `/responsavel/**` nem `/contas/responsaveis/**` (RF24 e RF25 fora
@@ -879,6 +880,21 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   fora do intervalo vale a mais próxima). O status do aviso vem de uma subconsulta em
   `notificacao` ("Não enviado" sem notificação). A Observação dos manuais é "motivo. Lançado
   às HH:mm por Nome." (com a data quando o lançamento é de outro dia) [PROP: texto].
+- **Versão para impressão (T-36, 08/11/2026):** `GET /historico/impressao` [PROP], no mesmo
+  `HistoricoController`, lê os filtros do mesmo jeito que o histórico e chama
+  `ConsultaDoHistorico.paraImpressao`: conta antes e, acima de
+  `furin.relatorio.max-registros`, não lista nada e pede para refinar os filtros; senão traz
+  todas as linhas com o mesmo SQL, sem paginação. A página `historico/impressao.html` tem o
+  cabeçalho ("Furin Access — Relatório de entradas e saídas", `furin.escola.nome`, filtros,
+  "Emitido em dd/mm/aaaa às HH:mm por Nome" com o relógio do servidor e o `usuario.nome` da
+  sessão, total), a tabela sem "Aviso ao responsável" e o rodapé de uso restrito. "Imprimir"
+  é um `<button>` com `.botao` (44 × 44 px) que chama `window.print()` em
+  `static/js/impressao.js`. O `@media print` do `base.css` esconde `.cabecalho` (menu),
+  `.pular-para-conteudo`, `.sem-impressao` (ações, filtros, paginação), `.coluna-aviso` e
+  `button`, deixa fundo branco e texto preto, repete o `thead` e evita quebrar linhas. A
+  página aberta com filtros válidos e dentro do limite registra `RELATORIO_IMPRESSO` com
+  `inicio`, `fim`, `turma` (se houver), `aluno=FILTRADO|TODOS` (sem o texto digitado) e o
+  número de registros [PROP]: o servidor não sabe se o navegador imprimiu de fato.
 - **Expiração e cancelamento (T-29, 07/11/2026):** `Expiracoes.expirarVencidas()` cancela
   com `SEM_GIRO` as liberações `AGUARDANDO_GIRO` lançadas há `furin.portaria.prazo-giro` ou
   mais, cada uma com o aluno bloqueado (RN08), e registra `LIBERACAO_EXPIRADA` [PROP] no

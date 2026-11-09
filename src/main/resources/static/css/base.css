@@ -434,6 +434,16 @@ td {
   min-width: 0;
 }
 
+/* Versão para impressão do histórico (T-36; RF20) */
+.relatorio__cabecalho p {
+  margin: 0.25rem 0;
+}
+
+.relatorio__rodape {
+  margin-top: 1.5rem;
+  font-size: 0.875rem;
+}
+
 .paginacao {
   display: flex;
   flex-wrap: wrap;
@@ -498,8 +508,28 @@ td {
   .pular-para-conteudo,
   .cabecalho,
   .sem-impressao,
-  .aviso-sessao {
+  .aviso-sessao,
+  .coluna-aviso,
+  button {
     display: none;
+  }
+
+  /* RF20, passo 5 (T-36): fundo branco, texto escuro, cabeçalho da tabela em cada página */
+  body {
+    color: #000;
+    background: #fff;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tr {
+    break-inside: avoid;
+  }
+
+  .tabela-rolavel {
+    overflow: visible;
   }
 
   @page {
