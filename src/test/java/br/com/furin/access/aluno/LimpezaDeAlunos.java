@@ -17,6 +17,9 @@ public final class LimpezaDeAlunos {
 	public static void apagar(JdbcTemplate jdbc, String condicao, Object... valores) {
 		List<Long> alunos = jdbc.queryForList("SELECT id_aluno FROM aluno WHERE " + condicao, Long.class, valores);
 		for (long aluno : alunos) {
+			// T-38: a notificação aponta para o registro e para o contato
+			jdbc.update("DELETE n FROM notificacao n JOIN contato_responsavel c ON c.id_contato = n.id_contato "
+					+ "WHERE c.id_aluno = ?", aluno);
 			jdbc.update("DELETE r FROM registro_acesso r JOIN vinculo_turma v ON v.id_vinculo = r.id_vinculo "
 					+ "WHERE v.id_aluno = ?", aluno);
 			jdbc.update("DELETE FROM carteirinha WHERE id_aluno = ?", aluno);

@@ -110,7 +110,10 @@ public record FurinProperties(
 		}
 	}
 
-	/** DEC-28 (F1). Só vale numa evolução com envio real (DEC-32). */
+	/**
+	 * DEC-28 (F1). Tentativas de envio de cada notificação (T-39). No MVP o envio é simulado
+	 * (DEC-32) e não falha; o limite vale para uma falha simulada no teste ou um envio real.
+	 */
 	public record Notificacao(@Min(1) int maxTentativas) {
 	}
 

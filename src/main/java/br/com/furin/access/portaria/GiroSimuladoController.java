@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
+import br.com.furin.access.notificacao.AvisoDaSimulacao;
 import br.com.furin.access.portaria.Giros.GiroRecusado;
 import br.com.furin.access.portaria.Giros.MotivoDoGiroRecusado;
 import br.com.furin.access.presenca.PainelDePresentes;
@@ -27,7 +28,8 @@ import jakarta.validation.constraints.Positive;
  * <p>
  * A resposta é a {@link Liberacao} e, junto, o contador de presentes calculado depois da
  * confirmação (T-34; RF16, passo 4; CA-RF16-06): a tela da portaria muda o contador com a
- * própria resposta do giro, sem recarregar.
+ * própria resposta do giro, sem recarregar. Vem também o aviso de simulação do e-mail ao
+ * responsável (T-39; DEC-28, F3), que a tela mostra fora das regiões vivas.
  */
 @RestController
 @Profile("prototipo")
@@ -37,8 +39,12 @@ public class GiroSimuladoController {
 	public record PedidoDeGiro(@NotNull @Positive Long idLiberacao, @NotNull UUID chaveRequisicao) {
 	}
 
-	/** A liberação, com os campos no primeiro nível como antes da T-34, e os presentes. */
-	public record RespostaDoGiro(@JsonUnwrapped Liberacao liberacao, PainelDePresentes.Resumo presentes) {
+	/**
+	 * A liberação, com os campos no primeiro nível como antes da T-34, os presentes e o aviso
+	 * de simulação do e-mail ao responsável (T-39), nulo quando não há notificação.
+	 */
+	public record RespostaDoGiro(@JsonUnwrapped Liberacao liberacao, PainelDePresentes.Resumo presentes,
+			AvisoDaSimulacao.Aviso avisoAoResponsavel) {
 	}
 
 	/** A recusa do giro, com o motivo técnico. */
@@ -49,16 +55,21 @@ public class GiroSimuladoController {
 
 	private final PainelDePresentes painel;
 
-	public GiroSimuladoController(Giros giros, PainelDePresentes painel) {
+	private final AvisoDaSimulacao avisoDaSimulacao;
+
+	public GiroSimuladoController(Giros giros, PainelDePresentes painel, AvisoDaSimulacao avisoDaSimulacao) {
 		this.giros = giros;
 		this.painel = painel;
+		this.avisoDaSimulacao = avisoDaSimulacao;
 	}
 
 	@PostMapping("/portaria/giros")
 	public RespostaDoGiro girar(@Valid @RequestBody PedidoDeGiro pedido) {
 		Liberacao liberacao = giros.confirmar(pedido.idLiberacao(), pedido.chaveRequisicao());
-		// Depois do commit do giro: o contador já vê a movimentação confirmada
-		return new RespostaDoGiro(liberacao, painel.resumoDepoisDe(liberacao.idLiberacao()));
+		// Depois do commit do giro: o contador já vê a movimentação confirmada. O aviso é montado
+		// do registro e não espera o envio, que corre em outra thread (CA-RF21-07)
+		return new RespostaDoGiro(liberacao, painel.resumoDepoisDe(liberacao.idLiberacao()),
+				avisoDaSimulacao.doRegistro(liberacao.idLiberacao()).orElse(null));
 	}
 
 	@ExceptionHandler(GiroRecusado.class)

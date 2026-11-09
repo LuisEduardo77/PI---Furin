@@ -847,6 +847,24 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   não fica na tabela: `notificacao/MensagemDaNotificacao.montar(id)` monta, na hora do envio
   (T-39), o assunto e o texto com o primeiro nome, o tipo, a data e a hora no fuso da escola e
   a forma ("leitura da carteirinha" ou "registro manual") [PROP: textos].
+- **Envio simulado (T-39, 08/11/2026):** a criação publica `NotificacoesCriadas`, e
+  `notificacao/EnvioDeNotificacoes` a recebe só depois do commit
+  (`@TransactionalEventListener(phase = AFTER_COMMIT)`) e em outra thread
+  (`@Async("applicationTaskExecutor")`): a leitura e o giro não esperam, e uma confirmação
+  desfeita não envia nada. Cada tentativa é reservada no próprio `UPDATE` (`tentativas + 1`,
+  `ultima_tentativa_em`, só para `PENDENTE` ou `FALHA` abaixo de
+  `furin.notificacao.max-tentativas`), o que impede duas threads de entregarem a mesma. O
+  serviço fica atrás da interface `EnvioDeEmail`; a única implementação é o `EnvioSimulado`
+  (`@Profile("prototipo")`), que não envia nada e devolve `SIMULADA`. Uma exceção do serviço
+  deixa `FALHA` e leva à próxima tentativa, em seguida, até 3. Só a tabela `notificacao`
+  muda. O log de auditoria recebe `NOTIFICACAO_SIMULADA`, `NOTIFICACAO_ENVIADA` ou
+  `NOTIFICACAO_FALHA` com o ID, o e-mail mascarado e, na falha, o número da tentativa e o tipo
+  da exceção, nunca o corpo. Fora do `prototipo` não há envio, e a notificação fica
+  `PENDENTE`. Não há Spring Mail (DEC-32). A tela: a resposta de `POST /portaria/giros` traz
+  `avisoAoResponsavel` (título "Simulação — nenhum e-mail foi enviado", destinatário
+  mascarado, assunto e corpo, de `notificacao/AvisoDaSimulacao`), mostrado na seção "Aviso ao
+  responsável (protótipo)" da portaria, fora das regiões vivas; o registro manual mostra o
+  mesmo aviso na volta à busca. Sem notificação (aviso desligado), nada aparece.
 - **Expiração e cancelamento (T-29, 07/11/2026):** `Expiracoes.expirarVencidas()` cancela
   com `SEM_GIRO` as liberações `AGUARDANDO_GIRO` lançadas há `furin.portaria.prazo-giro` ou
   mais, cada uma com o aluno bloqueado (RN08), e registra `LIBERACAO_EXPIRADA` [PROP] no

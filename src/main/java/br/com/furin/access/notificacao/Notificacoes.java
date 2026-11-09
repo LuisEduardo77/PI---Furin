@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -21,7 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
  * {@code recebe_notificacao = 1}. Uma liberação {@code AGUARDANDO_GIRO} ou
  * {@code CANCELADA} nunca gera notificação, e o banco garante uma só por movimentação e
  * contato ({@code uk_notificacao}). A tabela não guarda o corpo da mensagem (A10 §5.34):
- * ele é montado na hora do envio por {@link MensagemDaNotificacao}. O envio é da T-39.
+ * ele é montado na hora do envio por {@link MensagemDaNotificacao}. O envio (T-39) fica com
+ * o {@link EnvioDeNotificacoes}, que recebe o evento {@link NotificacoesCriadas} depois do
+ * commit.
  * <p>
  * Um contato principal sem e-mail não chega a existir: o banco recusa
  * ({@code ck_contato_principal}). A consulta exige o e-mail mesmo assim.
@@ -29,10 +32,20 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class Notificacoes {
 
+	/**
+	 * Avisa o envio (T-39) de que a movimentação {@code idRegistro} criou notificações. O
+	 * {@link EnvioDeNotificacoes} só o recebe depois do commit.
+	 */
+	public record NotificacoesCriadas(long idRegistro) {
+	}
+
 	private final JdbcTemplate jdbc;
 
-	public Notificacoes(JdbcTemplate jdbc) {
+	private final ApplicationEventPublisher eventos;
+
+	public Notificacoes(JdbcTemplate jdbc, ApplicationEventPublisher eventos) {
 		this.jdbc = jdbc;
+		this.eventos = eventos;
 	}
 
 	/**
@@ -42,6 +55,15 @@ public class Notificacoes {
 	 */
 	@Transactional(propagation = Propagation.MANDATORY)
 	public int criarParaConfirmada(long idRegistro, Instant agora) {
+		int criadas = inserir(idRegistro, agora);
+		if (criadas > 0) {
+			// T-39: o envio só acontece depois do commit, fora do caminho da leitura e do giro
+			eventos.publishEvent(new NotificacoesCriadas(idRegistro));
+		}
+		return criadas;
+	}
+
+	private int inserir(long idRegistro, Instant agora) {
 		return jdbc.update("INSERT INTO notificacao (id_registro, id_contato, canal, status, tentativas, criado_em) "
 				+ "SELECT r.id_registro, c.id_contato, 'EMAIL', 'PENDENTE', 0, ? FROM registro_acesso r "
 				+ "JOIN vinculo_turma v ON v.id_vinculo = r.id_vinculo "

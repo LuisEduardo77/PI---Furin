@@ -92,6 +92,9 @@ class NotificacaoTests {
 	@Autowired
 	private MensagemDaNotificacao mensagens;
 
+	@Autowired
+	private EnvioDeNotificacoes envio;
+
 	private long turma;
 	private long ana;
 	private long bia;
@@ -161,6 +164,17 @@ class NotificacaoTests {
 
 		assertThat(notificacoesDo(semPrincipal)).isEmpty();
 		assertThat(notificacoesDo(principalInativo)).isEmpty();
+	}
+
+	@Test
+	void foraDoPrototipoNadaEEnviadoEANotificacaoContinuaPendente() {
+		// T-39: o EnvioSimulado só existe no perfil prototipo (DEC-18, DEC-25, DEC-32)
+		long liberacao = ler(CODIGO_ANA);
+		girar(liberacao);
+
+		envio.enviar(id(notificacoesDo(liberacao).get(0)));
+
+		assertThat(notificacoesDo(liberacao).get(0)).containsEntry("status", "PENDENTE").containsEntry("tentativas", 0L);
 	}
 
 	// --- CA-RF21-02 ---
