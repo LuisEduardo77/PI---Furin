@@ -818,7 +818,11 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   passagem do aluno anterior" ao funcionário e "Aguarde." ao aluno (RN05). A RN05 é
   conferida no serviço e garantida no banco pela `uk_registro_pendente_ponto` (DEC-46,
   migração V4): duas leituras de alunos diferentes ao mesmo tempo não se bloqueiam pelo
-  aluno, e a que perder a corrida recebe a mesma recusa. `POST /portaria/giros` (`GiroSimuladoController`, `@Profile("prototipo")`)
+  aluno, e a que perder a corrida recebe a mesma recusa. Às vezes o InnoDB resolve essa
+  disputa como deadlock e desfaz a transação inteira de uma delas: o `LeituraController` a
+  repete numa transação nova, com a mesma `chaveRequisicao`, até 3 vezes no total, e a nova
+  tentativa recusa normalmente (09/11/2026, falha intermitente do `LeituraConcorrenteTests`
+  na CI). `POST /portaria/giros` (`GiroSimuladoController`, `@Profile("prototipo")`)
   recebe o ID da liberação e uma `chaveRequisicao` própria e confirma uma liberação ainda
   pendente, com `ocorrido_em` do servidor; um reenvio com a mesma chave devolve o
   resultado original (`chave_giro`, DEC-41). As consultas

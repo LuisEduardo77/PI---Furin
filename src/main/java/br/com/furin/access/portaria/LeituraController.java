@@ -3,6 +3,7 @@ package br.com.furin.access.portaria;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -56,6 +57,13 @@ public class LeituraController {
 	public record Recusa(MotivoDaRecusa motivo, LocalDate saidaPendenteDe) {
 	}
 
+	/**
+	 * Quantas vezes a leitura é tentada quando o MySQL a escolhe como vítima de um deadlock.
+	 * É um limite técnico, e não uma regra de negócio: na prática a segunda tentativa já
+	 * resolve.
+	 */
+	static final int TENTATIVAS_NO_DEADLOCK = 3;
+
 	private final Leituras leituras;
 
 	public LeituraController(Leituras leituras) {
@@ -65,7 +73,7 @@ public class LeituraController {
 	@PostMapping("/portaria/leituras")
 	public ResponseEntity<RespostaDaLeitura> ler(@Valid @RequestBody PedidoDeLeitura pedido,
 			Authentication funcionario) {
-		ResultadoDaLeitura resultado = leituras.ler(pedido.codigo(), pedido.chaveRequisicao(), funcionario.getName());
+		ResultadoDaLeitura resultado = lerComNovaTentativa(pedido, funcionario.getName());
 		HttpStatus situacao = switch (resultado.desfecho()) {
 			case NOVA -> HttpStatus.CREATED;
 			case AGUARDANDO_PASSAGEM -> HttpStatus.OK;
@@ -75,6 +83,27 @@ public class LeituraController {
 			return ResponseEntity.status(situacao).build();
 		}
 		return ResponseEntity.status(situacao).body(RespostaDaLeitura.de(resultado.liberacao()));
+	}
+
+	/**
+	 * DEC-46: duas leituras de alunos diferentes ao mesmo tempo disputam a
+	 * {@code uk_registro_pendente_ponto}. Em geral a segunda recebe a chave duplicada e vira a
+	 * recusa {@code OUTRA_LIBERACAO_PENDENTE}, mas o InnoDB às vezes resolve a disputa como
+	 * deadlock e desfaz a transação inteira de uma delas, inclusive o bloqueio do aluno (RN08).
+	 * Por isso a leitura é repetida aqui, fora da transação, numa transação nova e com a mesma
+	 * {@code chaveRequisicao}: a nova tentativa vê a liberação da outra e recusa normalmente,
+	 * ou devolve a original se a primeira tiver gravado (RN08).
+	 */
+	private ResultadoDaLeitura lerComNovaTentativa(PedidoDeLeitura pedido, String login) {
+		for (int tentativa = 1;; tentativa++) {
+			try {
+				return leituras.ler(pedido.codigo(), pedido.chaveRequisicao(), login);
+			} catch (PessimisticLockingFailureException deadlock) {
+				if (tentativa >= TENTATIVAS_NO_DEADLOCK) {
+					throw deadlock;
+				}
+			}
+		}
 	}
 
 	@ExceptionHandler(LeituraRecusada.class)
