@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: pagina('Histórico', 'historico', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Histórico | Furin Access</title>
+</head>
+<body>
+<th:block th:fragment="conteudo">
+  <h1>Histórico</h1>
+  <p>Entradas e saídas confirmadas. Esta tela é só de consulta.</p>
+
+  <!--
+    T-35 (RF18, passo 2). A ordem do formulário é a ordem de foco de A11 §5.1.4: data
+    inicial, data final, turma, aluno e Filtrar. GET: os filtros ficam na URL e continuam
+    preenchidos depois da consulta e dos erros
+  -->
+  <form id="filtros" class="filtros" th:action="@{/historico}" method="get" novalidate>
+    <!-- A11 §5.9.9: o resumo recebe o foco (resumo-de-erros.js) e leva a cada campo -->
+    <div id="resumo-erros" class="aviso aviso--erro" tabindex="-1" aria-labelledby="resumo-erros-titulo"
+         th:unless="${#maps.isEmpty(erros)}">
+      <h2 id="resumo-erros-titulo">Corrija os filtros abaixo.</h2>
+      <ul>
+        <li th:if="${erros.containsKey('inicio')}"><a href="#inicio" th:text="${erros.get('inicio')}">Informe a data no formato dd/mm/aaaa.</a></li>
+        <li th:if="${erros.containsKey('fim')}"><a href="#fim" th:text="${erros.get('fim')}">A data final precisa ser igual ou posterior à data inicial.</a></li>
+      </ul>
+    </div>
+
+    <div class="filtros__campos">
+      <div class="campo">
+        <label for="inicio">Data inicial</label>
+        <p id="inicio-erro" class="campo__erro" th:if="${erros.containsKey('inicio')}">
+          <span>Erro:</span> <span th:text="${erros.get('inicio')}">Informe a data no formato dd/mm/aaaa.</span>
+        </p>
+        <input id="inicio" name="inicio" type="date" th:value="${formulario.inicio()}"
+               th:attr="aria-invalid=${erros.containsKey('inicio')} ? 'true',
+                        aria-describedby=${erros.containsKey('inicio')} ? 'inicio-erro'">
+      </div>
+
+      <div class="campo">
+        <label for="fim">Data final</label>
+        <p id="fim-dica" class="campo__dica" th:text="|Período de até ${periodoMaximo} dias.|">Período de até 31 dias.</p>
+        <p id="fim-erro" class="campo__erro" th:if="${erros.containsKey('fim')}">
+          <span>Erro:</span> <span th:text="${erros.get('fim')}">A data final precisa ser igual ou posterior à data inicial.</span>
+        </p>
+        <input id="fim" name="fim" type="date" th:value="${formulario.fim()}"
+               th:attr="aria-invalid=${erros.containsKey('fim')} ? 'true',
+                        aria-describedby=${erros.containsKey('fim')} ? 'fim-erro fim-dica' : 'fim-dica'">
+      </div>
+
+      <div class="campo">
+        <label for="turma">Turma</label>
+        <select id="turma" name="turma">
+          <option value="" th:selected="${formulario.turma() == null}">Todas</option>
+          <option th:each="t : ${turmas}" th:value="${t.id()}" th:text="${t.nome()}"
+                  th:selected="${formulario.turma() != null and formulario.turma() == t.id()}">6A — Manhã (2026)</option>
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="aluno">Aluno</label>
+        <p id="aluno-dica" class="campo__dica">Nome ou matrícula. Deixe vazio para todos.</p>
+        <input id="aluno" name="aluno" type="text" maxlength="150" autocomplete="off"
+               th:value="${formulario.aluno()}" aria-describedby="aluno-dica">
+      </div>
+    </div>
+
+    <div class="acoes">
+      <button type="submit" class="botao">Filtrar</button>
+    </div>
+  </form>
+
+  <!-- RF18, passo 6 (A11 §5.13.8): o total é anunciado sem mover o foco -->
+  <p id="total-historico" role="status" th:text="${total}">128 registros encontrados</p>
+
+  <th:block th:if="${resultado != null and resultado.total() > 0}">
+    <!--
+      RF19 (A11 §5.6.3): caption com os filtros, th scope="col" em todas as colunas e o aluno
+      como cabeçalho da linha. Tipo e forma sempre em texto (A11 §5.11.1). Sem foto, contato
+      nem código da carteirinha (CA-RF19-08). Tudo com th:text (CA-RF19-09)
+    -->
+    <div class="tabela-rolavel">
+      <table id="tabela-historico">
+        <caption th:text="${legenda}">Entradas e saídas de 19/10/2026, todas as turmas</caption>
+        <thead>
+          <tr>
+            <th scope="col">Data</th>
+            <th scope="col">Hora</th>
+            <th scope="col">Aluno</th>
+            <th scope="col">Turma</th>
+            <th scope="col">Tipo</th>
+            <th scope="col">Forma</th>
+            <th scope="col">Observação</th>
+            <th scope="col">Aviso ao responsável</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="linha : ${resultado.linhas()}">
+            <td th:text="${linha.data()}">19/10/2026</td>
+            <td th:text="${linha.hora()}">07:02</td>
+            <th scope="row" th:text="${linha.aluno()}">Ana Teste (000123)</th>
+            <td th:text="${linha.turma()}">6A — Manhã</td>
+            <td th:text="${linha.tipo()}">Entrada</td>
+            <td th:text="${linha.forma()}">Leitura</td>
+            <td th:text="${linha.observacao()}"></td>
+            <td th:text="${linha.aviso()}">Simulada</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- RF18, passo 4: 50 por página. Os links levam os mesmos filtros -->
+    <nav class="paginacao" aria-label="Páginas do histórico" th:if="${resultado.totalDePaginas() > 1}">
+      <a class="botao botao--secundario" th:if="${resultado.temAnterior()}"
+         th:href="@{/historico(inicio=${formulario.inicio()}, fim=${formulario.fim()}, turma=${formulario.turma()}, aluno=${formulario.aluno()}, pagina=${resultado.pagina() - 1})}">Página anterior</a>
+      <span th:text="|Página ${resultado.pagina()} de ${resultado.totalDePaginas()}|">Página 1 de 3</span>
+      <a class="botao botao--secundario" th:if="${resultado.temProxima()}"
+         th:href="@{/historico(inicio=${formulario.inicio()}, fim=${formulario.fim()}, turma=${formulario.turma()}, aluno=${formulario.aluno()}, pagina=${resultado.pagina() + 1})}">Próxima página</a>
+    </nav>
+  </th:block>
+
+  <script th:src="@{/js/resumo-de-erros.js}" defer></script>
+</th:block>
+</body>
+</html>

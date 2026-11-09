@@ -182,7 +182,9 @@ class AutorizacaoDeTodasAsRotasTests {
 				new Rota(HttpMethod.GET, "/alunos/1/inativacao"),
 				new Rota(HttpMethod.POST, "/alunos/1/inativacao"),
 				// Painel de presentes (T-34)
-				new Rota(HttpMethod.GET, "/presentes"))
+				new Rota(HttpMethod.GET, "/presentes"),
+				// Histórico (T-35)
+				new Rota(HttpMethod.GET, "/historico"))
 				.doesNotContain(new Rota(HttpMethod.GET, ROTA_SEM_REGRA));
 	}
 
