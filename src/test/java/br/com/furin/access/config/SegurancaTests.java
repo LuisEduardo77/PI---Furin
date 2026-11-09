@@ -83,8 +83,9 @@ class SegurancaTests {
 	@Test
 	@WithMockUser(roles = SegurancaConfig.PERFIL_FUNCIONARIO)
 	void rotaLiberadaAindaSemTelaDa404AoFuncionario() throws Exception {
-		// RF03: rota inexistente dá 404, e não 403, dentro da área do funcionário
-		mvc.perform(get("/historico")).andExpect(status().isNotFound());
+		// RF03: rota inexistente dá 404, e não 403, dentro da área do funcionário. O histórico
+		// ganhou tela na T-35; as contas da equipe (T-43) ainda não têm
+		mvc.perform(get("/contas/equipe")).andExpect(status().isNotFound());
 	}
 
 	@Test

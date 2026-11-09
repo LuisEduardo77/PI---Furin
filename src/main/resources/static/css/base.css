@@ -421,6 +421,27 @@ td {
   gap: 0.5rem 1rem;
 }
 
+/* Filtros do histórico (T-35; RF18): lado a lado quando cabe, um embaixo do outro em 320 px.
+   A ordem do código é a ordem de foco (A11 §5.1.4) */
+.filtros__campos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.5rem;
+}
+
+.filtros__campos .campo {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.paginacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-top: var(--espaco);
+}
+
 .presentes__hora {
   margin: 0;
 }

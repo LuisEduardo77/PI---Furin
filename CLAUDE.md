@@ -69,12 +69,14 @@ usa no envio) está concluída. T-39 (envio em `notificacao/EnvioDeNotificacoes`
 commit e em outra thread; serviço atrás de `EnvioDeEmail`, com só o `EnvioSimulado` no perfil
 `prototipo`; aviso de simulação em `notificacao/AvisoDaSimulacao`; teste do envio sem a
 transação do teste, com o `EnvioSimulado` trocado por um controlável) está concluída.
-`LimpezaDeAlunos` apaga também as notificações. `CenaDaPortaria` é pública para os testes de outros
+`LimpezaDeAlunos` apaga também as notificações. T-35 (histórico em `historico/HistoricoController`
+e `ConsultaDoHistorico`, só consulta; o teste usa uma data de março de 2026 que nenhum outro
+teste usa) está concluída. `CenaDaPortaria` é pública para os testes de outros
 pacotes. Teste que
   grava aluno de verdade usa `aluno/LimpezaDeAlunos` para apagar. O
   perfil `test` usa pools de 4 conexões. Teste que precisa do
   `prototipo` usa `furin.carga.ativa=false` para não rodar a carga V2, e teste com
-  JavaScript que faz pedidos não usa a transação do teste (grava e apaga a cena). RF02, RF03, RF13, RF15, RF16 e RF23 estão `Implementada`; RF21 está `Simulada`. A T-33 mediu o RNF02 só no
+  JavaScript que faz pedidos não usa a transação do teste (grava e apaga a cena). RF02, RF03, RF12, RF13, RF15, RF16, RF18, RF19 e RF23 estão `Implementada`; RF21 está `Simulada`. A T-33 mediu o RNF02 só no
   servidor (`DesempenhoDaPortariaTests`, carga em `scripts/desempenho/`, fora da carga
   padrão); falta a medição na tela. RF01 e RNF03 estão
   `Planejada, em andamento`; os

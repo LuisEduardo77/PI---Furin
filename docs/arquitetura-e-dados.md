@@ -865,6 +865,20 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   mascarado, assunto e corpo, de `notificacao/AvisoDaSimulacao`), mostrado na seção "Aviso ao
   responsável (protótipo)" da portaria, fora das regiões vivas; o registro manual mostra o
   mesmo aviso na volta à busca. Sem notificação (aviso desligado), nada aparece.
+- **Histórico (T-35, 08/11/2026):** `GET /historico` (`historico/HistoricoController`), só de
+  consulta, com os filtros num formulário `GET` (data inicial, data final, turma, aluno e
+  Filtrar, a ordem de A11 §5.1.4). Datas vazias valem "hoje" no fuso da escola; o campo
+  `type="date"` manda aaaa-mm-dd, e dd/mm/aaaa digitado também vale (`ResolverStyle.STRICT`).
+  Data final antes da inicial e período acima de `furin.historico.periodo-max-dias` (contando
+  os dois dias) dão erro no campo da data final; data inválida, no próprio campo. Turma ou
+  página manipuladas são ignoradas. `ConsultaDoHistorico` usa um SQL constante, com os filtros
+  opcionais como `? IS NULL OR …` (Sonar S2077), e só parâmetros: `CONFIRMADA`, `ocorrido_em` de 00:00 da data inicial até 00:00 do dia seguinte
+  à final, no fuso da escola convertido para UTC, turma do `id_vinculo` do registro, aluno por
+  parte do nome (LIKE com `%` e `_` escapados) ou matrícula inteira [PROP], ordem
+  `ocorrido_em DESC, id_registro DESC`, `furin.historico.tamanho-pagina` por página (página
+  fora do intervalo vale a mais próxima). O status do aviso vem de uma subconsulta em
+  `notificacao` ("Não enviado" sem notificação). A Observação dos manuais é "motivo. Lançado
+  às HH:mm por Nome." (com a data quando o lançamento é de outro dia) [PROP: texto].
 - **Expiração e cancelamento (T-29, 07/11/2026):** `Expiracoes.expirarVencidas()` cancela
   com `SEM_GIRO` as liberações `AGUARDANDO_GIRO` lançadas há `furin.portaria.prazo-giro` ou
   mais, cada uma com o aluno bloqueado (RN08), e registra `LIBERACAO_EXPIRADA` [PROP] no
