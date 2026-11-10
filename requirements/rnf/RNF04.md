@@ -84,7 +84,7 @@ Estes critérios valem **no ambiente de implantação**:
 | Acesso | `http://localhost`, no mesmo computador (A13 p.3) | `https://` pelo domínio da escola, se um dia houver implantação real (DEC-31) |
 | Celular na demonstração | (DEC-28, G5, opcional) Se for usado um celular na rede local, a demonstração **pode** ativar HTTPS com certificado autoassinado (`server.ssl.*` do Spring Boot). Mesmo assim, conta só como *demonstrado*, não como *verificado* | Certificado válido |
 | E-mail | Envio **simulado**. Não há conexão SMTP | SMTP com TLS |
-| Como aparece na entrega | O README e este RNF dizem com clareza que o HTTPS **não** está implementado no protótipo | — |
+| Como aparece na entrega | O README, o índice da documentação ([`docs/README-documentacao.md`](../../docs/README-documentacao.md)) e este RNF dizem com clareza que o HTTPS **não** está implementado no protótipo | — |
 
 ## Pendências
 

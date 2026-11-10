@@ -118,8 +118,11 @@ regra nova. Uma decisão nova recebe o próximo ID DEC e vai para a rastreabilid
 4. `mvn -B verify` precisa passar localmente e na CI.
 5. Ao terminar:
    - mude o campo **Implementação** do RF ou RNF só com evidência (`Simulada`,
-     `Implementada` ou `Verificada`; ver [README](README.md));
-   - atualize a tabela de estado do README quando mudar algo dela;
+     `Implementada` ou `Verificada`; ver
+     [`docs/README-documentacao.md`](docs/README-documentacao.md));
+   - atualize a tabela de estado de `docs/README-documentacao.md` quando mudar algo dela
+     e, se a mudança afetar como rodar ou usar o sistema, o [`README.md`](README.md)
+     (lista "Em desenvolvimento" e passos de uso);
    - registre o uso de IA na tabela da seção 3 de
      [`docs/registro-de-ia.md`](docs/registro-de-ia.md).
 
