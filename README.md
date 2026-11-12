@@ -485,7 +485,28 @@ Mostra quantos alunos estão na escola agora, para apoiar a merenda.
 A senha nova fica só no banco. O `application-local.yml` não muda, e a senha antiga dele
 deixa de funcionar para essa conta (até um reset, seção 3.6).
 
-### 4.7 Sair
+### 4.7 Contas da equipe
+
+Qualquer funcionário cria e gerencia as contas de quem usa o sistema. Todas têm o mesmo
+acesso.
+
+1. Clique em **Contas da equipe** no menu. A lista mostra nome, login, situação (Ativa ou
+   Inativa) e a data de criação.
+2. Para criar, clique em **Nova conta**, preencha **Nome** e **Login** (texto livre, por
+   exemplo `secretaria.paula`; fica em minúsculas e não pode repetir) e clique em **Criar
+   conta**.
+3. A próxima tela mostra a **senha temporária** uma única vez (use **Mostrar a senha** ou
+   **Copiar a senha**). Entregue-a à pessoa de forma reservada. Ela vale por 72 horas, e a
+   pessoa precisa trocá-la no primeiro acesso (tela **Definir nova senha**). Recarregar ou
+   voltar para essa página **não** mostra a senha de novo.
+4. Na lista, cada conta tem **Gerar nova senha temporária** (a anterior deixa de valer),
+   **Desativar** e, nas inativas, **Reativar** (que já gera uma nova senha temporária).
+   Cada ação pede confirmação. Ninguém desativa a própria conta.
+
+Uma conta desativada não entra mais, mas os registros feitos por ela continuam mostrando
+o nome de quem os fez.
+
+### 4.8 Sair
 
 Clique em **Sair**, no fim do menu. O sistema volta para o login com "você saiu do
 sistema."
@@ -494,10 +515,6 @@ sistema."
 
 Ainda não está pronto (não aparece no protótipo ou aparece incompleto):
 
-- **Contas da equipe** (RF26): o item está no menu, mas a página ainda não existe e
-  mostra "Página não encontrada". Por isso também não há, por enquanto, como criar
-  contas novas nem gerar senhas temporárias (a tela **Definir nova senha** só aparece
-  para quem entra com uma senha temporária).
 - **Backup** do banco e dos arquivos (T-47): os scripts `scripts/backup.ps1` e
   `scripts/backup.sh` ainda não existem.
 - **Script de reset** do banco do protótipo: por enquanto, o reset é manual (seção 3.6).

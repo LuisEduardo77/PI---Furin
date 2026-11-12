@@ -125,7 +125,7 @@ Vale para todo cartão:
 | T-40 | ~~Conta do responsável~~ **Cancelada** (RF25 fora do escopo, DEC-37) | — | — | — | — |
 | T-41 | ~~Consulta resumida do responsável~~ **Cancelada** (RF24 fora do escopo, DEC-37) | — | — | — | — |
 | T-42 | ~~Interruptor do responsável~~ **Cancelada**. A opção de aviso foi para a edição do aluno, na T-23 (DEC-38) | — | — | — | — |
-| T-43 | Fazer a tela "Contas da equipe": criar, gerar nova senha temporária, desativar e reativar contas `FUNCIONARIO` (DEC-39) | RF26, RNF03 | T-15 | Critérios de aceitação do RF26 atendidos | Ninguém desativa a própria conta. Senha exibida uma vez, `no-store`. Confirmação nas ações (A11 §5.9.12) |
+| T-43 | Fazer a tela "Contas da equipe": criar, gerar nova senha temporária, desativar e reativar contas `FUNCIONARIO` (DEC-39) | RF26, RNF03 | T-15 | Critérios de aceitação do RF26 atendidos. **Concluída em 11/11/2026:** pacote `conta` (`ContasDaEquipe`, `ContasDaEquipeController`, `GeradorDeSenhaTemporaria`), telas em `templates/contas/`, senha exibida uma vez por atributo *flash* com `no-store` e `static/js/senha-temporaria.js` (Mostrar/Copiar). Testes em `ContasDaEquipeTests` (CA-RF26-01 a 05, 07 a 09) e `HistoricoTests` (CA-RF26-06). Fechamento da Fase 7: `AutorizacaoDeTodasAsRotasTests` com todas as rotas; RF01 e RF26 passaram a `Implementada` | Ninguém desativa a própria conta. Senha exibida uma vez, `no-store`. Confirmação nas ações (A11 §5.9.12) |
 
 ### Fase 8: qualidade e entrega
 

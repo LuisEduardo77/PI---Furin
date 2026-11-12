@@ -186,7 +186,18 @@ class AutorizacaoDeTodasAsRotasTests {
 				// Histórico (T-35)
 				new Rota(HttpMethod.GET, "/historico"),
 				// Versão para impressão (T-36)
-				new Rota(HttpMethod.GET, "/historico/impressao"))
+				new Rota(HttpMethod.GET, "/historico/impressao"),
+				// Contas da equipe (T-43)
+				new Rota(HttpMethod.GET, "/contas/equipe"),
+				new Rota(HttpMethod.GET, "/contas/equipe/nova"),
+				new Rota(HttpMethod.POST, "/contas/equipe"),
+				new Rota(HttpMethod.GET, "/contas/equipe/senha-temporaria"),
+				new Rota(HttpMethod.GET, "/contas/equipe/1/nova-senha"),
+				new Rota(HttpMethod.POST, "/contas/equipe/1/nova-senha"),
+				new Rota(HttpMethod.GET, "/contas/equipe/1/desativacao"),
+				new Rota(HttpMethod.POST, "/contas/equipe/1/desativacao"),
+				new Rota(HttpMethod.GET, "/contas/equipe/1/reativacao"),
+				new Rota(HttpMethod.POST, "/contas/equipe/1/reativacao"))
 				.doesNotContain(new Rota(HttpMethod.GET, ROTA_SEM_REGRA));
 	}
 

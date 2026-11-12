@@ -4,8 +4,8 @@
 |---|---|
 | **Categoria** | Segurança |
 | **Documentação** | Revisada em 21/10/2026 (DEC-37 a DEC-39) |
-| **Implementação** | Planejada, em andamento. `PasswordEncoder` delegante (bcrypt) configurado na T-09, com teste do hash `{bcrypt}` sem a senha e do salt (CA-RNF03-02). A carga fictícia (T-11) grava as senhas de `ate.demo` e `gestao.demo`, vindas do ambiente, só como hash `{bcrypt}` (teste em `CargaFicticiaTests`, parte do CA-RNF03-01). O login (T-12) confere a senha pelo mesmo `PasswordEncoder`, contra o hash do banco (`LoginTests`). A troca de senha (T-15) grava só o hash `{bcrypt}` da nova senha e confere a atual pelo mesmo `PasswordEncoder` (`SenhaTests`). Faltam as contas (T-43) |
-| **Atualizado em** | 02/11/2026 |
+| **Implementação** | Implementada (fim da Fase 7, 11/11/2026). T-43: a senha temporária das contas da equipe é gravada só como hash `{bcrypt}`, a nova senha substitui o hash anterior, e a única resposta com a senha é a exibição única (CA-RNF03-01, parte do RF26, e CA-RNF03-06; `ContasDaEquipeTests`). CA-RNF03-04: depois do `./mvnw -B verify` (771 testes), as 25 senhas fixas dos testes não aparecem em `logs/auditoria.log` nem nos 108 relatórios de `target/surefire-reports` (busca manual, 11/11/2026). CA-RNF03-05: os arquivos versionados (`*.yml`, `*.properties`, `*.sql`, `*.ps1`, `*.sh`) não têm senha; o `application-local.yml` está no `.gitignore`, e as senhas dos testes são descartáveis (`descartavel-…`). Para `Verificada`, falta tornar as duas buscas um passo automático da CI. Histórico: `PasswordEncoder` delegante (bcrypt) configurado na T-09, com teste do hash `{bcrypt}` sem a senha e do salt (CA-RNF03-02). A carga fictícia (T-11) grava as senhas de `ate.demo` e `gestao.demo`, vindas do ambiente, só como hash `{bcrypt}` (teste em `CargaFicticiaTests`, parte do CA-RNF03-01). O login (T-12) confere a senha pelo mesmo `PasswordEncoder`, contra o hash do banco (`LoginTests`). A troca de senha (T-15) grava só o hash `{bcrypt}` da nova senha e confere a atual pelo mesmo `PasswordEncoder` (`SenhaTests`) |
+| **Atualizado em** | 11/11/2026 |
 
 ## Descrição
 

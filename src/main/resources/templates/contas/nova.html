@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: pagina('Nova conta', 'contas', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Nova conta | Furin Access</title>
+</head>
+<body>
+<th:block th:fragment="conteudo">
+  <h1>Nova conta</h1>
+  <p>
+    A conta é criada com o mesmo acesso das demais e com uma senha temporária, que aparece
+    uma única vez na próxima tela.
+  </p>
+
+  <!--
+    RF26, "Criar" (T-43). Só nome e login: o perfil é sempre FUNCIONARIO, gravado pelo
+    servidor. novalidate: o erro descritivo vem do servidor (A11 §5.9.9), com os dados
+    preservados
+  -->
+  <form th:action="@{/contas/equipe}" th:object="${conta}" method="post" novalidate>
+    <div id="resumo-erros" class="aviso aviso--erro" tabindex="-1" aria-labelledby="resumo-erros-titulo"
+         th:if="${#fields.hasAnyErrors()}">
+      <h2 id="resumo-erros-titulo">Corrija os erros abaixo. Nada foi salvo.</h2>
+      <ul>
+        <li th:if="${#fields.hasErrors('nome')}"><a href="#nome" th:errors="*{nome}">Informe o nome.</a></li>
+        <li th:if="${#fields.hasErrors('login')}"><a href="#login" th:errors="*{login}">Informe o login.</a></li>
+      </ul>
+    </div>
+
+    <div class="campo">
+      <label for="nome">Nome (obrigatório)</label>
+      <p id="nome-erro" class="campo__erro" th:if="${#fields.hasErrors('nome')}">
+        <span>Erro:</span> <span th:errors="*{nome}">Informe o nome.</span>
+      </p>
+      <input id="nome" type="text" th:field="*{nome}" required maxlength="150" autocomplete="off"
+             th:attr="aria-invalid=${#fields.hasErrors('nome')} ? 'true',
+                      aria-describedby=${#fields.hasErrors('nome')} ? 'nome-erro'">
+    </div>
+
+    <div class="campo">
+      <label for="login">Login (obrigatório)</label>
+      <p id="login-dica" class="campo__dica">
+        Texto livre, por exemplo ate.nome ou secretaria.nome. Fica em minúsculas, e cada login só pode ser usado uma vez.
+      </p>
+      <p id="login-erro" class="campo__erro" th:if="${#fields.hasErrors('login')}">
+        <span>Erro:</span> <span th:errors="*{login}">Este login já está em uso. Escolha outro.</span>
+      </p>
+      <input id="login" type="text" th:field="*{login}" required maxlength="80" autocomplete="off"
+             autocapitalize="none" spellcheck="false"
+             th:attr="aria-invalid=${#fields.hasErrors('login')} ? 'true',
+                      aria-describedby=${#fields.hasErrors('login')} ? 'login-erro login-dica' : 'login-dica'">
+    </div>
+
+    <div class="acoes">
+      <button type="submit" class="botao">Criar conta</button>
+      <a class="botao botao--secundario" th:href="@{/contas/equipe}">Cancelar</a>
+    </div>
+  </form>
+
+  <script th:src="@{/js/resumo-de-erros.js}" defer></script>
+</th:block>
+</body>
+</html>
