@@ -177,7 +177,8 @@ gravados no banco para a próxima vez.
 ### 3.6 Recomeçar o banco do protótipo
 
 Ainda **não há um script de reset**. Para voltar aos dados fictícios do início (por
-exemplo, antes de uma apresentação), com o sistema **desligado**:
+exemplo, antes de uma apresentação), com o sistema **desligado** (se quiser guardar os
+dados atuais, faça antes um backup, seção 3.10):
 
 1. Apague e recrie o banco `furin` com o `root` (o comando é o mesmo no Windows e no
    Linux/macOS). **Isso apaga todos os registros do protótipo e não tem volta.** O banco
@@ -280,6 +281,43 @@ computador, e a instalação dele precisa de alguém com permissão de administr
   o pacote `openjdk-21-jdk` no Ubuntu) e o MySQL 8.4 pelo repositório oficial do MySQL
   (*MySQL APT Repository* ou *MySQL Yum Repository*), porque muitas distribuições trazem
   outra versão.
+
+### 3.10 Backup
+
+Faça um backup **antes de cada demonstração e no fim de cada dia de testes** (DEC-30). O
+backup copia o banco `furin` (`furin.sql`) e a pasta de fotos e termos (`arquivos.zip`)
+para uma pasta com data e hora, guarda as **7 cópias mais recentes** e apaga as mais
+antigas. Ele tem dados pessoais: fica **fora do projeto**, na pasta indicada pela variável
+`FURIN_BACKUP_DIR`, e o script se recusa a rodar se ela estiver dentro do repositório.
+
+**Uma vez por computador:** crie o usuário só de leitura `furin_backup` (a senha aparece
+uma única vez, na coluna `generated password`) e a pasta dos backups, por exemplo
+`%USERPROFILE%\furin-backups`:
+
+```bat
+mysql -u root -p --table -e "source scripts/criar-usuario-backup.sql"
+```
+
+**A cada backup, no Windows (PowerShell):**
+
+```powershell
+$env:FURIN_BACKUP_DIR = "$env:USERPROFILE\furin-backups"
+powershell -ExecutionPolicy Bypass -File scripts\backup.ps1
+```
+
+**No Linux/macOS** (precisa do programa `zip`):
+
+```bash
+export FURIN_BACKUP_DIR="$HOME/furin-backups"
+bash scripts/backup.sh
+```
+
+Rode um comando por vez. O script pergunta a senha do `furin_backup`: cole a `generated
+password` só nesse momento. Ela não entra em nenhum comando e não aparece na tela (sem
+terminal, ela vem da variável `FURIN_BACKUP_DB_PASSWORD`).
+
+Como testar a restauração num banco vazio e como restaurar de verdade:
+[`docs/backup-e-restauracao.md`](docs/backup-e-restauracao.md).
 
 ## 4. Como usar, tela por tela
 
@@ -515,8 +553,6 @@ sistema."
 
 Ainda não está pronto (não aparece no protótipo ou aparece incompleto):
 
-- **Backup** do banco e dos arquivos (T-47): os scripts `scripts/backup.ps1` e
-  `scripts/backup.sh` ainda não existem.
 - **Script de reset** do banco do protótipo: por enquanto, o reset é manual (seção 3.6).
 - **HTTPS**: o protótipo roda só em `http://localhost` (RNF04).
 - **Medição de desempenho na tela** da portaria (RNF02): só o servidor foi medido.

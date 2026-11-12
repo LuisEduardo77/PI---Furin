@@ -47,7 +47,7 @@ Atualizado em 11/11/2026.
 | Giro da catraca | **Planejado como função simulada** no protótipo | A integração física fica fora do MVP |
 | Hospedagem | **Local** (DEC-31) | A aplicação roda no computador da equipe. O GitHub Pages pode publicar só a documentação |
 | HTTPS | **Planejado** | Não verificado, porque a aplicação roda local com HTTP (RNF04) |
-| Backup | **Planejado** (T-47, DEC-30) | Script simples com o banco e os arquivos, 7 cópias e restauração testada |
+| Backup | **Implementado e com restauração testada** em 12/11/2026 (T-47, DEC-30; [evidência](evidencias/backup-restauracao.md)) | `scripts/backup.ps1` e `scripts/backup.sh`: `mysqldump` com usuário só de leitura e `.zip` das fotos e termos, 7 cópias fora do projeto. Passo a passo em [`docs/backup-e-restauracao.md`](backup-e-restauracao.md) |
 | Proteção de logs | **Planejada** | Só será "verificada" depois de configurada e testada |
 
 ### Como ler o estado de cada requisito
@@ -97,7 +97,8 @@ os arquivos detalhados.
 | [`docs/arquitetura-e-dados.md`](arquitetura-e-dados.md) | Componentes, versões, fluxos, parâmetros, modelo relacional, dicionário, DDL de referência (validado na T-03) e CI | Atualizada (27/10/2026) |
 | [`docs/rastreabilidade.md`](rastreabilidade.md) | Fontes, decisões (ATU, DEC), pendências (PEND), propostas, matriz requisito → fonte → arquivo → verificação, alterações aprovadas | Atualizada (21/10/2026) |
 | [`docs/plano-de-implementacao.md`](plano-de-implementacao.md) | Tarefas T-00 a T-47, ordenadas por dependência, prontas para cartões do Trello (T-37, T-40 a T-42 canceladas) | Atualizada (21/10/2026) |
-| [`docs/registro-de-ia.md`](registro-de-ia.md) | Ferramentas, modelos, datas, finalidades e prompts de IA usados | Atualizada (11/11/2026) |
+| [`docs/registro-de-ia.md`](registro-de-ia.md) | Ferramentas, modelos, datas, finalidades e prompts de IA usados | Atualizada (12/11/2026) |
+| [`docs/backup-e-restauracao.md`](backup-e-restauracao.md) | Como fazer o backup do protótipo, testar a restauração num banco vazio e restaurar de verdade (T-47, DEC-30) | Nova (12/11/2026) |
 | [`requirements/rf/`](../requirements/rf/) `RF01.md` … `RF26.md` | Um arquivo por requisito funcional (26; RF17, RF24 e RF25 fora do escopo) | Atualizada (21/10/2026) |
 | [`requirements/rnf/`](../requirements/rnf/) `RNF01.md` … `RNF08.md` | Um arquivo por requisito não funcional (8) | Atualizada (21/10/2026) |
 | [`docs/resumo-ferramentas.md`](resumo-ferramentas.md) | Resumo das ferramentas: o que é cada uma, para que serve e em que estado está | Rascunho (resumo, atualizado em 21/10/2026) |

@@ -58,7 +58,7 @@ mas o código ainda não começou.
 |---|---|---|---|
 | **Computador da equipe** | Rodar a aplicação, o MySQL e a pasta de arquivos, tudo local | DEC-31; A13 p.3 | — |
 | **Navegadores** | Chrome, Edge e Firefox (duas últimas versões). O Safari no iOS saiu junto com a consulta do responsável | DEC-28 (G3), DEC-37 | — |
-| **mysqldump** | Copiar o banco no script de backup (`scripts/backup.ps1` e `backup.sh`) | DEC-30 | Planejada (T-47) |
+| **mysqldump** | Copiar o banco no script de backup (`scripts/backup.ps1` e `backup.sh`) | DEC-30 | Em uso (T-47; [passo a passo](backup-e-restauracao.md)) |
 
 ## 5. Apoio de inteligência artificial
 

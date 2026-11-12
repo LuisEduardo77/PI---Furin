@@ -1073,6 +1073,7 @@ simples de atender a essa exigência.
 | Quantas cópias | As **7 últimas**. O script apaga as mais antigas |
 | Teste de restauração | Restaurar uma vez em um banco vazio e conferir os dados. A evidência vai para o cartão do Trello (T-47) |
 | Segurança | O usuário do banco no script tem só permissão de leitura. A senha vem de variável de ambiente. Na implantação, o `.zip` é protegido por senha, porque o backup contém dados pessoais |
+| Implementação (T-47) | Usuário `furin_backup` criado por `scripts/criar-usuario-backup.sql` (`SELECT`, `SHOW VIEW` e `TRIGGER` em `furin.*`). Senha em `FURIN_BACKUP_DB_PASSWORD`, passada ao `mysqldump` por um arquivo de opções temporário, nunca na linha de comando. O script recusa um `FURIN_BACKUP_DIR` dentro do repositório. Passo a passo e conferência da restauração em [`backup-e-restauracao.md`](backup-e-restauracao.md) e `scripts/conferir-restauracao.sql` |
 
 ## 7. Qualidade e integração contínua
 
