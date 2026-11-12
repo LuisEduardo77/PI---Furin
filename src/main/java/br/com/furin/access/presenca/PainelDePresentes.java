@@ -95,6 +95,11 @@ public class PainelDePresentes {
 
 	@Transactional(readOnly = true)
 	public Painel calcular() {
+		return montarPainel();
+	}
+
+	/** O cálculo do painel, sem passar pelo proxy: quem chama já está na transação. */
+	private Painel montarPainel() {
 		Instant agora = relogio.instant();
 		// RN10: "hoje" começa à meia-noite no fuso da escola
 		Instant inicioDeHoje = LocalDate.ofInstant(agora, fusoDaEscola).atStartOfDay(fusoDaEscola).toInstant();
@@ -142,7 +147,7 @@ public class PainelDePresentes {
 	 */
 	@Transactional(readOnly = true)
 	public Resumo resumoDepoisDe(long idRegistro) {
-		Painel painel = calcular();
+		Painel painel = montarPainel();
 		Optional<Long> turmaDoAluno = turmaVigenteDoAlunoDo(idRegistro);
 		return turmaDoAluno.flatMap(id -> painel.turmas().stream().filter(turma -> id.equals(turma.idTurma())).findFirst())
 				.map(turma -> new Resumo(painel.total(), turma.nome() + " — " + turma.turno(), turma.presentes()))

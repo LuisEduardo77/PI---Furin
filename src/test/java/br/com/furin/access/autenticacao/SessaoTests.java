@@ -123,7 +123,8 @@ class SessaoTests {
 		HtmlPage pagina = navegador.getPage("http://localhost" + SegurancaConfig.LOGIN_SESSAO_EXPIRADA);
 
 		DomElement aviso = pagina.getElementById("aviso-expirada");
-		assertThat(aviso.getAttribute("role")).isEqualTo("status");
+		// <output> tem o papel status sem o atributo role (Sonar Web:S6819)
+		assertThat(aviso.getTagName()).isEqualToIgnoringCase("output");
 		assertThat(aviso.getTextContent()).contains("Sua sessão foi encerrada por inatividade. Entre novamente.");
 		assertThat(pagina.getTitleText()).isEqualTo("Login | Furin Access");
 	}

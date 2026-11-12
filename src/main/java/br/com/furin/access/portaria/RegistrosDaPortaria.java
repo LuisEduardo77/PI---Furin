@@ -68,6 +68,13 @@ public class RegistrosDaPortaria {
 			+ "JOIN aluno a ON a.id_aluno = v.id_aluno "
 			+ "JOIN turma t ON t.id_turma = v.id_turma ";
 
+	/** Colunas lidas em várias consultas. */
+	private static final String ID_ALUNO = "id_aluno";
+
+	private static final String ID_REGISTRO = "id_registro";
+
+	private static final String OCORRIDO_EM = "ocorrido_em";
+
 	private final JdbcTemplate jdbc;
 
 	/** "07:02" no fuso da escola (RN10). */
@@ -80,7 +87,7 @@ public class RegistrosDaPortaria {
 
 	Optional<Carteirinha> carteirinhaPorCodigo(String codigo) {
 		return jdbc.query("SELECT id_carteirinha, id_aluno, expira_em, revogada_em FROM carteirinha WHERE codigo = ?",
-				(rs, linha) -> new Carteirinha(rs.getLong("id_carteirinha"), rs.getLong("id_aluno"),
+				(rs, linha) -> new Carteirinha(rs.getLong("id_carteirinha"), rs.getLong(ID_ALUNO),
 						instante(rs, "expira_em"), instante(rs, "revogada_em")),
 				codigo).stream().findFirst();
 	}
@@ -88,7 +95,7 @@ public class RegistrosDaPortaria {
 	/** RN08: toda operação sobre o aluno começa por aqui, e a transação segura o bloqueio. */
 	Aluno bloquearAluno(long idAluno) {
 		return jdbc.queryForObject("SELECT id_aluno, nome, ativo FROM aluno WHERE id_aluno = ? FOR UPDATE",
-				(rs, linha) -> new Aluno(rs.getLong("id_aluno"), rs.getString("nome"), rs.getBoolean("ativo")),
+				(rs, linha) -> new Aluno(rs.getLong(ID_ALUNO), rs.getString("nome"), rs.getBoolean("ativo")),
 				idAluno);
 	}
 
@@ -136,7 +143,7 @@ public class RegistrosDaPortaria {
 				+ "JOIN vinculo_turma v ON v.id_vinculo = r.id_vinculo WHERE v.id_aluno = ? AND r.situacao = ? "
 				+ "ORDER BY r.ocorrido_em DESC, r.id_registro DESC LIMIT 1",
 				(rs, linha) -> new UltimaMovimentacao(TipoMovimentacao.valueOf(rs.getString("tipo")),
-						instante(rs, "ocorrido_em")),
+						instante(rs, OCORRIDO_EM)),
 				idAluno, CONFIRMADA).stream().findFirst();
 	}
 
@@ -197,7 +204,7 @@ public class RegistrosDaPortaria {
 		return jdbc.query("SELECT r.id_registro, v.id_aluno FROM registro_acesso r "
 				+ "JOIN vinculo_turma v ON v.id_vinculo = r.id_vinculo WHERE r.situacao = ? AND r.lancado_em <= ? "
 				+ "ORDER BY r.id_registro",
-				(rs, linha) -> new Vencida(rs.getLong("id_registro"), rs.getLong("id_aluno")),
+				(rs, linha) -> new Vencida(rs.getLong(ID_REGISTRO), rs.getLong(ID_ALUNO)),
 				AGUARDANDO_GIRO, utc(limite));
 	}
 
@@ -225,7 +232,7 @@ public class RegistrosDaPortaria {
 				(rs, linha) -> {
 					long idVinculo = rs.getLong("id_vinculo");
 					boolean semVinculo = rs.wasNull();
-					return new AlunoDoManual(rs.getLong("id_aluno"), rs.getString("nome"), rs.getString("matricula"),
+					return new AlunoDoManual(rs.getLong(ID_ALUNO), rs.getString("nome"), rs.getString("matricula"),
 							rs.getBoolean("ativo"), semVinculo ? null : idVinculo,
 							semVinculo ? null : Liberacao.turmaComTurno(rs.getString("turma"), rs.getString("turno")));
 				},
@@ -262,8 +269,8 @@ public class RegistrosDaPortaria {
 		return jdbc.query("SELECT r.id_registro, v.id_aluno, r.tipo, r.ocorrido_em, a.nome FROM registro_acesso r "
 				+ "JOIN vinculo_turma v ON v.id_vinculo = r.id_vinculo JOIN aluno a ON a.id_aluno = v.id_aluno "
 				+ "WHERE r.chave_requisicao = ? AND r.forma = 'MANUAL'",
-				(rs, linha) -> new Manual(rs.getLong("id_registro"), rs.getLong("id_aluno"),
-						TipoMovimentacao.valueOf(rs.getString("tipo")), instante(rs, "ocorrido_em"), rs.getString("nome")),
+				(rs, linha) -> new Manual(rs.getLong(ID_REGISTRO), rs.getLong(ID_ALUNO),
+						TipoMovimentacao.valueOf(rs.getString("tipo")), instante(rs, OCORRIDO_EM), rs.getString("nome")),
 				chaveRequisicao.toString()).stream().findFirst();
 	}
 
@@ -272,15 +279,15 @@ public class RegistrosDaPortaria {
 		return jdbc.query("SELECT r.id_registro, r.situacao, r.motivo_cancelamento, a.nome FROM registro_acesso r "
 				+ "JOIN vinculo_turma v ON v.id_vinculo = r.id_vinculo JOIN aluno a ON a.id_aluno = v.id_aluno "
 				+ "WHERE r.id_registro = ?",
-				(rs, linha) -> new SituacaoDaLiberacao(rs.getLong("id_registro"), rs.getString("situacao"),
+				(rs, linha) -> new SituacaoDaLiberacao(rs.getLong(ID_REGISTRO), rs.getString("situacao"),
 						rs.getString("motivo_cancelamento"), Liberacao.primeiroNomeDe(rs.getString("nome"))),
 				idRegistro).stream().findFirst();
 	}
 
 	private Liberacao liberacaoDaLinha(ResultSet rs, int linha) throws SQLException {
 		String nome = rs.getString("nome");
-		Instant ocorridoEm = instante(rs, "ocorrido_em");
-		return new Liberacao(rs.getLong("id_registro"), TipoMovimentacao.valueOf(rs.getString("tipo")),
+		Instant ocorridoEm = instante(rs, OCORRIDO_EM);
+		return new Liberacao(rs.getLong(ID_REGISTRO), TipoMovimentacao.valueOf(rs.getString("tipo")),
 				rs.getString("situacao"), nome, Liberacao.primeiroNomeDe(nome),
 				Liberacao.turmaComTurno(rs.getString("turma"), rs.getString("turno")), rs.getString("foto_chave"),
 				instante(rs, "lancado_em"), ocorridoEm,

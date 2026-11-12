@@ -321,7 +321,7 @@ class PresentesTests {
 		assertThat(pagina.querySelectorAll("main table caption")).hasSize(2);
 		// Só a região de anúncio é viva, e ela começa vazia (o "Atualizar" escreve nela)
 		DomElement anuncio = pagina.getElementById("anuncio-presentes");
-		assertThat(anuncio.getAttribute("role")).isEqualTo("status");
+		assertThat(anuncio.getTagName()).isEqualToIgnoringCase("output");
 		assertThat(texto(anuncio)).isEmpty();
 		assertThat(pagina.querySelectorAll("#dados-presentes [role], #dados-presentes [aria-live]")).isEmpty();
 		assertThat(pagina.getElementById("dados-presentes").hasAttribute("aria-live")).isFalse();

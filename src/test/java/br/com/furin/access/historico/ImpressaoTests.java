@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.htmlunit.WebClient;
@@ -289,7 +290,8 @@ class ImpressaoTests {
 		assertThat(html.toLowerCase()).doesNotContain(".csv", "text/csv", ".xls", "planilha", "exportar");
 		Stream<String> caminhos = mapeamentos.getHandlerMethods().keySet().stream()
 				.flatMap(info -> info.getPatternValues().stream());
-		assertThat(caminhos).noneMatch(caminho -> caminho.matches("(?i).*(csv|xls|export|planilha|dre).*"));
+		Pattern exportacao = Pattern.compile("csv|xls|export|planilha|dre", Pattern.CASE_INSENSITIVE);
+		assertThat(caminhos).noneMatch(caminho -> exportacao.matcher(caminho).find());
 	}
 
 	// --- DEC-28, C6: log ---

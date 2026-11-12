@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
+import java.util.regex.Pattern;
 
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
@@ -288,8 +289,9 @@ class EnvioDeNotificacoesTests {
 		List<String> caminhos = mapeamentos.getHandlerMethods().keySet().stream()
 				.flatMap(info -> info.getPatternValues().stream()).toList();
 
-		assertThat(caminhos).isNotEmpty().noneMatch(caminho -> caminho.matches(
-				"(?i).*(responsav|pais|familia|consulta|verifica|notifica).*"));
+		Pattern telaDeResponsavel = Pattern.compile("responsav|pais|familia|consulta|verifica|notifica",
+				Pattern.CASE_INSENSITIVE);
+		assertThat(caminhos).isNotEmpty().noneMatch(caminho -> telaDeResponsavel.matcher(caminho).find());
 	}
 
 	// --- CA-RF21-10: log com o e-mail mascarado e sem o corpo ---

@@ -15,7 +15,7 @@ import jakarta.servlet.http.HttpSession;
 
 /**
  * Pedido automático da tela não é atividade do funcionário (T-34; RF16, passo 4; RF01,
- * fluxo A2). A tela Presentes pede os números de novo a cada 30 s, e todo pedido renova a
+ * fluxo A2). A tela Presentes pede os números de novo a cada 30 s, e cada pedido renova a
  * sessão no servidor: sem este filtro, uma tela Presentes aberta nunca deixaria a sessão
  * expirar por inatividade (T-16).
  * <p>

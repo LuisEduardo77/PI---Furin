@@ -188,7 +188,7 @@ class GiroTests {
 	private long ler() throws Exception {
 		String json = leitura(UUID.randomUUID()).andExpect(status().isCreated())
 				.andReturn().getResponse().getContentAsString();
-		return Long.parseLong(json.replaceAll(".*\"idLiberacao\":(\\d+).*", "$1"));
+		return Long.parseLong(json.split("\"idLiberacao\":", 2)[1].split("\\D", 2)[0]);
 	}
 
 	private ResultActions leitura(UUID chave) throws Exception {

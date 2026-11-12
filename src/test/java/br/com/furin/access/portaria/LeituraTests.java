@@ -330,7 +330,7 @@ class LeituraTests {
 
 	private long idDaLiberacao(ResultActions resposta) throws Exception {
 		String json = resposta.andReturn().getResponse().getContentAsString();
-		return Long.parseLong(json.replaceAll(".*\"idLiberacao\":(\\d+).*", "$1"));
+		return Long.parseLong(json.split("\"idLiberacao\":", 2)[1].split("\\D", 2)[0]);
 	}
 
 	private static long idDe(Map<String, Object> linha, String coluna) {
