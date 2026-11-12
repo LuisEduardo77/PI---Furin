@@ -29,7 +29,8 @@
       <p>
         Senha temporária:
         <code id="senha-temporaria" class="senha-temporaria__valor" th:text="${senhaGerada.senha()}">Ab3dEf7hJk9m</code>
-        <span id="senha-mascarada" class="senha-temporaria__valor" hidden>••••••••••••</span>
+        <!-- T-45: o leitor de tela lê "oculta", e não "marcador" doze vezes -->
+        <span id="senha-mascarada" class="senha-temporaria__valor" hidden><span aria-hidden="true">••••••••••••</span><span class="visualmente-oculto">oculta</span></span>
       </p>
       <div class="acoes" hidden data-botoes-senha>
         <button type="button" class="botao botao--secundario" id="mostrar-senha"

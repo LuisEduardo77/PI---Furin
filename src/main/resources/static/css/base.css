@@ -184,6 +184,15 @@ button {
   background-color: var(--cor-fundo);
 }
 
+/* T-45: botão desativado diferente do ativo, não só pela cor (borda tracejada) (A11 §5.11.1) */
+button:disabled {
+  color: var(--cor-borda);
+  background-color: var(--cor-fundo-suave);
+  border-color: var(--cor-borda);
+  border-style: dashed;
+  cursor: not-allowed;
+}
+
 /* Formulários (A11 §5.9.3, §5.9.7, §5.9.9) */
 .campo {
   margin-bottom: 1.25rem;
@@ -224,19 +233,44 @@ button {
   border: 2px solid var(--cor-erro);
 }
 
-/* Mensagens de status: o texto sempre diz o estado ("Sucesso:", "Erro:") (A11 §5.11.1, §5.13.8) */
-/* Caixa de seleção com o texto ao lado; a área clicável inclui o label (A11 §5.9.3) */
+/*
+ * Caixa de seleção com o texto ao lado; a área clicável inclui o label (A11 §5.9.3). T-45: o
+ * label tem pelo menos 44 px de altura, e clicar nele marca a caixa (A11 §5.8.6). O erro e a
+ * dica ocupam uma linha inteira, acima ou abaixo da caixa
+ */
+.campo--caixa {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 0.5rem;
+}
+
 .campo--caixa input[type="checkbox"] {
-  display: inline-block;
+  flex: none;
   width: 1.5rem;
   min-height: 1.5rem;
   height: 1.5rem;
-  margin: 0 0.5rem 0 0;
-  vertical-align: middle;
+  margin: 0;
 }
 
 .campo--caixa label {
-  display: inline;
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  min-width: 0;
+  min-height: var(--alvo-minimo);
+  margin: 0;
+}
+
+.campo--caixa .campo__erro,
+.campo--caixa .campo__dica {
+  flex-basis: 100%;
+}
+
+/* T-45: o resumo de erros recebe o foco pelo script (resumo-de-erros.js); o contorno aparece sempre */
+.aviso[tabindex="-1"]:focus {
+  outline: 3px solid var(--cor-foco);
+  outline-offset: 2px;
 }
 
 .grupo-de-campos {
@@ -367,9 +401,10 @@ td {
   border: 1px dashed var(--cor-borda);
 }
 
+/* T-45: o termo ocupa no máximo metade da largura e quebra a linha, sem rolagem com 320 px */
 .portaria__dados {
   display: grid;
-  grid-template-columns: max-content 1fr;
+  grid-template-columns: fit-content(50%) minmax(0, 1fr);
   gap: 0.25rem 1rem;
 }
 
@@ -379,6 +414,7 @@ td {
 
 .portaria__dados dd {
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
 /* Monitor do aluno: letra grande e linguagem simples (A11 §5.12.12) */
@@ -478,6 +514,8 @@ output.monitor {
   gap: 2mm;
   box-sizing: border-box;
   width: 85.6mm;
+  /* T-45: 85,6 mm passam de 320 px; na tela estreita o cartão encolhe. Na folha cabe inteiro */
+  max-width: 100%;
   height: 54mm;
   padding: 3mm 4mm;
   color: #000;

@@ -68,7 +68,8 @@
           <td th:text="${aluno.turma() ?: '—'}">6A — Manhã</td>
           <td th:text="${aluno.situacao().texto()}">Fora da escola</td>
           <td>
-            <a th:href="@{/alunos/{id}/editar(id=${aluno.id()})}"
+            <!-- T-45: com a aparência e o tamanho de botão (44 px), como no registro manual (A11 §5.8.6) -->
+            <a class="botao botao--secundario" th:href="@{/alunos/{id}/editar(id=${aluno.id()})}"
                th:text="|Editar aluno ${aluno.nome()}|">Editar aluno Ana Teste</a>
           </td>
         </tr>
