@@ -1156,7 +1156,10 @@ partida, registradas no PR e em [`evidencias/sonarcloud.md`](evidencias/sonarclo
   passo é pulado;
 - `./mvnw` em vez de `mvn`; a versão do `sonar-maven-plugin` e o `sonar.host.url` ficam no
   `pom.xml`; a análise reaproveita as classes e a cobertura do passo de testes;
-- cache de `~/.sonar/cache`.
+- cache de `~/.sonar/cache`;
+- `sonar.sources` (`pom.xml`, `src/main/java`, `src/main/resources`) e `sonar.tests`
+  declarados no `pom.xml`: sem isso, o scanner do Maven só analisa o Java e o `pom.xml`,
+  e as telas, o JavaScript, o CSS e as migrações ficam de fora.
 
 ## 8. Histórico deste arquivo
 

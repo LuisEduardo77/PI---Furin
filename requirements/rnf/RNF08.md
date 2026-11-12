@@ -4,7 +4,7 @@
 |---|---|
 | **Categoria** | Implementação |
 | **Documentação** | Revisada em 19/10/2026 (T-00: DEC-24 a DEC-36) |
-| **Implementação** | Planejada, em andamento. Projeto criado na T-04 (Boot 4.1.2) e CI verde na T-05 ([PR #4](https://github.com/LuisEduardo77/PI---Furin/pull/4)): CA-RNF08-03 e 06 com evidência na CI. CA-RNF08-04 atendido na T-06 (`EsquemaInicialTests`: a V1 cria as 9 tabelas em um banco vazio). Falta CA-RNF08-05 (telas, segurança e e-mail simulado). CA-RNF08-07: análise do SonarCloud com cobertura configurada na CI na T-44 ([evidência](../../docs/evidencias/sonarcloud.md)); falta ver o quality gate no PR da T-44 |
+| **Implementação** | Planejada, em andamento. Projeto criado na T-04 (Boot 4.1.2) e CI verde na T-05 ([PR #4](https://github.com/LuisEduardo77/PI---Furin/pull/4)): CA-RNF08-03 e 06 com evidência na CI. CA-RNF08-04 atendido na T-06 (`EsquemaInicialTests`: a V1 cria as 9 tabelas em um banco vazio). Falta CA-RNF08-05 (telas, segurança e e-mail simulado). CA-RNF08-07 atendido na T-44: a análise do SonarCloud roda na CI, com a cobertura do JaCoCo, e o quality gate apareceu nos [PR #45](https://github.com/LuisEduardo77/PI---Furin/pull/45) e [PR #46](https://github.com/LuisEduardo77/PI---Furin/pull/46) ([evidência](../../docs/evidencias/sonarcloud.md)) |
 | **Atualizado em** | 12/11/2026 |
 
 ## Descrição
@@ -98,4 +98,4 @@ A organização está em [arquitetura-e-dados §4 e §7](../../docs/arquitetura-
 |---|---|
 | Patch exato do Spring Boot 4.1.x e do MySQL 8.4 | **a definir** na criação do projeto (T-04), usando a versão estável mais recente de cada linha |
 | Uso de Flyway, Spring Data JPA, Bean Validation e ZXing | **Aprovado** (DEC-28, G1; [arquitetura-e-dados §1](../../docs/arquitetura-e-dados.md)) |
-| Configuração do GitHub Actions e do SonarCloud | GitHub Actions **configurado** na T-05 (`.github/workflows/ci.yml`), com execução verde no PR #4 e no push da `main` (29/10/2026). SonarCloud com cobertura do JaCoCo configurado na T-44 (12/11/2026) |
+| Configuração do GitHub Actions e do SonarCloud | GitHub Actions **configurado** na T-05 (`.github/workflows/ci.yml`), com execução verde no PR #4 e no push da `main` (29/10/2026). SonarCloud com cobertura do JaCoCo configurado na T-44, com quality gate OK nos PRs #45 e #46 (12/11/2026) |
