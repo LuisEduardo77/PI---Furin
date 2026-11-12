@@ -563,6 +563,10 @@ Gestão.
 
 ## 5. Roteiro de demonstração em 5 minutos
 
+Para a demonstração completa (25 a 30 minutos), com o resultado esperado e os critérios
+de aceitação de cada passo, use o
+[roteiro da demonstração final](docs/evidencias/roteiro-demonstracao.md).
+
 Antes de começar: sistema rodando (seção 3.4), de preferência com o banco recomeçado
 (seção 3.6), e o navegador em <http://localhost:8080/login>.
 

@@ -4,8 +4,8 @@
 |---|---|
 | **Categoria** | Segurança |
 | **Documentação** | Revisada em 21/10/2026 (DEC-37 a DEC-39) |
-| **Implementação** | **Planejada. Não será verificada no protótipo local** |
-| **Atualizado em** | 21/10/2026 |
+| **Implementação** | **Planejada. Não será verificada no protótipo local**. Revisão final (T-46, 12/11/2026): sem mudança; a aplicação roda só em `http://localhost` (DEC-31). |
+| **Atualizado em** | 12/11/2026 |
 
 ## Descrição
 

@@ -4,8 +4,8 @@
 |---|---|
 | **Categoria** | Acessibilidade |
 | **Documentação** | Revisada em 21/10/2026 (DEC-37 a DEC-39) |
-| **Implementação** | Planejada |
-| **Atualizado em** | 21/10/2026 |
+| **Implementação** | Planejada, em andamento (revisão final, T-46, 12/11/2026). As telas foram feitas com a checklist do plano §3, e a parte automatizável tem teste: título, `lang`, link de pular e menu (`LayoutBaseTests`), contraste, foco de 3 px e alvos de 44 px (`EstiloBaseTests`) e `label`, `aria-invalid`, `aria-describedby` e regiões de status nos testes de cada tela. A T-45 (12/11/2026) revisou as telas e criou a [checklist de evidências](../../docs/evidencias/acessibilidade.md), ainda **em branco**. **Pendente:** a rodada manual (teclado, NVDA, escala de cinza, zoom e Lighthouse ou axe) que comprova o CA-RNF06-01 a 06. Por isso o RNF06 continua `Planejada` |
+| **Atualizado em** | 12/11/2026 |
 
 ## Descrição
 
