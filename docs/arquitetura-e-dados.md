@@ -1076,7 +1076,8 @@ simples de atender a essa exigência.
 
 ## 7. Qualidade e integração contínua
 
-**Estado: GitHub Actions configurado na T-05; SonarCloud planejado (T-44).** Fica
+**Estado: GitHub Actions configurado na T-05; SonarCloud com cobertura do JaCoCo
+configurado na T-44 ([evidência](evidencias/sonarcloud.md)).** Fica
 proporcional ao PI (ATU-07; A13 p.5–6).
 
 - **Fluxo:**
@@ -1138,12 +1139,24 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 - usa `./mvnw -B verify` (Maven Wrapper, mesma versão do Maven do ambiente local) em vez
   de `mvn`, e não passa `-Dspring.profiles.active=test`, porque os testes já ativam o
   perfil com `@ActiveProfiles("test")`;
-- o passo do SonarCloud e a variável `SONAR_TOKEN` ficam para a T-44;
+- o passo do SonarCloud e a variável `SONAR_TOKEN` ficam para a T-44 (feito: ver abaixo);
 - acrescenta `permissions: contents: read`, `concurrency` (cancela a execução anterior do
   mesmo PR), `timeout-minutes: 20` e o envio dos relatórios do Surefire como artefato
   (7 dias);
 - o teste `BancoDeDadosTests` confere que o banco dos testes é o MySQL 8.4 e o
   `furin_test` (CA-RNF08-03).
+
+**Como ficou na T-44** (SonarCloud), com estas diferenças em relação ao ponto de
+partida, registradas no PR e em [`evidencias/sonarcloud.md`](evidencias/sonarcloud.md):
+
+- o JaCoCo entra no `pom.xml` (`prepare-agent` e `report` no `verify`) e o SonarCloud lê
+  `target/site/jacoco/jacoco.xml`; o relatório também vai para o artefato da execução;
+- o token não fica no `env` do job: o job guarda só `TEM_SONAR_TOKEN` (se o *secret*
+  existe), usado no `if`, e o valor vai apenas para o passo da análise. Sem o *secret*, o
+  passo é pulado;
+- `./mvnw` em vez de `mvn`; a versão do `sonar-maven-plugin` e o `sonar.host.url` ficam no
+  `pom.xml`; a análise reaproveita as classes e a cobertura do passo de testes;
+- cache de `~/.sonar/cache`.
 
 ## 8. Histórico deste arquivo
 
@@ -1188,3 +1201,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 08/11/2026 | T-33: carga de referência do RNF02 em `scripts/desempenho/` (fora da carga padrão e do Flyway) e o teste `DesempenhoDaPortariaTests` [PROP] |
 | 08/11/2026 | T-32: registro manual (§4 e §6, "Registro manual"), com as rotas da revisão e da correção, a mensagem com a data quando o horário é de outro dia e as mensagens de formato da data [PROP] |
 | 11/11/2026 | T-43: contas da equipe (§4, rotas de `/contas/equipe/**`, e §6, "Contas da equipe"), com a senha exibida uma vez por atributo *flash*, o evento `CONTA_NAO_ENCONTRADA` e os textos [PROP] |
+| 12/11/2026 | T-44: análise do SonarCloud na CI com a cobertura do JaCoCo (§7), com o token só no passo da análise |

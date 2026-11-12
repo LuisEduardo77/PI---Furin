@@ -1,6 +1,6 @@
-# CI do Furin Access (T-05, RNF08, DEC-28 G2).
-# Compila e roda os testes com um MySQL 8.4 de teste. Não publica a aplicação (DEC-31).
-# A análise do SonarCloud entra na T-44.
+# CI do Furin Access (T-05 e T-44, RNF08, DEC-28 G2).
+# Compila, roda os testes com um MySQL 8.4 de teste e faz a análise do SonarCloud,
+# com a cobertura do JaCoCo. Não publica a aplicação (DEC-31).
 name: CI
 
 on:
@@ -9,6 +9,7 @@ on:
   pull_request:
 
 # Só leitura do repositório: o job não precisa escrever nada no GitHub.
+# O resultado do SonarCloud chega ao PR pelo aplicativo do SonarCloud, não por este job.
 permissions:
   contents: read
 
@@ -22,6 +23,10 @@ jobs:
     name: Build e testes
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      # Só diz se o token existe; o token em si vai apenas para o passo do SonarCloud.
+      # Sem o secret (por exemplo, em um PR vindo de fork), a análise é pulada.
+      TEM_SONAR_TOKEN: ${{ secrets.SONAR_TOKEN != '' }}
     services:
       mysql:
         image: mysql:8.4
@@ -37,7 +42,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # histórico completo, usado pelo SonarCloud (T-44)
+          fetch-depth: 0   # histórico completo, usado pelo SonarCloud para achar o código novo
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -46,6 +51,7 @@ jobs:
       - name: Build e testes
         # O Maven Wrapper garante a mesma versão do Maven usada localmente.
         # O perfil test é ativado pelos próprios testes (@ActiveProfiles("test")).
+        # O JaCoCo (pom.xml) grava a cobertura em target/site/jacoco/jacoco.xml.
         run: ./mvnw -B verify
         env:
           SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/furin_test
@@ -56,6 +62,26 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: relatorios-de-teste
-          path: target/surefire-reports/
+          path: |
+            target/surefire-reports/
+            target/site/jacoco/
           if-no-files-found: ignore
           retention-days: 7
+      - name: Cache do SonarCloud
+        if: env.TEM_SONAR_TOKEN == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+      - name: Análise SonarCloud
+        # Usa as classes e o relatório do JaCoCo do passo anterior (não roda os testes de novo).
+        # Em um pull_request, o scanner reconhece o PR sozinho e o SonarCloud mostra o
+        # quality gate no PR. Só o código-fonte é enviado, nunca o banco.
+        if: env.TEM_SONAR_TOKEN == 'true'
+        run: >-
+          ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+          -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
+          -Dsonar.organization=${{ vars.SONAR_ORG }}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
