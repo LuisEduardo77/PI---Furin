@@ -79,3 +79,28 @@ status e anuncia sem mover o foco.
 | Web:S6819 ×7 (`role="status"`) | Medium (Maintainability) | `alunos/editar.html:13`, `alunos/inicio.html:39`, `alunos/revogacao.html:13`, `carteirinhas/imprimir.html:17`, `portaria/inicio.html:60` (`#painel-funcionario`), `portaria/manual-busca.html:14` e `:59` | Essas regiões têm `<div>` e `<p>` dentro (e o `#painel-funcionario` recebe blocos montados pelo `portaria.js`). O `<output>` só aceita conteúdo de frase, então a troca exigiria refazer a marcação das regiões e os testes de acessibilidade (RNF06, CA-RF22-06). Fica para quando cada tela for mexida |
 | java:S101 (nome de classe) | Low (Maintainability) | `carga/V2__CargaFicticia.java:53` | O Flyway exige o nome `V<versão>__<descrição>` na migração Java |
 | javascript:S7718 ×2 (`catch (erro)` → `error_`) | Low (Maintainability) | `static/js/portaria.js:127` e `:156` | O projeto escreve os nomes em português (CLAUDE.md §6) |
+| java:S3516 (método devolve sempre o mesmo valor) | Blocker (Maintainability) | `aluno/RevogacaoController.java:65` (`registrar`) | Falso positivo: o método devolve sempre a tela da revogação porque o sucesso e os erros aparecem nela mesma (RF da T-20). Mudar exigiria redirecionar depois do POST, uma mudança de comportamento que o grupo não pediu. Marcar como "False Positive" no SonarCloud |
+| java:S2589 (expressão sempre verdadeira) | Medium (Maintainability) | `aluno/EdicaoDoAluno.java:147` (`fotoAntiga != null`) | Falso positivo: o Sonar supõe que o `TransactionTemplate.execute` nunca devolve nulo, mas o `aplicar` devolve nulo quando a foto não muda, e a foto antiga pode não existir. Tirar a conferência faria o sistema tentar apagar um arquivo nulo. Marcar como "False Positive" no SonarCloud |
+
+## Resultado nos pull requests (12/11/2026)
+
+| PR | O que entrou | CI | Quality gate |
+|---|---|---|---|
+| [#45](https://github.com/LuisEduardo77/PI---Furin/pull/45) | Passo do SonarCloud e JaCoCo | "Build e testes" e "SonarCloud Code Analysis" com sucesso | **OK** |
+| [#46](https://github.com/LuisEduardo77/PI---Furin/pull/46) | As 40 correções acima | Sucesso | **OK** (0 bugs, 0 vulnerabilidades, 0 *code smells* novos) |
+
+Depois do merge do #45, a `main` ficou com quality gate **OK** e cobertura de **94,2%**
+no SonarCloud.
+
+### Escopo da análise (ajuste depois do PR #46)
+
+A primeira análise pela CI mostrou só Java e XML: o scanner do Maven analisa apenas o que
+o `pom.xml` declara, e as telas, o JavaScript, o CSS e as migrações (todos em
+`src/main/resources`) tinham saído da análise. A análise automática, usada até a T-43,
+lia o repositório inteiro. O `pom.xml` passou a declarar `sonar.sources` e `sonar.tests`.
+Com isso, os apontamentos de HTML, JavaScript e SQL da tabela acima voltam a aparecer, como
+esperado.
+
+A análise com as classes compiladas também achou três problemas novos de Java: o S1612 em
+`LayoutBaseTests` (lambda trocada por `HtmlOption::getValueAttribute`) foi corrigido; o
+S3516 e o S2589 são falsos positivos e estão na tabela acima.

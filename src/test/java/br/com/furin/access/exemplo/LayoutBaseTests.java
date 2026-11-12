@@ -10,6 +10,7 @@ import org.htmlunit.html.HtmlButton;
 import org.htmlunit.html.HtmlElement;
 import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlInput;
+import org.htmlunit.html.HtmlOption;
 import org.htmlunit.html.HtmlPage;
 import org.htmlunit.html.HtmlSelect;
 import org.junit.jupiter.api.BeforeEach;
@@ -155,7 +156,7 @@ class LayoutBaseTests {
 		assertThat(resposta.getElementById("nome-erro").getTextContent())
 				.contains("Erro:").contains("Informe o nome do aluno.");
 		assertThat(((HtmlSelect) resposta.getElementById("turma")).getSelectedOptions())
-				.extracting(opcao -> opcao.getValueAttribute()).containsExactly("7B");
+				.extracting(HtmlOption::getValueAttribute).containsExactly("7B");
 		assertThat(resposta.querySelector("[role=status]").getTextContent()).doesNotContain("Sucesso");
 	}
 

@@ -77,6 +77,9 @@ T-43 (contas da equipe no pacote `conta`: `ContasDaEquipe`, `ContasDaEquipeContr
 `GeradorDeSenhaTemporaria`; senha temporária exibida uma vez por atributo *flash* em
 `/contas/equipe/senha-temporaria`, com `no-store`; teste de outro pacote que faz login chama
 `TentativasDeLogin.esquecerTodos()`, agora público) está concluída: a **Fase 7 está fechada**.
+T-44 (SonarCloud no passo "Análise SonarCloud" do `ci.yml`, com a cobertura do JaCoCo; escopo
+em `sonar.sources` no `pom.xml`; problemas não corrigidos, com o motivo, em
+`docs/evidencias/sonarcloud.md`) está concluída.
 `CenaDaPortaria` é pública para os testes de outros
 pacotes. Teste que
   grava aluno de verdade usa `aluno/LimpezaDeAlunos` para apagar. O
