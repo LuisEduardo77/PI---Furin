@@ -1,8 +1,10 @@
 package br.com.furin.access.historico;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -293,6 +295,27 @@ class HistoricoTests {
 		assertThat(pagina.textos("#tabela-historico tbody tr:first-child > *")).containsExactly("10/03/2026", "11:30",
 				"Ana Teste (T35-001)", "6B-T35 — Manhã", "Saída", "Manual",
 				"<script>alert('x')</script> Saiu com a mãe. Lançado às 11:45 por Funcionário Teste.", "Simulada");
+	}
+
+	@Test
+	void autorComContaDesativadaContinuaAparecendo() throws Exception {
+		// CA-RF26-06 e RF19, exceções (A10 §5.16): a conta é desativada pela tela de contas (T-43)
+		long autora = cena.funcionario("autora.t43", AGORA.minus(Duration.ofDays(60)));
+		jdbc.update("UPDATE usuario SET nome = 'Autora Desativada' WHERE id_usuario = ?", autora);
+		jdbc.update("INSERT INTO registro_acesso (id_vinculo, id_usuario, id_carteirinha, tipo, forma, situacao, "
+				+ "lancado_em, ocorrido_em, chave_requisicao, motivo_manual) VALUES (?, ?, NULL, 'ENTRADA', 'MANUAL', "
+				+ "'CONFIRMADA', ?, ?, ?, 'Chegou sem a carteirinha')", biaNaA, autora,
+				CenaDaPortaria.utc(naEscola(9, 8, 5)), CenaDaPortaria.utc(naEscola(9, 8, 0)), UUID.randomUUID().toString());
+
+		mvc.perform(post("/contas/equipe/{id}/desativacao", autora).with(funcionario()).with(csrf()))
+				.andExpect(redirectedUrl("/contas/equipe"));
+		assertThat(jdbc.queryForObject("SELECT ativo FROM usuario WHERE id_usuario = ?", Boolean.class, autora))
+				.isFalse();
+
+		Pagina pagina = historico(get("/historico").param("inicio", "2026-03-09").param("fim", "2026-03-09")
+				.param("aluno", "Bia"));
+		assertThat(pagina.textos("#tabela-historico tbody td")).contains(
+				"Chegou sem a carteirinha. Lançado às 08:05 por Autora Desativada.");
 	}
 
 	@Test

@@ -92,6 +92,12 @@ public record FurinProperties(
 			@NotNull @DurationMin(minutes = 1) Duration validadeTemporaria,
 			@Min(1) int tamanhoTemporaria,
 			@Min(1) int tamanhoMinimo) {
+
+		/** A temporária também precisa respeitar o tamanho mínimo de uma senha (T-43). */
+		@AssertTrue(message = "o tamanho da senha temporária não pode ser menor que o tamanho mínimo")
+		public boolean isTemporariaComOTamanhoMinimo() {
+			return tamanhoTemporaria >= tamanhoMinimo;
+		}
 	}
 
 	/** DEC-28 (E2). */

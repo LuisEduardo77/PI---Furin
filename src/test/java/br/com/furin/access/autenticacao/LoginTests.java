@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.htmlunit.WebClient;
+import org.htmlunit.WebWindow;
 import org.htmlunit.html.DomElement;
 import org.htmlunit.html.HtmlButton;
 import org.htmlunit.html.HtmlElement;
@@ -252,6 +253,25 @@ class LoginTests {
 		HtmlPage depois = navegador.getPage("http://localhost/portaria");
 		assertThat(depois.getUrl().getPath()).isEqualTo("/login");
 		assertThat(depois.getTitleText()).isEqualTo("Login | Furin Access");
+	}
+
+	@Test
+	void voltarDepoisDeSairERepetirAAcaoNaoAcessaAAreaRestrita() throws Exception {
+		// CA-RF01-08, botão Voltar (fechamento da Fase 7): a página restrita sai com no-store, então
+		// o navegador não a guarda. Ao voltar, ele pede a página de novo e, sem sessão, cai no login
+		HtmlPage portaria = entrar("ate.demo", SENHA_ATE);
+		assertThat(portaria.getWebResponse().getResponseHeaderValue("Cache-Control")).contains("no-store");
+		((HtmlButton) portaria.querySelector("nav form button")).click();
+
+		WebWindow janela = navegador.getCurrentWindow();
+		janela.getHistory().back();
+		HtmlPage voltou = (HtmlPage) janela.getEnclosedPage();
+		assertThat(voltou.getUrl().getPath()).isEqualTo("/login");
+		assertThat(voltou.getTitleText()).isEqualTo("Login | Furin Access");
+
+		// Repetir a ação (o link "Alunos" do menu) também leva ao login
+		HtmlPage depois = navegador.getPage("http://localhost/alunos");
+		assertThat(depois.getUrl().getPath()).isEqualTo("/login");
 	}
 
 	private HtmlPage entrar(String login, String senha) throws Exception {

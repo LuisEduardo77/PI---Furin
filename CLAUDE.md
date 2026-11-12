@@ -73,15 +73,19 @@ transação do teste, com o `EnvioSimulado` trocado por um controlável) está c
 e `ConsultaDoHistorico`, só consulta; o teste usa uma data de março de 2026 que nenhum outro
 teste usa) e T-36 (impressão em `GET /historico/impressao`, no mesmo controller; `@media print`
 no `base.css` com `.sem-impressao` e `.coluna-aviso`) estão concluídas: a **Fase 5 está fechada**.
+T-43 (contas da equipe no pacote `conta`: `ContasDaEquipe`, `ContasDaEquipeController`,
+`GeradorDeSenhaTemporaria`; senha temporária exibida uma vez por atributo *flash* em
+`/contas/equipe/senha-temporaria`, com `no-store`; teste de outro pacote que faz login chama
+`TentativasDeLogin.esquecerTodos()`, agora público) está concluída: a **Fase 7 está fechada**.
 `CenaDaPortaria` é pública para os testes de outros
 pacotes. Teste que
   grava aluno de verdade usa `aluno/LimpezaDeAlunos` para apagar. O
   perfil `test` usa pools de 4 conexões. Teste que precisa do
   `prototipo` usa `furin.carga.ativa=false` para não rodar a carga V2, e teste com
-  JavaScript que faz pedidos não usa a transação do teste (grava e apaga a cena). RF02, RF03, RF12, RF13, RF15, RF16, RF18, RF19, RF20 e RF23 estão `Implementada`; RF21 está `Simulada`. A T-33 mediu o RNF02 só no
+  JavaScript que faz pedidos não usa a transação do teste (grava e apaga a cena). RF01, RF02, RF03, RF12, RF13, RF15, RF16, RF18, RF19, RF20, RF23 e RF26 estão `Implementada`; RF21 está `Simulada`. A T-33 mediu o RNF02 só no
   servidor (`DesempenhoDaPortariaTests`, carga em `scripts/desempenho/`, fora da carga
-  padrão); falta a medição na tela. RF01 e RNF03 estão
-  `Planejada, em andamento`; os
+  padrão); falta a medição na tela. RNF03 está `Implementada` (buscas de senha nos logs
+  feitas à mão; falta o passo automático na CI); os
   demais RF e RNF estão com `Implementação: Planejada`, menos **RF17, RF24 e RF25**, que
   estão **fora do escopo** e não devem ser implementados (DEC-37).
 

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: pagina('Contas da equipe', 'contas', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Contas da equipe | Furin Access</title>
+</head>
+<body>
+<th:block th:fragment="conteudo">
+  <h1>Contas da equipe</h1>
+  <p>Todas as contas têm o mesmo acesso ao sistema. Alunos e responsáveis não têm conta.</p>
+
+  <!-- A11 §5.13.8: role="status" sem mover o foco. Texto [PROP] -->
+  <div role="status" class="aviso aviso--sucesso" th:if="${contaDesativada}">
+    <p><strong>Sucesso:</strong> <span th:text="|a conta de ${contaDesativada} foi desativada.|">a conta de Paula Exemplo foi desativada.</span></p>
+  </div>
+
+  <p><a id="nova-conta" class="botao" th:href="@{/contas/equipe/nova}">Nova conta</a></p>
+
+  <!--
+    RF26, "Listar" (T-43): nome, login, situação em texto (A11 §5.11.1) e data de criação.
+    Cada ação é um link para a página de confirmação (A11 §5.9.12). O nome acessível leva o
+    nome da pessoa, e o texto visível vem primeiro (WCAG 2.5.3). Tudo com th:text
+  -->
+  <div class="tabela-rolavel">
+    <table id="tabela-contas">
+      <caption>Contas da equipe</caption>
+      <thead>
+        <tr>
+          <th scope="col">Nome</th>
+          <th scope="col">Login</th>
+          <th scope="col">Situação</th>
+          <th scope="col">Criada em</th>
+          <th scope="col">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="c : ${contas}" th:id="|conta-${c.id()}|">
+          <th scope="row" th:text="${c.nome()}">Paula Exemplo</th>
+          <td th:text="${c.login()}">secretaria.paula</td>
+          <td th:text="${c.ativa()} ? 'Ativa' : 'Inativa'">Ativa</td>
+          <td th:text="${c.criadaEm()}">11/11/2026</td>
+          <td>
+            <ul class="acoes acoes--lista">
+              <li th:if="${c.ativa()}">
+                <a class="botao botao--secundario" th:href="@{/contas/equipe/{id}/nova-senha(id=${c.id()})}">Gerar nova senha temporária<span class="visualmente-oculto" th:text="| para ${c.nome()}|"> para Paula Exemplo</span></a>
+              </li>
+              <li th:if="${c.ativa() and not c.propria()}">
+                <a class="botao botao--secundario" th:href="@{/contas/equipe/{id}/desativacao(id=${c.id()})}">Desativar<span class="visualmente-oculto" th:text="| ${c.nome()}|"> Paula Exemplo</span></a>
+              </li>
+              <!-- CA-RF26-05: em vez do botão, o motivo [PROP: texto] -->
+              <li th:if="${c.propria()}">Você não pode desativar a sua própria conta.</li>
+              <li th:unless="${c.ativa()}">
+                <a class="botao botao--secundario" th:href="@{/contas/equipe/{id}/reativacao(id=${c.id()})}">Reativar<span class="visualmente-oculto" th:text="| ${c.nome()}|"> Paula Exemplo</span></a>
+              </li>
+            </ul>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</th:block>
+</body>
+</html>

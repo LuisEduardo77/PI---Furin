@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: pagina('Senha temporária', 'contas', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Senha temporária | Furin Access</title>
+</head>
+<body>
+<th:block th:fragment="conteudo">
+  <h1>Senha temporária</h1>
+
+  <!--
+    RF26, "Criar", passo 3; RN14 (T-43). A senha vem num atributo flash, lido uma vez: ao
+    recarregar ou voltar, só aparece o aviso de que ela já foi exibida (CA-RF26-09). Resposta
+    com Cache-Control: no-store. Sem JavaScript, a senha aparece em texto; com ele, fica
+    mascarada, com "Mostrar" e "Copiar" (senha-temporaria.js). Textos [PROP]
+  -->
+  <th:block th:if="${senhaGerada}">
+    <div role="status" class="aviso aviso--sucesso">
+      <p th:switch="${senhaGerada.motivo().name()}"><strong>Sucesso:</strong>
+        <span th:case="'CONTA_CRIADA'" th:text="|conta criada para ${senhaGerada.nome()}.|">conta criada para Paula Exemplo.</span>
+        <span th:case="'NOVA_SENHA'" th:text="|nova senha temporária gerada para ${senhaGerada.nome()}. A anterior deixou de valer.|">nova senha temporária gerada para Paula Exemplo.</span>
+        <span th:case="'CONTA_REATIVADA'" th:text="|conta de ${senhaGerada.nome()} reativada.|">conta de Paula Exemplo reativada.</span>
+      </p>
+    </div>
+
+    <div class="senha-temporaria" data-senha-temporaria>
+      <p>
+        Senha temporária:
+        <code id="senha-temporaria" class="senha-temporaria__valor" th:text="${senhaGerada.senha()}">Ab3dEf7hJk9m</code>
+        <span id="senha-mascarada" class="senha-temporaria__valor" hidden>••••••••••••</span>
+      </p>
+      <div class="acoes" hidden data-botoes-senha>
+        <button type="button" class="botao botao--secundario" id="mostrar-senha"
+                aria-controls="senha-temporaria">Mostrar a senha</button>
+        <button type="button" class="botao botao--secundario" id="copiar-senha">Copiar a senha</button>
+      </div>
+      <p id="resultado-copia" role="status" class="campo__dica"></p>
+    </div>
+
+    <p>
+      Entregue a senha à pessoa de forma reservada. Ela vale por
+      <span th:text="${horasDeValidade}">72</span> horas, precisa ser trocada no primeiro acesso e
+      <strong>não será exibida novamente</strong>.
+    </p>
+  </th:block>
+
+  <div id="senha-ja-exibida" class="aviso" th:unless="${senhaGerada}">
+    <p>
+      A senha temporária já foi exibida e não aparece de novo. Se ela se perdeu, gere uma nova
+      senha temporária na lista de contas.
+    </p>
+  </div>
+
+  <p><a class="botao" th:href="@{/contas/equipe}">Voltar às contas da equipe</a></p>
+
+  <script th:src="@{/js/senha-temporaria.js}" defer></script>
+</th:block>
+</body>
+</html>

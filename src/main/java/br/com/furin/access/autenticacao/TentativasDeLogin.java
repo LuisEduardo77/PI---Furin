@@ -81,8 +81,11 @@ public class TentativasDeLogin {
 		porLogin.remove(chave(login));
 	}
 
-	/** Só para os testes, que dividem o mesmo contexto do Spring: começa sem nenhum contador. */
-	void esquecerTodos() {
+	/**
+	 * Só para os testes, que dividem o mesmo contexto do Spring: começa sem nenhum contador.
+	 * Público para os testes de outros pacotes que fazem login (T-43).
+	 */
+	public void esquecerTodos() {
 		porLogin.clear();
 	}
 

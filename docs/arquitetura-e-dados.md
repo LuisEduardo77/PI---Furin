@@ -279,7 +279,7 @@ inválido (Bean Validation). Qualquer valor pode ser trocado pelo ambiente, por 
 | `GET /presentes` | FUNCIONARIO | RF16. Na T-34, a tela pede a mesma rota de novo a cada `furin.presentes.intervalo-atualizacao`, com o cabeçalho `X-Furin-Atualizacao-Automatica` [PROP]: o filtro `autenticacao/AtualizacaoAutomatica` não conta esse pedido como atividade, e a sessão expira por inatividade do mesmo jeito (T-16). A resposta de `POST /portaria/giros` traz também `presentes` (total e turma) para o contador da portaria [PROP] |
 | `GET /historico` | FUNCIONARIO | RF18–RF20 |
 | `GET /historico/impressao` [PROP] | FUNCIONARIO | RF20 (T-36) |
-| `/contas/equipe/**` | FUNCIONARIO | RF26 (DEC-39) |
+| `/contas/equipe/**`: `GET /contas/equipe`, `GET /contas/equipe/nova`, `POST /contas/equipe`, `GET /contas/equipe/senha-temporaria` e `GET/POST /contas/equipe/{id}/nova-senha`, `…/desativacao` e `…/reativacao` [PROP] | FUNCIONARIO | RF26 (DEC-39; T-43) |
 
 Não existem as rotas `/responsavel/**` nem `/contas/responsaveis/**` (RF24 e RF25 fora
 do escopo, DEC-37). Sem login, toda rota (menos `/login`) leva à tela de login.
@@ -792,6 +792,22 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   `;jsessionid=` nos links da primeira página. O teste
   `AutorizacaoDeTodasAsRotasTests` descobre as rotas pelos controllers registrados e é
   rodado de novo no fim de cada fase (plano, T-17). Texto [PROP]: o da página 403.
+- **Contas da equipe (T-43, 11/11/2026):** RF26, RN14. Pacote `br.com.furin.access.conta`.
+  `ContasDaEquipe` cria (`Usuario.novaConta`, perfil fixo `FUNCIONARIO`; o formulário
+  `NovaContaForm` nem tem campo de perfil), gera nova senha, desativa e reativa, sempre com
+  a linha travada (`UsuarioRepository.travarPorId`, `FOR UPDATE`). `GeradorDeSenhaTemporaria`
+  usa `SecureRandom` com `furin.senha.tamanho-temporaria` caracteres, num alfabeto sem 0, O,
+  1, l e I [PROP]; `FurinProperties` recusa uma temporária menor que `furin.senha.tamanho-minimo`.
+  A senha passa do POST para `GET /contas/equipe/senha-temporaria` num atributo *flash*, que
+  o Spring apaga da sessão na primeira leitura: recarregar ou voltar não a mostra de novo, e
+  a página sai com `Cache-Control: no-store`. Sem JavaScript a senha aparece em texto; com
+  `static/js/senha-temporaria.js`, fica mascarada, com "Mostrar a senha" e "Copiar a senha".
+  Cada ação tem uma página de confirmação (`GET`), e o envio é `POST`. Reativar gera a nova
+  senha temporária junto [PROP do RF26]. Eventos `CONTA_CRIADA`, `SENHA_TEMPORARIA_GERADA`,
+  `CONTA_DESATIVADA`, `CONTA_REATIVADA` e `CONTA_NAO_ENCONTRADA` [PROP: nome; ID inexistente,
+  404], com o autor mascarado e o `idConta`, nunca a senha. `Usuario.criadoEm` passou a
+  `Instant`, como o prazo da temporária. Textos [PROP]: as mensagens da tela e das
+  confirmações.
 - **Portaria, leitura e giro (T-25, T-26 e T-28, 02/11/2026, antecipadas para a
   demonstração):** pacote `br.com.furin.access.portaria`. `TipoAutomatico` aplica a RN01
   com o dia no fuso da escola (`furin.escola.fuso`).
@@ -1171,3 +1187,4 @@ estas diferenças em relação ao ponto de partida acima, registradas no PR:
 | 08/11/2026 | T-31: textos da leitura inválida (§6, "Portaria, leitura e giro"), com a região `#alerta-funcionario`, o motivo `LEITURA_NAO_RECONHECIDA` e os textos separados de revogada/expirada e inativo/sem turma [PROP] |
 | 08/11/2026 | T-33: carga de referência do RNF02 em `scripts/desempenho/` (fora da carga padrão e do Flyway) e o teste `DesempenhoDaPortariaTests` [PROP] |
 | 08/11/2026 | T-32: registro manual (§4 e §6, "Registro manual"), com as rotas da revisão e da correção, a mensagem com a data quando o horário é de outro dia e as mensagens de formato da data [PROP] |
+| 11/11/2026 | T-43: contas da equipe (§4, rotas de `/contas/equipe/**`, e §6, "Contas da equipe"), com a senha exibida uma vez por atributo *flash*, o evento `CONTA_NAO_ENCONTRADA` e os textos [PROP] |

@@ -25,6 +25,8 @@ public enum EventoAuditoria {
 	CONTA_DESATIVADA,
 	/** RF26. */
 	CONTA_REATIVADA,
+	/** RF26, exceções: ID de conta inexistente (404). Só o ID pedido. [PROP: nome] */
+	CONTA_NAO_ENCONTRADA,
 
 	/** RF04. */
 	ALUNO_CADASTRADO,

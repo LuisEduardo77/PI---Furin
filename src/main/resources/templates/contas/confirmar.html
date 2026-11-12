@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: pagina(${titulo}, 'contas', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Desativar Paula Exemplo | Furin Access</title>
+</head>
+<body>
+<th:block th:fragment="conteudo">
+  <h1 th:text="${titulo}">Desativar Paula Exemplo</h1>
+
+  <!--
+    RF26 (T-43): confirmação de cada ação (A11 §5.9.12). Quando a ação não cabe na conta
+    (por exemplo, a própria conta, CA-RF26-05), a página mostra o motivo e não mostra o
+    botão. Textos [PROP]
+  -->
+  <div id="resumo-erros" class="aviso aviso--erro" tabindex="-1" th:if="${erro}">
+    <p><strong>Erro:</strong> <span id="erro-acao" th:text="${erro}">Você não pode desativar a sua própria conta.</span></p>
+  </div>
+
+  <th:block th:unless="${erro}">
+    <p th:text="${explicacao}">Paula Exemplo não vai mais conseguir entrar no sistema.</p>
+    <p>Confirma?</p>
+    <form th:action="@{/contas/equipe/{id}/{acao}(id=${conta.id()}, acao=${acao.caminho})}" method="post">
+      <div class="acoes">
+        <button type="submit" class="botao"><span th:text="${acao.botao}">Desativar a conta</span><span class="visualmente-oculto" th:text="| de ${conta.nome()}|"> de Paula Exemplo</span></button>
+        <a class="botao botao--secundario" th:href="@{/contas/equipe}">Cancelar</a>
+      </div>
+    </form>
+  </th:block>
+  <p th:if="${erro}"><a th:href="@{/contas/equipe}">Voltar às contas da equipe</a></p>
+
+  <script th:src="@{/js/resumo-de-erros.js}" defer></script>
+</th:block>
+</body>
+</html>

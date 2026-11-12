@@ -500,6 +500,20 @@ td {
   height: 30mm;
 }
 
+/* Contas da equipe (T-43; RF26): a senha temporária em fonte fixa, fácil de ler e de ditar */
+.senha-temporaria__valor {
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  overflow-wrap: anywhere;
+}
+
+/* Os botões "Mostrar" e "Copiar" só aparecem com o script (senha-temporaria.js) */
+.acoes[hidden] {
+  display: none;
+}
+
 /*
  * Na impressão, só o cartão: sem menu, sem avisos e sem botões. Esta regra vem depois das
  * outras, com a mesma especificidade, e por isso vence sem !important
