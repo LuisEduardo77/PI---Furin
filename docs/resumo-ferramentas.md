@@ -37,7 +37,8 @@ mas o código ainda não começou.
 | **Spring Security Test (MockMvc)** | Testar login, bloqueio e o acesso de cada rota (sem login, funcionário ativo, conta desativada) | — | Planejada |
 | **HtmlUnit** | Ler as páginas como um navegador nos testes: ordem do Tab, rótulos, envio de formulário com CSRF | T-08 (versão gerenciada pelo Spring Boot) | **Em uso** (T-08) |
 | **GitHub Actions** | Integração contínua: compila e testa a cada pull request, com um MySQL 8.4 de teste | ATU-07 | **Configurada** (T-05), com execução verde no PR #4 |
-| **SonarCloud** | Análise estática do código (falhas e trechos inseguros) no pull request | ATU-07 | **Não configurada** (T-44) |
+| **SonarCloud** | Análise estática do código (falhas e trechos inseguros) no pull request | ATU-07 | **Configurada** (T-44), com a cobertura do JaCoCo |
+| **JaCoCo** | Medir a cobertura dos testes e enviar o relatório ao SonarCloud | T-44 (`jacoco-maven-plugin` 0.8.13) | **Em uso** (T-44) |
 | **NVDA** | Leitor de tela gratuito, para testar a acessibilidade | DEC-28 (G6) | Planejada |
 | **axe DevTools ou Lighthouse** | Verificador automático de acessibilidade no navegador | DEC-28 (G6) | Planejada |
 | **Ferramentas do navegador** | Medir o tempo de resposta da leitura (meta de 2 s, RNF02) | — | Planejada |
