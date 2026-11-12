@@ -49,7 +49,8 @@
         <button type="submit" class="botao">Registrar leitura</button>
       </form>
       <!-- DEC-28, A8; CA-RNF07-04: "Leitor não está pronto" quando o foco sai do campo -->
-      <p id="aviso-leitor" role="status"></p>
+      <!-- <output> já tem o papel status, sem precisar de role="status" (Sonar Web:S6819) -->
+      <output id="aviso-leitor"></output>
     </section>
 
     <div class="portaria__paineis">
@@ -81,7 +82,7 @@
       -->
       <section class="painel painel--monitor" aria-labelledby="titulo-monitor">
         <h2 id="titulo-monitor">Monitor do aluno</h2>
-        <p id="monitor-aluno" class="monitor" role="status">Aproxime sua carteirinha do leitor.</p>
+        <output id="monitor-aluno" class="monitor">Aproxime sua carteirinha do leitor.</output>
       </section>
     </div>
 

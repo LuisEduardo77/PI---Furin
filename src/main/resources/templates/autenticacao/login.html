@@ -14,10 +14,13 @@
     <p><strong>Sucesso:</strong> você saiu do sistema.</p>
   </div>
 
-  <!-- RF01, fluxo A2, passo 3 (T-16): a sessão expirou por inatividade. role="status" sem mover o foco -->
-  <div id="aviso-expirada" role="status" class="aviso" th:if="${param.expirada}">
-    <p><strong>Aviso:</strong> Sua sessão foi encerrada por inatividade. Entre novamente.</p>
-  </div>
+  <!--
+    RF01, fluxo A2, passo 3 (T-16): a sessão expirou por inatividade. <output> tem o papel
+    status, sem mover o foco e sem precisar de role="status" (Sonar Web:S6819)
+  -->
+  <p class="aviso" th:if="${param.expirada}">
+    <output id="aviso-expirada"><strong>Aviso:</strong> Sua sessão foi encerrada por inatividade. Entre novamente.</output>
+  </p>
 
   <!-- RF03, exceções (T-17): a conta foi desativada durante a sessão. Texto [PROP] do RF03 -->
   <div id="aviso-desativada" role="alert" class="aviso aviso--erro" th:if="${param.desativada}">

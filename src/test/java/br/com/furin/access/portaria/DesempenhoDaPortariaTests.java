@@ -116,7 +116,7 @@ class DesempenhoDaPortariaTests {
 					.andReturn().getResponse();
 			leituras.add(System.nanoTime() - inicio);
 			assertThat(leitura.getStatus()).as("leitura de %s", matricula).isEqualTo(201);
-			String idLiberacao = leitura.getContentAsString().replaceAll(".*\"idLiberacao\":(\\d+).*", "$1");
+			String idLiberacao = leitura.getContentAsString().split("\"idLiberacao\":", 2)[1].split("\\D", 2)[0];
 
 			inicio = System.nanoTime();
 			MockHttpServletResponse giro = mvc.perform(post("/portaria/giros").with(funcionario()).with(csrf())

@@ -306,7 +306,7 @@ class AutorizacaoDeTodasAsRotasTests {
 
 	private MockHttpServletRequestBuilder pedido(Rota rota) {
 		MockHttpServletRequestBuilder pedido = request(rota.metodo(), rota.caminho());
-		// O token CSRF vai em todo pedido que altera algo: aqui se testa a autorização
+		// O token CSRF vai em cada pedido que altera algo: aqui se testa a autorização
 		return rota.metodo() == HttpMethod.GET ? pedido : pedido.with(csrf());
 	}
 

@@ -178,11 +178,11 @@ class PortariaTelaTests {
 				.isEqualTo("Código da carteirinha");
 		assertThat(portaria.getFocusedElement()).isEqualTo(campo);
 
-		// CA-RF22-06: duas regiões role="status", separadas
+		// CA-RF22-06: duas regiões de status, separadas (o monitor é um <output>, que já tem o papel)
 		DomElement painel = portaria.getElementById("painel-funcionario");
 		DomElement monitor = portaria.getElementById("monitor-aluno");
 		assertThat(painel.getAttribute("role")).isEqualTo("status");
-		assertThat(monitor.getAttribute("role")).isEqualTo("status");
+		assertThat(monitor.getTagName()).isEqualToIgnoringCase("output");
 		assertThat(painel.isAncestorOf(monitor) || monitor.isAncestorOf(painel)).isFalse();
 		// CA-RF22-05: em espera, nenhum dado pessoal no monitor
 		assertThat(monitor.getTextContent()).isEqualTo(ESPERA);
@@ -470,7 +470,7 @@ class PortariaTelaTests {
 	void focoForaDoCampoAvisaQueOLeitorNaoEstaProntoEClicarNaTelaODevolve() throws Exception {
 		HtmlPage portaria = abrir();
 		assertThat(texto(portaria, "aviso-leitor")).isEmpty();
-		assertThat(portaria.getElementById("aviso-leitor").getAttribute("role")).isEqualTo("status");
+		assertThat(portaria.getElementById("aviso-leitor").getTagName()).isEqualToIgnoringCase("output");
 
 		((HtmlButton) portaria.querySelector("[data-codigo='" + CODIGO_ANA + "']")).focus();
 		esperar(Duration.ofMillis(500));

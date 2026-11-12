@@ -382,6 +382,12 @@ td {
 }
 
 /* Monitor do aluno: letra grande e linguagem simples (A11 §5.12.12) */
+/* <output> no lugar de role="status" (Sonar Web:S6819): em bloco, como o <p> que substituiu */
+output.aviso,
+output.monitor {
+  display: block;
+}
+
 .monitor {
   margin: 0;
   font-size: 1.5rem;

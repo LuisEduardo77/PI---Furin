@@ -137,8 +137,7 @@ public class HistoricoController {
 		model.addAttribute("filtros", filtrosEmTexto(leitura));
 		model.addAttribute("emitido", "Emitido em " + emissao.format(agora) + " por "
 				+ consulta.nomeDoUsuario(funcionario.getName()));
-		model.addAttribute("total", relatorio.total() == 0 ? NENHUM_REGISTRO
-				: "Total: " + numeroBrasileiro(relatorio.total()) + (relatorio.total() == 1 ? " registro" : " registros"));
+		model.addAttribute("total", totalEmTexto(relatorio.total()));
 		if (relatorio.excedeu()) {
 			// RF20, exceções [PROP: texto]
 			model.addAttribute("excedeu", "O relatório tem mais de " + numeroBrasileiro(consulta.maximoDoRelatorio())
@@ -250,6 +249,15 @@ public class HistoricoController {
 			return NENHUM_REGISTRO;
 		}
 		return total == 1 ? "1 registro encontrado" : total + " registros encontrados";
+	}
+
+	/** "Total: 1 registro", "Total: 1.000 registros" ou o texto de nenhum registro. */
+	private static String totalEmTexto(long total) {
+		if (total == 0) {
+			return NENHUM_REGISTRO;
+		}
+		String unidade = total == 1 ? " registro" : " registros";
+		return "Total: " + numeroBrasileiro(total) + unidade;
 	}
 
 	/** "1.000", como no RF20. */

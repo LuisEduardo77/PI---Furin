@@ -49,7 +49,33 @@ Regra da T-44: são corrigidos os de severidade **Blocker** e **Critical** e tod
 **segurança** (vulnerabilidades e *security hotspots*). Os demais ficam listados aqui,
 com o motivo.
 
-_Aguardando a primeira análise no PR da T-44._
+### Levantamento de 12/11/2026
 
-| Regra | Severidade | Tipo | Arquivo | Motivo de não corrigir |
-|---|---|---|---|---|
+Lista lida pela API pública do SonarCloud (`api/issues/search`, problemas não resolvidos
+da `main`) e `api/hotspots/search`: **58 problemas**, **nenhum de segurança** e **nenhum
+*security hotspot***. Quality gate do PR #45 (T-44): **OK**.
+
+| Qualidade | Total | Corrigidos na T-44 | Ficaram (tabela abaixo) |
+|---|---|---|---|
+| Security | 0 | — | — |
+| Reliability | 8 | 7 (S8786: regex dos testes) | 1 (S9379, `autofocus`) |
+| Maintainability, High/Critical | 18 | 14 (S1192 em `RegistrosDaPortaria`, S6809, S7761 ×10) | 4 (plsql:S1192 na V1) |
+| Maintainability, Medium | 19 | 9 (S5778 ×4, S3358, S6819 ×4) | 10 (S2925 ×3, S6819 ×7) |
+| Maintainability, Low/Info | 13 | 10 (S1128, S5838 ×2, S6582 ×3, S7765 ×2, S1135 ×2) | 3 (S101, S7718 ×2) |
+
+As correções não mudam o comportamento do sistema. Os S1135 eram falso positivo: o Sonar
+leu o "todo" de "todo pedido" como TODO; o comentário passou a dizer "cada pedido". Nos
+S6819 corrigidos, a região de status virou `<output>` (`#aviso-leitor` e `#monitor-aluno`
+na portaria, `#anuncio-presentes` e `#aviso-expirada` no login), que já tem o papel
+status e anuncia sem mover o foco.
+
+### Não corrigidos
+
+| Regra | Severidade (qualidade) | Arquivo | Motivo de não corrigir |
+|---|---|---|---|
+| Web:S9379 (`autofocus`) | Medium (Reliability) | `templates/portaria/inicio.html:46` | O [RNF07](../../requirements/rnf/RNF07.md) pede o campo "Leitura da carteirinha" com foco automático: o leitor USB digita no campo que tem o foco, e a tela só serve para isso. Decisão do grupo de manter (12/11/2026); marcar como "Accepted" no SonarCloud. Trocar o atributo pelo `campo.focus()` do `portaria.js` só esconderia o apontamento |
+| plsql:S1192 ×4 (literal repetido) | Critical/High (Maintainability) | `db/migration/V1__esquema_inicial.sql:145-146` | A V1 já foi aplicada: mudar o arquivo muda o checksum do Flyway e quebra todo banco já migrado. Além disso, o arquivo é DDL do MySQL, sem constantes; o Sonar o leu como PL/SQL da Oracle. Ignorar a regra nas migrações pelo `pom.xml` fica para decisão do grupo |
+| java:S2925 ×3 (`Thread.sleep`) | Medium (Maintainability) | `EnvioDeNotificacoesTests.java:275` e `:433`, `LeituraConcorrenteTests.java:211` | São esperas de propósito nos testes: provar que nada é enviado depois de um *rollback*, a espera com prazo do `esperarAte` e o intervalo entre as leituras concorrentes. Tirar exigiria uma biblioteca nova (Awaitility), fora do escopo da T-44 |
+| Web:S6819 ×7 (`role="status"`) | Medium (Maintainability) | `alunos/editar.html:13`, `alunos/inicio.html:39`, `alunos/revogacao.html:13`, `carteirinhas/imprimir.html:17`, `portaria/inicio.html:60` (`#painel-funcionario`), `portaria/manual-busca.html:14` e `:59` | Essas regiões têm `<div>` e `<p>` dentro (e o `#painel-funcionario` recebe blocos montados pelo `portaria.js`). O `<output>` só aceita conteúdo de frase, então a troca exigiria refazer a marcação das regiões e os testes de acessibilidade (RNF06, CA-RF22-06). Fica para quando cada tela for mexida |
+| java:S101 (nome de classe) | Low (Maintainability) | `carga/V2__CargaFicticia.java:53` | O Flyway exige o nome `V<versão>__<descrição>` na migração Java |
+| javascript:S7718 ×2 (`catch (erro)` → `error_`) | Low (Maintainability) | `static/js/portaria.js:127` e `:156` | O projeto escreve os nomes em português (CLAUDE.md §6) |

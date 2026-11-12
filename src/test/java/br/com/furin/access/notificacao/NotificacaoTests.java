@@ -205,13 +205,15 @@ class NotificacaoTests {
 	void liberacaoCanceladaPeloFuncionarioOuExpiradaNaoGeraNotificacao() {
 		long cancelada = ler(CODIGO_ANA);
 		liberacoes.cancelar(cancelada);
-		assertThatThrownBy(() -> giros.confirmar(cancelada, UUID.randomUUID())).isInstanceOf(GiroRecusado.class);
+		UUID chaveDoCancelado = UUID.randomUUID();
+		assertThatThrownBy(() -> giros.confirmar(cancelada, chaveDoCancelado)).isInstanceOf(GiroRecusado.class);
 
 		avancar(Duration.ofSeconds(5));
 		long expirada = ler(CODIGO_ANA);
 		avancar(Duration.ofSeconds(20));
 		expiracoes.expirarVencidas();
-		assertThatThrownBy(() -> giros.confirmar(expirada, UUID.randomUUID())).isInstanceOf(GiroRecusado.class);
+		UUID chaveDoExpirado = UUID.randomUUID();
+		assertThatThrownBy(() -> giros.confirmar(expirada, chaveDoExpirado)).isInstanceOf(GiroRecusado.class);
 
 		assertThat(situacao(cancelada)).isEqualTo("CANCELADA");
 		assertThat(situacao(expirada)).isEqualTo("CANCELADA");
@@ -229,9 +231,11 @@ class NotificacaoTests {
 
 		// Recusadas: código que não existe e aluno inativo
 		jdbc.update("UPDATE aluno SET ativo = 0 WHERE id_aluno = ?", bia);
-		assertThatThrownBy(() -> leituras.ler("ffffffffffffffffffffffffffffff38", UUID.randomUUID(), FUNCIONARIO))
+		UUID chaveDoInexistente = UUID.randomUUID();
+		assertThatThrownBy(() -> leituras.ler("ffffffffffffffffffffffffffffff38", chaveDoInexistente, FUNCIONARIO))
 				.isInstanceOf(LeituraRecusada.class);
-		assertThatThrownBy(() -> leituras.ler(CODIGO_BIA, UUID.randomUUID(), FUNCIONARIO))
+		UUID chaveDoInativo = UUID.randomUUID();
+		assertThatThrownBy(() -> leituras.ler(CODIGO_BIA, chaveDoInativo, FUNCIONARIO))
 				.isInstanceOf(LeituraRecusada.class);
 
 		assertThat(totalDeNotificacoes()).isZero();

@@ -76,10 +76,10 @@
   var token = document.querySelector('meta[name="_csrf"]');
   var cabecalhoDoToken = document.querySelector('meta[name="_csrf_header"]');
 
-  var tempoDoMonitor = Number(raiz.getAttribute('data-monitor-ms'));
-  var tempoDoPainel = Number(raiz.getAttribute('data-painel-ms'));
-  var tempoDoPrazo = Number(raiz.getAttribute('data-prazo-giro-ms'));
-  var tempoDaVerificacao = Number(raiz.getAttribute('data-verificacao-ms'));
+  var tempoDoMonitor = Number(raiz.dataset.monitorMs);
+  var tempoDoPainel = Number(raiz.dataset.painelMs);
+  var tempoDoPrazo = Number(raiz.dataset.prazoGiroMs);
+  var tempoDaVerificacao = Number(raiz.dataset.verificacaoMs);
 
   var liberacaoEmCurso = null;
   var giroEmCurso = null;
@@ -117,7 +117,7 @@
     }
     pedido.onload = function () {
       // A sessão acabou: o servidor mandou para o login (T-16, T-17)
-      if (pedido.responseURL && pedido.responseURL.indexOf('/login') >= 0) {
+      if (pedido.responseURL && pedido.responseURL.includes('/login')) {
         window.location.assign(pedido.responseURL);
         return;
       }
@@ -146,7 +146,7 @@
     pedido.open('GET', endereco);
     pedido.setRequestHeader('Accept', 'application/json');
     pedido.onload = function () {
-      if (pedido.responseURL && pedido.responseURL.indexOf('/login') >= 0) {
+      if (pedido.responseURL && pedido.responseURL.includes('/login')) {
         window.location.assign(pedido.responseURL);
         return;
       }
@@ -175,14 +175,14 @@
     }
     // Esvaziar antes faz o leitor de tela anunciar de novo uma recusa igual à anterior
     limparAlerta();
-    enviar(raiz.getAttribute('data-leituras'), { codigo: limpo, chaveRequisicao: novaChave() },
+    enviar(raiz.dataset.leituras, { codigo: limpo, chaveRequisicao: novaChave() },
       function (status, dados) {
         if ((status === 201 || status === 200 || status === 202) && dados) {
           mostrarLiberacao(dados, DESFECHO_POR_STATUS[status]);
         } else if (status === 202) {
           // RN03: a leitura da janela já não está pendente; nada muda na tela além do aviso
           paragrafo(painel, LEITURA_JA_RECEBIDA);
-        } else if (status === 422 && dados && dados.motivo === 'OUTRA_LIBERACAO_PENDENTE') {
+        } else if (status === 422 && dados?.motivo === 'OUTRA_LIBERACAO_PENDENTE') {
           // RN05; RN09: o aluno vê só "Aguarde"
           mostrarRecusa(AGUARDE_O_ANTERIOR, MONITOR_AGUARDE);
         } else if (status === 422 && dados) {
@@ -229,7 +229,7 @@
     clearTimeout(esperaDaExpiracao);
     liberacaoAcompanhada = idLiberacao;
     esperaDaExpiracao = setTimeout(function () {
-      consultar(raiz.getAttribute('data-liberacoes') + idLiberacao, function (status, dados) {
+      consultar(raiz.dataset.liberacoes + idLiberacao, function (status, dados) {
         if (liberacaoAcompanhada !== idLiberacao) {
           return;
         }
@@ -288,12 +288,12 @@
     botaoCancelar.disabled = true;
     // O botão some com o cancelamento: o foco volta ao campo de leitura (DEC-28, A8)
     campo.focus();
-    enviar(raiz.getAttribute('data-liberacoes') + idLiberacao + '/cancelar', {},
+    enviar(raiz.dataset.liberacoes + idLiberacao + '/cancelar', {},
       function (status, dados) {
         botaoCancelar.disabled = false;
         if (status === 200 && dados) {
           mostrarSituacao(dados);
-        } else if (status === 422 && dados && dados.motivo === 'LIBERACAO_CONFIRMADA') {
+        } else if (status === 422 && dados?.motivo === 'LIBERACAO_CONFIRMADA') {
           liberacaoEmCurso = null;
           pararDeAcompanhar();
           atualizarCancelamento();
@@ -384,13 +384,13 @@
     if (!giroEmCurso || giroEmCurso.idLiberacao !== liberacaoEmCurso.idLiberacao) {
       giroEmCurso = { idLiberacao: liberacaoEmCurso.idLiberacao, chaveRequisicao: novaChave() };
     }
-    enviar(raiz.getAttribute('data-giros'), giroEmCurso,
+    enviar(raiz.dataset.giros, giroEmCurso,
       function (status, dados) {
         if (status === 200 && dados) {
           mostrarLiberacao(dados, 'nova');
           mostrarPresentes(dados.presentes);
           mostrarAvisoAoResponsavel(dados.avisoAoResponsavel);
-        } else if (status === 422 && dados && dados.motivo === 'LIBERACAO_ENCERRADA') {
+        } else if (status === 422 && dados?.motivo === 'LIBERACAO_ENCERRADA') {
           // RF09, exceções: giro depois do prazo ou de uma liberação cancelada
           encerrarLiberacao(GIRO_FORA_DO_PRAZO);
         } else if (status === 422 && dados) {
@@ -462,7 +462,7 @@
       }
     });
     painel.appendChild(imagem);
-    imagem.src = raiz.getAttribute('data-arquivos') + encodeURIComponent(liberacao.fotoChave);
+    imagem.src = raiz.dataset.arquivos + encodeURIComponent(liberacao.fotoChave);
   }
 
   function textoDeFotoIndisponivel() {
@@ -565,7 +565,7 @@
   });
   Array.prototype.forEach.call(document.querySelectorAll('[data-simular-leitura]'), function (botao) {
     botao.addEventListener('click', function () {
-      ler(botao.getAttribute('data-codigo'));
+      ler(botao.dataset.codigo);
     });
   });
   if (botaoGiro) {

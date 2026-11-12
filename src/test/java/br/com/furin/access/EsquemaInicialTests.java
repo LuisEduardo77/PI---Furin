@@ -65,8 +65,8 @@ class EsquemaInicialTests {
 				  AND TABLE_NAME <> 'flyway_schema_history'
 				""");
 		assertThat(tabelas).hasSize(TABELAS.size()).allSatisfy(tabela -> {
-			assertThat(tabela.get("ENGINE")).isEqualTo("InnoDB");
-			assertThat(tabela.get("TABLE_COLLATION")).isEqualTo("utf8mb4_0900_ai_ci");
+			assertThat(tabela).containsEntry("ENGINE", "InnoDB")
+					.containsEntry("TABLE_COLLATION", "utf8mb4_0900_ai_ci");
 		});
 	}
 
