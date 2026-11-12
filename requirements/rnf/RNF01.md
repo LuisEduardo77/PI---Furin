@@ -4,8 +4,8 @@
 |---|---|
 | **Categoria** | Plataforma |
 | **Documentação** | Revisada em 21/10/2026 (DEC-37 a DEC-39) |
-| **Implementação** | Planejada |
-| **Atualizado em** | 21/10/2026 |
+| **Implementação** | Planejada, em andamento (revisão final, T-46, 12/11/2026). O código já tem a parte verificável por teste: a meta viewport sem bloqueio de zoom (`LayoutBaseTests`), as unidades relativas e os alvos de 44 px (`EstiloBaseTests`) e nenhuma função que exija extensão ou plugin. Todos os critérios são manuais (MAN) e ainda não foram conferidos: a matriz navegador × tela (Chrome, Edge, Firefox e um celular Android), 320 px, zoom de 200%, retrato e paisagem e os painéis da portaria em tela estreita. Eles entram na rodada manual da T-45 ([checklist](../../docs/evidencias/acessibilidade.md)) |
+| **Atualizado em** | 12/11/2026 |
 
 ## Descrição
 

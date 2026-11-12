@@ -82,18 +82,21 @@ em `sonar.sources` no `pom.xml`; problemas não corrigidos, com o motivo, em
 `docs/evidencias/sonarcloud.md`) está concluída. T-47 (backup em `scripts/backup.ps1` e
 `backup.sh`, usuário só de leitura `furin_backup` de `scripts/criar-usuario-backup.sql`,
 passo a passo em `docs/backup-e-restauracao.md`, restauração testada em
-`docs/evidencias/backup-restauracao.md`) está concluída.
+`docs/evidencias/backup-restauracao.md`) está concluída. T-45 (revisão do código das telas;
+checklist manual em `docs/evidencias/acessibilidade.md`, ainda em branco) e T-46 (roteiro em
+`docs/evidencias/roteiro-demonstracao.md`, revisão final do campo Implementação de todos os
+RF e RNF em 12/11/2026) estão feitas, menos a rodada manual de acessibilidade e o ensaio.
 `CenaDaPortaria` é pública para os testes de outros
 pacotes. Teste que
   grava aluno de verdade usa `aluno/LimpezaDeAlunos` para apagar. O
   perfil `test` usa pools de 4 conexões. Teste que precisa do
   `prototipo` usa `furin.carga.ativa=false` para não rodar a carga V2, e teste com
-  JavaScript que faz pedidos não usa a transação do teste (grava e apaga a cena). RF01, RF02, RF03, RF12, RF13, RF15, RF16, RF18, RF19, RF20, RF23 e RF26 estão `Implementada`; RF21 está `Simulada`. A T-33 mediu o RNF02 só no
-  servidor (`DesempenhoDaPortariaTests`, carga em `scripts/desempenho/`, fora da carga
-  padrão); falta a medição na tela. RNF03 está `Implementada` (buscas de senha nos logs
-  feitas à mão; falta o passo automático na CI); os
-  demais RF e RNF estão com `Implementação: Planejada`, menos **RF17, RF24 e RF25**, que
-  estão **fora do escopo** e não devem ser implementados (DEC-37).
+  JavaScript que faz pedidos não usa a transação do teste (grava e apaga a cena). Depois da revisão final da T-46
+  (12/11/2026), os RF do escopo e os RNF02, RNF03, RNF05 e RNF08 estão `Implementada`,
+  menos RF09, RF14, RF21 e RNF07, que estão `Simulada`; RNF01, RNF04 e RNF06 continuam
+  `Planejada`; nenhum está `Verificada` (faltam as verificações manuais e a medição do
+  RNF02 na tela). **RF17, RF24 e RF25** estão **fora do escopo** e não devem ser
+  implementados (DEC-37).
 
 ## 2. Onde está a verdade
 

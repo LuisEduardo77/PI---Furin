@@ -266,7 +266,7 @@ Siglas de **verificação**:
 
 ## 5. Matriz de rastreabilidade: requisitos não funcionais
 
-| RNF | Título (igual ao do arquivo) | Categoria | Fonte original | Decisões | Arquivo | RF afetados | Verificação | Meta no protótipo (hoje todos estão `Planejada`) |
+| RNF | Título (igual ao do arquivo) | Categoria | Fonte original | Decisões | Arquivo | RF afetados | Verificação | Meta no protótipo (o estado atual de cada um está no campo Implementação do arquivo; revisão final na T-46, 12/11/2026) |
 |---|---|---|---|---|---|---|---|---|
 | RNF01 | Acesso por navegador, com layout responsivo | Plataforma | A08 p.4 (origem: A05) | — | [RNF01](../requirements/rnf/RNF01.md) | Todos | MAN (navegadores, 320 px) | Implementada |
 | RNF02 | Confirmação da leitura na tela em até 2 segundos | Desempenho | A08 p.4 (origem: US3) | DEC-19 | [RNF02](../requirements/rnf/RNF02.md) | RF09, RF14 | MAN (medição registrada) | Implementada |

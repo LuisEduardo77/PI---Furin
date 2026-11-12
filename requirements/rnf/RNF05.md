@@ -4,8 +4,8 @@
 |---|---|
 | **Categoria** | Privacidade |
 | **Documentação** | Revisada em 21/10/2026 (DEC-37 a DEC-39) |
-| **Implementação** | Planejada, em andamento. Canal "Logs": log de auditoria com e-mail, login e código mascarados e sem senha (T-10; testes da CA-RNF05-05 em `AuditoriaTests` e `AuditoriaIntegracaoTests`). Esquema V1 conferido na T-06 (CA-RNF05-01, inspeção no PR). A coluna `chave_giro` (V3, DEC-41) é técnica, sem dado pessoal. Resposta da leitura só com os campos do CA-RNF05-03, com a referência da foto em `fotoChave` (DEC-43, `LeituraTests`). Fotos e termos só saem por `GET /arquivos/{chave}` (CA-RNF05-07, T-18, `ArquivoControllerTests`). Os demais canais vêm com as telas |
-| **Atualizado em** | 05/11/2026 |
+| **Implementação** | Implementada (revisão final, T-46, 12/11/2026): CA-RNF05-01 (inspeção da V1 na T-06), 03, 05 e 07 têm teste; o CA-RNF05-02 tem teste nos formulários (`CadastroDeAlunoTests`, `EdicaoDoAlunoTests`); os canais do CA-RNF05-04 estão todos prontos, conferidos pelos critérios dos RF (busca sem foto nem responsável, CA-RF11-05; histórico sem foto, contato nem código, CA-RF19-08; monitor só com o primeiro nome, CA-RF22-04; e-mail com o conteúdo mínimo, CA-RF21-04; relatório impresso sem o aviso, CA-RF19-10). CA-RNF05-06: busca no repositório em 12/11/2026, e os 53 e-mails de `src/` e `scripts/` são todos `@example.com`, sem nenhum número no formato de CPF. **Pendente:** as capturas das telas do CA-RNF05-02 e 04 (MAN). Histórico: Canal "Logs": log de auditoria com e-mail, login e código mascarados e sem senha (T-10; testes da CA-RNF05-05 em `AuditoriaTests` e `AuditoriaIntegracaoTests`). Esquema V1 conferido na T-06 (CA-RNF05-01, inspeção no PR). A coluna `chave_giro` (V3, DEC-41) é técnica, sem dado pessoal. Resposta da leitura só com os campos do CA-RNF05-03, com a referência da foto em `fotoChave` (DEC-43, `LeituraTests`). Fotos e termos só saem por `GET /arquivos/{chave}` (CA-RNF05-07, T-18, `ArquivoControllerTests`). Os demais canais vêm com as telas |
+| **Atualizado em** | 12/11/2026 |
 
 ## Descrição
 

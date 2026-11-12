@@ -4,8 +4,8 @@
 |---|---|
 | **Categoria** | Hardware |
 | **Documentação** | Revisada em 21/10/2026 (DEC-37 a DEC-39) |
-| **Implementação** | Planejada. Meta no protótipo: **Simulada**. O grupo **não tem leitor USB** (DEC-25), então a leitura, a catraca e o sensor de giro são simulados pelas telas. Em andamento: leitura pelo campo com Enter (CA-RNF07-01 e 03), aviso `Leitor não está pronto` (CA-RNF07-04), botão `Ler carteirinha de Ana Teste` (CA-RNF07-05) e simulações só no `prototipo` (CA-RNF07-07), em `PortariaTelaTests` e `PortariaSemSimulacaoTests` |
-| **Atualizado em** | 05/11/2026 |
+| **Implementação** | **Simulada** (revisão final, T-46, 12/11/2026). O grupo **não tem leitor USB** (DEC-25), então a leitura, a catraca e o sensor de giro são simulados pelas telas, com indicação visível. CA-RNF07-01, 03 a 08 têm teste (o 06 em `LeituraInvalidaTests` e o 08 em `CarteirinhaTests`, com ZXing). **Pendente:** o CA-RNF07-02 nos três navegadores e o 09 por teclado (MAN); o CA-RNF07-10 e 11 só valem na implantação. Demonstração nos passos 2.7 e 2.14 do [roteiro](../../docs/evidencias/roteiro-demonstracao.md). Histórico: leitura pelo campo com Enter (CA-RNF07-01 e 03), aviso `Leitor não está pronto` (CA-RNF07-04), botão `Ler carteirinha de Ana Teste` (CA-RNF07-05) e simulações só no `prototipo` (CA-RNF07-07), em `PortariaTelaTests` e `PortariaSemSimulacaoTests` |
+| **Atualizado em** | 12/11/2026 |
 
 ## Descrição
 
