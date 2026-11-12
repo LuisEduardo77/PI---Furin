@@ -16,13 +16,14 @@
     mascarada, com "Mostrar" e "Copiar" (senha-temporaria.js). Textos [PROP]
   -->
   <th:block th:if="${senhaGerada}">
-    <div role="status" class="aviso aviso--sucesso">
-      <p th:switch="${senhaGerada.motivo().name()}"><strong>Sucesso:</strong>
+    <!-- <output> já tem o papel status, sem precisar de role="status" (Sonar Web:S6819) -->
+    <p class="aviso aviso--sucesso">
+      <output id="aviso-senha-gerada" th:switch="${senhaGerada.motivo().name()}"><strong>Sucesso:</strong>
         <span th:case="'CONTA_CRIADA'" th:text="|conta criada para ${senhaGerada.nome()}.|">conta criada para Paula Exemplo.</span>
         <span th:case="'NOVA_SENHA'" th:text="|nova senha temporária gerada para ${senhaGerada.nome()}. A anterior deixou de valer.|">nova senha temporária gerada para Paula Exemplo.</span>
         <span th:case="'CONTA_REATIVADA'" th:text="|conta de ${senhaGerada.nome()} reativada.|">conta de Paula Exemplo reativada.</span>
-      </p>
-    </div>
+      </output>
+    </p>
 
     <div class="senha-temporaria" data-senha-temporaria>
       <p>
@@ -35,7 +36,7 @@
                 aria-controls="senha-temporaria">Mostrar a senha</button>
         <button type="button" class="botao botao--secundario" id="copiar-senha">Copiar a senha</button>
       </div>
-      <p id="resultado-copia" role="status" class="campo__dica"></p>
+      <p class="campo__dica"><output id="resultado-copia"></output></p>
     </div>
 
     <p>

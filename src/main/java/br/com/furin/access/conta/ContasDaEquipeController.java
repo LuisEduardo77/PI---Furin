@@ -20,7 +20,6 @@ import br.com.furin.access.autenticacao.Usuario;
 import br.com.furin.access.config.FurinProperties;
 import br.com.furin.access.conta.ContasDaEquipe.LoginEmUso;
 import br.com.furin.access.conta.ContasDaEquipe.PropriaConta;
-import br.com.furin.access.conta.ContasDaEquipe.SenhaGerada;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 

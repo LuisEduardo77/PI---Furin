@@ -33,6 +33,9 @@ import br.com.furin.access.config.FurinProperties;
 @Service
 public class ContasDaEquipe {
 
+	/** Nome do detalhe de auditoria com o ID da conta afetada. */
+	private static final String ID_CONTA = "idConta";
+
 	private final UsuarioRepository usuarios;
 
 	private final PasswordEncoder encoder;
@@ -126,7 +129,7 @@ public class ContasDaEquipe {
 		Instant agora = relogio.instant();
 		Usuario conta = usuarios.saveAndFlush(Usuario.novaConta(nome.strip(), normalizado, encoder.encode(senha),
 				agora.plus(validadeTemporaria), agora));
-		auditoria.registrar(EventoAuditoria.CONTA_CRIADA, detalhes().id("idConta", conta.getId()));
+		auditoria.registrar(EventoAuditoria.CONTA_CRIADA, detalhes().id(ID_CONTA, conta.getId()));
 		return new SenhaGerada(conta.getId(), conta.getNome(), senha, SenhaGerada.Motivo.CONTA_CRIADA);
 	}
 
@@ -153,7 +156,7 @@ public class ContasDaEquipe {
 		if (conta.isAtivo()) {
 			conta.desativar();
 			usuarios.saveAndFlush(conta);
-			auditoria.registrar(EventoAuditoria.CONTA_DESATIVADA, detalhes().id("idConta", idConta));
+			auditoria.registrar(EventoAuditoria.CONTA_DESATIVADA, detalhes().id(ID_CONTA, idConta));
 		}
 	}
 
@@ -168,7 +171,7 @@ public class ContasDaEquipe {
 			return Optional.empty();
 		}
 		conta.reativar();
-		auditoria.registrar(EventoAuditoria.CONTA_REATIVADA, detalhes().id("idConta", idConta));
+		auditoria.registrar(EventoAuditoria.CONTA_REATIVADA, detalhes().id(ID_CONTA, idConta));
 		String senha = novaSenhaTemporaria(conta);
 		return Optional.of(new SenhaGerada(idConta, conta.getNome(), senha, SenhaGerada.Motivo.CONTA_REATIVADA));
 	}
@@ -182,7 +185,7 @@ public class ContasDaEquipe {
 		String senha = gerador.gerar();
 		conta.definirSenhaTemporaria(encoder.encode(senha), relogio.instant().plus(validadeTemporaria));
 		usuarios.saveAndFlush(conta);
-		auditoria.registrar(EventoAuditoria.SENHA_TEMPORARIA_GERADA, detalhes().id("idConta", conta.getId()));
+		auditoria.registrar(EventoAuditoria.SENHA_TEMPORARIA_GERADA, detalhes().id(ID_CONTA, conta.getId()));
 		return senha;
 	}
 
@@ -191,7 +194,7 @@ public class ContasDaEquipe {
 	}
 
 	private ContaNaoEncontrada naoEncontrada(long idConta) {
-		auditoria.registrar(EventoAuditoria.CONTA_NAO_ENCONTRADA, detalhes().id("idConta", idConta));
+		auditoria.registrar(EventoAuditoria.CONTA_NAO_ENCONTRADA, detalhes().id(ID_CONTA, idConta));
 		return new ContaNaoEncontrada();
 	}
 

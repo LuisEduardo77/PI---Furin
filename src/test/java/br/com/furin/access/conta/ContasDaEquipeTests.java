@@ -141,7 +141,7 @@ class ContasDaEquipeTests {
 				.containsEntry("troca_senha_obrigatoria", true);
 		LocalDateTime prazo = LocalDateTime.ofInstant(
 				relogio.instant().plus(propriedades.senha().validadeTemporaria()), ZoneOffset.UTC);
-		assertThat(linha.get("senha_temporaria_expira_em")).isEqualTo(prazo);
+		assertThat(linha).containsEntry("senha_temporaria_expira_em", prazo);
 
 		// RF01: no primeiro acesso, cai na troca de senha
 		mvc.perform(formLogin().user("secretaria.bruno").password(senha))
@@ -217,7 +217,10 @@ class ContasDaEquipeTests {
 
 		mvc.perform(post("/contas/equipe/{id}/desativacao", idBruno).with(como("ate.demo")).with(csrf()))
 				.andExpect(redirectedUrl(ContasDaEquipeController.LISTA))
-				.andExpect(result -> assertThat(result.getFlashMap().get("contaDesativada")).isEqualTo("Bruno Exemplo"));
+				.andExpect(result -> {
+					Map<String, Object> flash = result.getFlashMap();
+					assertThat(flash).containsEntry("contaDesativada", "Bruno Exemplo");
+				});
 		assertThat(linha("secretaria.bruno")).containsEntry("ativo", false);
 
 		String reativada = senhaDaPagina(mvc.perform(post("/contas/equipe/{id}/reativacao", idBruno)
@@ -391,7 +394,7 @@ class ContasDaEquipeTests {
 		assertThat(senha.getTitleText()).isEqualTo("Senha temporária | Furin Access");
 		String exibida = senha.getElementById("senha-temporaria").getTextContent();
 		assertThat(encoder.matches(exibida, (String) linha("secretaria.bruno").get("senha_hash"))).isTrue();
-		assertThat(senha.querySelector("[role=status]").getTextContent()).contains("Sucesso:",
+		assertThat(senha.querySelector("output#aviso-senha-gerada").getTextContent()).contains("Sucesso:",
 				"conta criada para Bruno Exemplo.");
 		assertThat(senha.asNormalizedText()).contains("72 horas", "não será exibida novamente");
 		assertThat(senha.getWebResponse().getResponseHeaderValue("Cache-Control")).contains("no-store");

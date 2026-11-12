@@ -10,10 +10,13 @@
   <h1>Contas da equipe</h1>
   <p>Todas as contas têm o mesmo acesso ao sistema. Alunos e responsáveis não têm conta.</p>
 
-  <!-- A11 §5.13.8: role="status" sem mover o foco. Texto [PROP] -->
-  <div role="status" class="aviso aviso--sucesso" th:if="${contaDesativada}">
-    <p><strong>Sucesso:</strong> <span th:text="|a conta de ${contaDesativada} foi desativada.|">a conta de Paula Exemplo foi desativada.</span></p>
-  </div>
+  <!--
+    A11 §5.13.8: anunciado sem mover o foco. <output> já tem o papel status, sem precisar de
+    role="status" (Sonar Web:S6819). Texto [PROP]
+  -->
+  <p class="aviso aviso--sucesso" th:if="${contaDesativada}">
+    <output id="aviso-conta-desativada"><strong>Sucesso:</strong> <span th:text="|a conta de ${contaDesativada} foi desativada.|">a conta de Paula Exemplo foi desativada.</span></output>
+  </p>
 
   <p><a id="nova-conta" class="botao" th:href="@{/contas/equipe/nova}">Nova conta</a></p>
 
