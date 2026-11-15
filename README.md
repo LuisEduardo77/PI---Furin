@@ -11,6 +11,7 @@ convenções e o índice de todos os documentos estão em
 ## Sumário
 
 1. [O que é o Furin Access](#1-o-que-é-o-furin-access)
+   - [1.1 O que o sistema já faz](#11-o-que-o-sistema-já-faz)
 2. [O que precisa ter instalado](#2-o-que-precisa-ter-instalado)
 3. [Como rodar](#3-como-rodar)
 4. [Como usar, tela por tela](#4-como-usar-tela-por-tela)
@@ -29,6 +30,74 @@ tela; no protótipo esse e-mail é **simulado** (nenhuma mensagem sai do computa
 DEC-32). O grupo não tem leitor de QR Code nem catraca, então, no protótipo, a
 **leitura da carteirinha** (DEC-25) e a **passagem pela catraca** (DEC-18) também são
 simuladas por botões na tela, sempre marcados com "(protótipo)".
+
+### 1.1 O que o sistema já faz
+
+Todas as funções abaixo estão prontas no protótipo. **Implementada** quer dizer que a
+função funciona de verdade; **Simulada** quer dizer que ela funciona, mas a parte física
+(leitor, catraca ou envio do e-mail) é imitada por botões ou mensagens na tela. O passo a
+passo de cada uma está na [seção 4](#4-como-usar-tela-por-tela).
+
+**Acesso e segurança**
+
+| Função | Situação | Requisito | Como usar |
+|---|---|---|---|
+| Login individual para cada funcionário (`ate.demo`, `gestao.demo` e as contas criadas) | Implementada | RF01 | [4.1](#41-login) |
+| Mesma mensagem para usuário ou senha errados, sem revelar qual dado está errado | Implementada | RF02 | [4.1](#41-login) |
+| Bloqueio do login por 15 minutos depois de 5 tentativas erradas | Implementada | RF02 | [4.1](#41-login) |
+| Troca obrigatória da senha temporária no primeiro acesso e tela "Alterar senha" | Implementada | RF01 | [4.6](#46-alterar-senha) |
+| Sessão que termina depois de 30 minutos sem uso, com aviso 1 minuto antes | Implementada | RF01 | [4.1](#41-login) |
+| Menu único para todos os funcionários e nenhuma tela aberta sem login | Implementada | RF03 | [4.1](#41-login) |
+| Senhas guardadas só como hash, nunca em texto | Implementada | RNF03 | — |
+
+**Portaria**
+
+| Função | Situação | Requisito | Como usar |
+|---|---|---|---|
+| Leitura da carteirinha pelo campo de leitura ou pelo painel "Simular leitura" | Simulada | RNF07 | [4.2](#42-portaria) |
+| Entrada ou saída decidida pelo sistema, sem botão de modo | Implementada | RF13 | [4.2](#42-portaria) |
+| Liberação na leitura e registro só depois da passagem pela catraca ("Simular passagem") | Simulada | RF09, RF14 | [4.2](#42-portaria) |
+| Painel do funcionário com foto, nome, turma, tipo e situação | Implementada | RF10 | [4.2](#42-portaria) |
+| Monitor do aluno só com o primeiro nome | Implementada | RF22 | [4.2](#42-portaria) |
+| Liberação cancelada sozinha depois de 15 segundos sem passagem, ou pelo funcionário | Implementada | RF09 | [4.2](#42-portaria) |
+| Proteções: leitura repetida em 2 segundos ignorada, um aluno por vez e nenhuma entrada ou saída repetida | Implementada | RF15 | [4.2](#42-portaria) |
+| Mensagens de leitura recusada: o motivo para o funcionário e uma frase genérica para o aluno | Implementada | RF23 | [4.2](#42-portaria) |
+| Registro manual de entrada ou saída, com horário real e motivo obrigatório | Implementada | RF12 | [4.2](#42-portaria) |
+
+**Alunos**
+
+| Função | Situação | Requisito | Como usar |
+|---|---|---|---|
+| Cadastro com nome, matrícula, turma, foto e contato principal do responsável | Implementada | RF04 | [4.3](#43-alunos) |
+| Conferência do termo de consentimento: sem termo, o aluno não é cadastrado | Implementada | RF05 | [4.3](#43-alunos) |
+| Bloqueio de matrícula repetida, inclusive de aluno inativo | Implementada | RF06 | [4.3](#43-alunos) |
+| Carteirinha com QR Code, impressão no tamanho de cartão e segunda via | Implementada | RF07 | [4.3](#43-alunos) |
+| Edição com resumo "antes e depois", troca de turma e troca do responsável | Implementada | RF08 | [4.3](#43-alunos) |
+| Aviso por e-mail ligado ou desligado a pedido do responsável | Implementada | RF08 | [4.3](#43-alunos) |
+| Registro da revogação do termo e inativação do aluno, sem apagar o histórico | Implementada | RF05, RF08 | [4.3](#43-alunos) |
+| Busca por nome ou matrícula | Implementada | RF11 | [4.3](#43-alunos) |
+
+**Consultas e relatórios**
+
+| Função | Situação | Requisito | Como usar |
+|---|---|---|---|
+| Presentes agora, total por turma e saídas pendentes de dias anteriores | Implementada | RF16 | [4.4](#44-presentes) |
+| Histórico com filtros por período, turma e aluno | Implementada | RF18, RF19 | [4.5](#45-histórico-e-impressão) |
+| Relatório para impressão ou PDF pelo navegador | Implementada | RF20 | [4.5](#45-histórico-e-impressão) |
+
+**Pais/responsáveis e contas**
+
+| Função | Situação | Requisito | Como usar |
+|---|---|---|---|
+| E-mail ao responsável a cada entrada e saída, com dados mínimos e sem link | Simulada | RF21 | [4.2](#42-portaria) |
+| Contas da equipe: criar, gerar nova senha temporária, desativar e reativar | Implementada | RF26 | [4.7](#47-contas-da-equipe) |
+
+**Apoio**
+
+| Função | Situação | Onde |
+|---|---|---|
+| Backup do banco e das fotos, com as 7 últimas cópias e restauração testada | Implementada | [3.10](#310-backup) |
+| Testes automatizados, CI no GitHub Actions e análise no SonarCloud | Implementada | [3.7](#37-rodar-os-testes-automatizados) |
 
 ## 2. O que precisa ter instalado
 
@@ -556,6 +625,10 @@ Ainda não está pronto (não aparece no protótipo ou aparece incompleto):
 - **Script de reset** do banco do protótipo: por enquanto, o reset é manual (seção 3.6).
 - **HTTPS**: o protótipo roda só em `http://localhost` (RNF04).
 - **Medição de desempenho na tela** da portaria (RNF02): só o servidor foi medido.
+- **Verificação manual de acessibilidade** (RNF01 e RNF06): as telas foram feitas com a
+  checklist de acessibilidade e a parte automatizável tem teste, mas falta a rodada com
+  teclado, leitor de tela (NVDA), 320 px, zoom de 200% e Lighthouse
+  ([checklist](docs/evidencias/acessibilidade.md)).
 
 Fora do escopo, de propósito (não serão feitos no protótipo): leitor USB, catraca e
 envio real de e-mail, WhatsApp, contas para alunos e pais e perfis separados para ATE e
