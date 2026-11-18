@@ -85,6 +85,10 @@ furin:
     max-tentativas: 3          # DEC-28 (F1); tentativas de envio (T-39)
   termo:
     versao-atual: v1-2026      # RF05; DEC-26
+  termos:
+    # DEC-47: Termo de uso e Política de privacidade do sistema (templates/termos/textos.html).
+    # Mudou o texto? Troque a versão: todos os funcionários aceitam de novo no próximo login
+    versao-atual: v1-2026
   contato:
     ddi: "55"                  # RF04: telefone gravado com DDI e DDD [PROP]
   arquivos:

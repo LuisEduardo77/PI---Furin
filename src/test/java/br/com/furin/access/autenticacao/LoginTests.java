@@ -207,7 +207,9 @@ class LoginTests {
 		assertThat(senha.getAttribute("autocomplete")).isEqualTo("current-password");
 		// Colar permitido: nenhum bloqueio de paste nem de copiar/arrastar
 		assertThat(pagina.querySelectorAll("[onpaste], [oncopy], [oncut], [ondrop]")).isEmpty();
-		assertThat(pagina.getElementsByTagName("script")).isEmpty();
+		// O único script é o das janelas dos termos (DEC-47), que não mexe no formulário
+		assertThat(pagina.getElementsByTagName("script")).extracting(script -> script.getAttribute("src"))
+				.containsExactly("/js/termos.js");
 	}
 
 	@Test
@@ -297,8 +299,8 @@ class LoginTests {
 	}
 
 	private void conta(String login, String nome, String senha, boolean ativa) {
-		jdbc.update("INSERT INTO usuario (nome, login, senha_hash, perfil, ativo, troca_senha_obrigatoria, "
-				+ "senha_temporaria_expira_em, criado_em) VALUES (?, ?, ?, ?, ?, 0, NULL, ?)",
+		jdbc.update("INSERT INTO usuario (termos_versao_aceita, termos_aceitos_em, nome, login, senha_hash, perfil, ativo, troca_senha_obrigatoria, "
+				+ "senha_temporaria_expira_em, criado_em) VALUES ('v1-2026', UTC_TIMESTAMP(6), ?, ?, ?, ?, ?, 0, NULL, ?)",
 				nome, login, encoder.encode(senha), SegurancaConfig.PERFIL_FUNCIONARIO, ativa,
 				LocalDateTime.now(ZoneOffset.UTC));
 	}

@@ -413,7 +413,16 @@ página, que aparece com a tecla Tab, é o link **"Ir para o conteúdo principal
 3. Em **Senha (obrigatório)**, digite a senha que **você** definiu no
    `application-local.yml` (seção 3.3). Este guia não traz senhas: elas vêm da
    configuração local de cada computador.
-4. Clique em **Entrar**. O sistema abre a tela **Portaria**.
+4. Clique em **Entrar**.
+5. **No primeiro acesso** de cada conta, abre a tela **Termo de uso e Política de
+   privacidade**, com os dois textos. Leia e clique em **Li e aceito**. O sistema guarda o
+   aceite e abre a tela **Portaria** com "Termo de uso e Política de privacidade aceitos."
+   Nos próximos acessos, o login vai direto à Portaria. Sem aceitar, nenhuma outra tela
+   abre (só **Sair**). Se a versão dos termos mudar, todos aceitam de novo.
+
+Antes de entrar, os botões **Termo de uso** e **Política de privacidade**, abaixo do
+formulário, abrem cada texto numa janela na própria tela de login. Feche com **Fechar** ou
+com a tecla Esc. Os textos são um rascunho, ainda em revisão pelo grupo.
 
 O que pode aparecer:
 
@@ -511,7 +520,9 @@ Na tela **Alunos** ficam o botão **Novo aluno** e a busca.
    nem de um inativo), **Turma** e **Foto do aluno** (JPEG ou PNG, até 2 MB). Use só
    imagens fictícias, nunca a foto de uma pessoa real.
 3. Bloco **Contato principal**: **Nome do responsável**, **Telefone com DDD** e
-   **E-mail**. Use e-mails `@example.com`.
+   **E-mail**. Use e-mails `@example.com`. No telefone, digite só os números: o campo
+   aceita até 11 dígitos e se formata sozinho, como `(12) 91234-5678` (celular) ou
+   `(12) 1234-5678` (fixo).
 4. Bloco **Termo de consentimento**: **Signatário**, **Versão do termo** (já vem
    preenchida) e **Data da assinatura**. Depois, informe o **Protocolo ou localização do
    termo físico** *ou* envie a **Cópia digitalizada do termo** (PDF, JPEG ou PNG, até
@@ -643,8 +654,10 @@ de aceitação de cada passo, use o
 Antes de começar: sistema rodando (seção 3.4), de preferência com o banco recomeçado
 (seção 3.6), e o navegador em <http://localhost:8080/login>.
 
-1. **Login (30 s).** Entre com `ate.demo` e a senha do seu `application-local.yml`.
-   Mostre o menu único: todos os funcionários usam as mesmas telas.
+1. **Login (30 s).** Mostre os botões **Termo de uso** e **Política de privacidade**
+   abrindo as janelas. Entre com `ate.demo` e a senha do seu `application-local.yml`. No
+   primeiro acesso, clique em **Li e aceito**. Mostre o menu único: todos os funcionários
+   usam as mesmas telas.
 2. **Entrada com aviso (1 min).** Na Portaria, clique em **Ler carteirinha de Ana Teste**.
    Mostre o Painel do funcionário (foto, turma, "Entrada liberada — aguardando
    passagem") e o Monitor do aluno (só "Ana"). Clique em **Simular passagem (giro)**.

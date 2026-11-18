@@ -79,8 +79,8 @@ class PresentesTelaTests {
 		apagarACena();
 		cena = new CenaDaPortaria(jdbc);
 		Instant antes = AGORA.minus(Duration.ofDays(30));
-		jdbc.update("INSERT INTO usuario (nome, login, senha_hash, perfil, ativo, troca_senha_obrigatoria, "
-				+ "senha_temporaria_expira_em, criado_em) VALUES ('Funcionário Teste', ?, ?, ?, 1, 0, NULL, ?)",
+		jdbc.update("INSERT INTO usuario (termos_versao_aceita, termos_aceitos_em, nome, login, senha_hash, perfil, ativo, troca_senha_obrigatoria, "
+				+ "senha_temporaria_expira_em, criado_em) VALUES ('v1-2026', UTC_TIMESTAMP(6), 'Funcionário Teste', ?, ?, ?, 1, 0, NULL, ?)",
 				FUNCIONARIO, encoder.encode(SENHA), SegurancaConfig.PERFIL_FUNCIONARIO, CenaDaPortaria.utc(antes));
 		idFuncionario = jdbc.queryForObject("SELECT id_usuario FROM usuario WHERE login = ?", Long.class, FUNCIONARIO);
 		long turma = cena.turma(TURMA);

@@ -54,6 +54,15 @@ public class Usuario {
 	@JdbcTypeCode(SqlTypes.TIMESTAMP)
 	private Instant senhaTemporariaExpiraEm;
 
+	/** DEC-47: última versão do Termo de uso e da Política de privacidade aceita. */
+	@Column(name = "termos_versao_aceita")
+	private String termosVersaoAceita;
+
+	/** DEC-47: quando a versão foi aceita. UTC (RN10), {@code Instant} pelo motivo acima. */
+	@Column(name = "termos_aceitos_em")
+	@JdbcTypeCode(SqlTypes.TIMESTAMP)
+	private Instant termosAceitosEm;
+
 	/** UTC (RN10). {@code Instant} pelo mesmo motivo do prazo da senha temporária (T-43). */
 	@Column(name = "criado_em")
 	@JdbcTypeCode(SqlTypes.TIMESTAMP)
@@ -116,6 +125,25 @@ public class Usuario {
 
 	public Instant getCriadoEm() {
 		return criadoEm;
+	}
+
+	public String getTermosVersaoAceita() {
+		return termosVersaoAceita;
+	}
+
+	public Instant getTermosAceitosEm() {
+		return termosAceitosEm;
+	}
+
+	/** DEC-47: a conta aceitou esta versão dos termos. */
+	public boolean aceitouOsTermos(String versao) {
+		return versao.equals(termosVersaoAceita);
+	}
+
+	/** DEC-47: grava o aceite da versão atual dos termos, no instante do aceite. */
+	public void aceitarTermos(String versao, Instant aceitosEm) {
+		this.termosVersaoAceita = versao;
+		this.termosAceitosEm = aceitosEm;
 	}
 
 	/**

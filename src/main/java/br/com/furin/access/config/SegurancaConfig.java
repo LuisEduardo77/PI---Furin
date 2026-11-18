@@ -19,6 +19,8 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 
 import br.com.furin.access.auditoria.AcessoNegadoAuditado;
 import br.com.furin.access.auditoria.Auditoria;
+import br.com.furin.access.autenticacao.AceiteDosTermos;
+import br.com.furin.access.autenticacao.AceiteDosTermosObrigatorio;
 import br.com.furin.access.autenticacao.AtualizacaoAutomatica;
 import br.com.furin.access.autenticacao.CamposDoLoginObrigatorios;
 import br.com.furin.access.autenticacao.ContaDesativada;
@@ -51,6 +53,8 @@ public class SegurancaConfig {
 	/** Rotas da arquitetura §4, todas do perfil FUNCIONARIO. Rota nova entra aqui. */
 	static final String[] ROTAS_DO_FUNCIONARIO = {
 			"/senha/definir", "/senha/alterar",
+			// Aceite do Termo de uso e da Política de privacidade (DEC-47)
+			AceiteDosTermosObrigatorio.TELA_DO_ACEITE,
 			"/portaria/**",
 			"/alunos/**", "/carteirinhas/**",
 			"/arquivos/**",
@@ -85,7 +89,7 @@ public class SegurancaConfig {
 	@Bean
 	SecurityFilterChain filtroDeSeguranca(HttpSecurity http, AcessoNegadoAuditado acessoNegado,
 			Auditoria auditoria, TentativasDeLogin tentativas, ContasDosFuncionarios contas,
-			TemposDaSessao temposDaSessao, Clock relogio,
+			TemposDaSessao temposDaSessao, Clock relogio, AceiteDosTermos aceiteDosTermos,
 			@Qualifier("requestMappingHandlerMapping") RequestMappingHandlerMapping rotasDosControllers) {
 		http
 				.authorizeHttpRequests(rotas -> rotas
@@ -99,7 +103,7 @@ public class SegurancaConfig {
 				// Spring Security, com as contas do banco (autenticacao/ContasDosFuncionarios)
 				.formLogin(login -> login
 						.loginPage("/login")
-						.successHandler(new LoginComSucessoAuditado(auditoria, tentativas, TELA_INICIAL))
+						.successHandler(new LoginComSucessoAuditado(auditoria, tentativas, aceiteDosTermos, TELA_INICIAL))
 						// RF02: mensagem única e LOGIN_FALHA no log (T-13); conta a falha (T-14)
 						.failureHandler(new LoginComFalhaAuditado(auditoria, tentativas)))
 				// Antes do login, nesta ordem e depois do CSRF:
@@ -115,6 +119,10 @@ public class SegurancaConfig {
 				// menos o "Sair", o "Continuar conectado" (T-16) e os arquivos estáticos. Antes
 				// da autorização: até uma rota negada leva à troca (CA-RF01-04)
 				.addFilterBefore(new TrocaDeSenhaObrigatoria(Stream.concat(Stream.of("/logout", SessaoController.RENOVAR),
+						Arrays.stream(ARQUIVOS_ESTATICOS)).toArray(String[]::new)), AuthorizationFilter.class)
+				// DEC-47: sem o aceite dos termos, toda rota leva a /termos/aceite, com as mesmas
+				// exceções da troca de senha. Registrado depois dela: a senha vem primeiro
+				.addFilterBefore(new AceiteDosTermosObrigatorio(Stream.concat(Stream.of("/logout", SessaoController.RENOVAR),
 						Arrays.stream(ARQUIVOS_ESTATICOS)).toArray(String[]::new)), AuthorizationFilter.class)
 				// RF01, fluxo A2 (T-16): um pedido com o cookie de uma sessão que expirou por
 				// inatividade leva ao login com o aviso. Antes do CSRF: o token do formulário

@@ -57,8 +57,8 @@ class BuscaDeAlunosTests {
 	@BeforeEach
 	void preparar() {
 		LocalDateTime ontem = LocalDateTime.now(ZoneOffset.UTC).minusDays(1);
-		jdbc.update("INSERT INTO usuario (nome, login, senha_hash, perfil, ativo, troca_senha_obrigatoria, "
-				+ "senha_temporaria_expira_em, criado_em) VALUES ('Funcionário Teste', 'busca.teste', '{noop}x', ?, 1, 0, "
+		jdbc.update("INSERT INTO usuario (termos_versao_aceita, termos_aceitos_em, nome, login, senha_hash, perfil, ativo, troca_senha_obrigatoria, "
+				+ "senha_temporaria_expira_em, criado_em) VALUES ('v1-2026', UTC_TIMESTAMP(6), 'Funcionário Teste', 'busca.teste', '{noop}x', ?, 1, 0, "
 				+ "NULL, ?)", SegurancaConfig.PERFIL_FUNCIONARIO, ontem);
 		usuario = jdbc.queryForObject("SELECT id_usuario FROM usuario WHERE login = 'busca.teste'", Long.class);
 		jdbc.update("INSERT INTO turma (nome, ano_letivo, turno, ativa) VALUES ('6A-T24', 2026, 'MANHA', 1)");

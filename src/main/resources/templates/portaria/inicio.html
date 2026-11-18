@@ -13,6 +13,10 @@
   <div role="status" class="aviso aviso--sucesso" th:if="${senhaDefinida}">
     <p><strong>Sucesso:</strong> sua nova senha foi salva.</p>
   </div>
+  <!-- DEC-47: volta do aceite dos termos. role="status" sem mover o foco. Texto [PROP] -->
+  <div role="status" class="aviso aviso--sucesso" th:if="${termosAceitos}">
+    <p><strong>Sucesso:</strong> Termo de uso e Política de privacidade aceitos.</p>
+  </div>
   <p>Você entrou como <strong sec:authentication="name">ate.demo</strong>.</p>
   <!-- RF12, passo 1 (T-32): a exceção para quando a leitura não é possível -->
   <p><a class="botao botao--secundario" th:href="@{/portaria/manual}">Registro manual</a></p>

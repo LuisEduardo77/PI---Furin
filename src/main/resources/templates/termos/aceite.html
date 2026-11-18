@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: pagina('Termo de uso e Política de privacidade', '', ~{::conteudo})}">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: o layout monta o título de verdade -->
+  <title>Termo de uso e Política de privacidade | Furin Access</title>
+</head>
+<body>
+<th:block th:fragment="conteudo">
+  <!-- DEC-47: aceite obrigatório no primeiro acesso e a cada nova versão. Textos [PROP] -->
+  <h1>Termo de uso e Política de privacidade</h1>
+  <p>
+    Antes de usar o Furin Access, leia o Termo de uso e a Política de privacidade. Para
+    continuar, é preciso aceitar os dois.
+  </p>
+
+  <div class="termos__aceite">
+    <section th:replace="~{termos/textos :: termoDeUso(${versaoDosTermos})}"></section>
+    <section th:replace="~{termos/textos :: politicaDePrivacidade(${versaoDosTermos})}"></section>
+  </div>
+
+  <form th:action="@{/termos/aceite}" method="post">
+    <p>Ao continuar, você confirma que leu e aceita o Termo de uso e a Política de privacidade.</p>
+    <button type="submit" class="botao">Li e aceito</button>
+  </form>
+  <p>
+    Não concorda? Saia do sistema pelo botão "Sair" e procure a direção da escola.
+  </p>
+</th:block>
+</body>
+</html>

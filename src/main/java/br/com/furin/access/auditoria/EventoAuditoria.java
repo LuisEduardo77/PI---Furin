@@ -16,6 +16,8 @@ public enum EventoAuditoria {
 	SENHA_ALTERADA,
 	/** RF03: rota negada (403). */
 	ACESSO_NEGADO,
+	/** DEC-47: aceite do Termo de uso e da Política de privacidade. Só a versão. [PROP: nome] */
+	TERMOS_ACEITOS,
 
 	/** RF26. */
 	CONTA_CRIADA,

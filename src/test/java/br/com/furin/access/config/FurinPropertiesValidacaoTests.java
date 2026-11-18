@@ -55,6 +55,8 @@ class FurinPropertiesValidacaoTests {
 				"furin.sessao.aviso-antes=10s",
 				"furin.sessao.aviso-antes=30m",
 				"furin.termo.versao-atual=v1-2026-versao-longa-demais-xyz",
+				"furin.termos.versao-atual=",
+				"furin.termos.versao-atual=v1-2026-versao-longa-demais-xyz",
 				"furin.arquivos.diretorio=arquivos",
 				"furin.arquivos.diretorio=" + dentroDoProjeto,
 				"furin.arquivos.foto.tipos=",

@@ -30,4 +30,16 @@ class TelefoneDoContatoTests {
 		assertThat(TelefoneDoContato.normalizar(digitado, DDI)).isEmpty();
 	}
 
+	/** DEC-47: o gravado volta no formato da máscara do campo, para a edição. */
+	@ParameterizedTest
+	@CsvSource({
+			"+55 11 900000001, (11) 90000-0001",
+			"+55 11 30000001, (11) 3000-0001",
+			// Gravado antes da normalização (carga fictícia)
+			"(11) 90000-0001, (11) 90000-0001",
+			"+55 55 900000001, (55) 90000-0001" })
+	void exibeNoFormatoDaMascara(String gravado, String esperado) {
+		assertThat(TelefoneDoContato.paraExibir(gravado, DDI)).isEqualTo(esperado);
+	}
+
 }

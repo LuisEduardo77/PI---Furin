@@ -105,8 +105,8 @@ class EdicaoDoAlunoTests {
 	void preparar() throws IOException {
 		apagarACena();
 		LocalDateTime ontem = LocalDateTime.now(ZoneOffset.UTC).minusDays(1);
-		jdbc.update("INSERT INTO usuario (nome, login, senha_hash, perfil, ativo, troca_senha_obrigatoria, "
-				+ "senha_temporaria_expira_em, criado_em) VALUES ('Funcionário Teste', 'edicao.teste', "
+		jdbc.update("INSERT INTO usuario (termos_versao_aceita, termos_aceitos_em, nome, login, senha_hash, perfil, ativo, troca_senha_obrigatoria, "
+				+ "senha_temporaria_expira_em, criado_em) VALUES ('v1-2026', UTC_TIMESTAMP(6), 'Funcionário Teste', 'edicao.teste', "
 				+ "'{noop}nao-usada', ?, 1, 0, NULL, ?)", SegurancaConfig.PERFIL_FUNCIONARIO, ontem);
 		jdbc.update("INSERT INTO turma (nome, ano_letivo, turno, ativa) VALUES ('6A-T23', 2026, 'MANHA', 1)");
 		jdbc.update("INSERT INTO turma (nome, ano_letivo, turno, ativa) VALUES ('6B-T23', 2026, 'MANHA', 1)");

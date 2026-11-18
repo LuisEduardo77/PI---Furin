@@ -129,8 +129,8 @@ class CadastroDeAlunoTests {
 		jdbc.update("INSERT INTO aluno (matricula, nome, foto_chave, ativo, criado_em) VALUES (?, 'Bia Exemplo', "
 				+ "'sem-arquivo.png', 1, UTC_TIMESTAMP(6))", MATRICULA_EXISTENTE);
 		// O conferente do termo é o funcionário da sessão (CA-RF05-04)
-		jdbc.update("INSERT INTO usuario (nome, login, senha_hash, perfil, ativo, troca_senha_obrigatoria, "
-				+ "senha_temporaria_expira_em, criado_em) VALUES ('Funcionário Teste', ?, '{noop}nao-usada', ?, 1, 0, "
+		jdbc.update("INSERT INTO usuario (termos_versao_aceita, termos_aceitos_em, nome, login, senha_hash, perfil, ativo, troca_senha_obrigatoria, "
+				+ "senha_temporaria_expira_em, criado_em) VALUES ('v1-2026', UTC_TIMESTAMP(6), 'Funcionário Teste', ?, '{noop}nao-usada', ?, 1, 0, "
 				+ "NULL, UTC_TIMESTAMP(6))", FUNCIONARIO, SegurancaConfig.PERFIL_FUNCIONARIO);
 	}
 
@@ -384,6 +384,25 @@ class CadastroDeAlunoTests {
 				.andExpect(content().string(containsString("id=\"contatoEmail-erro\"")));
 		enviar(comValor("contatoEmail", "carla@escola").file(foto(PNG)))
 				.andExpect(content().string(containsString("id=\"contatoEmail-erro\"")));
+	}
+
+	@Test
+	void telefoneAcimaDoTamanhoDaMascaraEhRecusado() throws Exception {
+		// DEC-47: no máximo 15 caracteres, o tamanho de (11) 90000-0000, mesmo sem o script
+		enviar(comValor("contatoTelefone", "(11) 90000-00011").file(foto(PNG)))
+				.andExpect(content().string(containsString("id=\"contatoTelefone-erro\"")));
+		enviar(comValor("contatoTelefone", "+55 (11) 90000-0001").file(foto(PNG)))
+				.andExpect(content().string(containsString("id=\"contatoTelefone-erro\"")));
+	}
+
+	@Test
+	void campoDoTelefoneTemOTamanhoEAMascara() throws Exception {
+		// DEC-47: maxlength de (12) 91234-5678, teclado numérico e o script da máscara
+		mvc.perform(get("/alunos/novo").with(user(FUNCIONARIO).roles(SegurancaConfig.PERFIL_FUNCIONARIO)))
+				.andExpect(content().string(containsString("maxlength=\"15\"")))
+				.andExpect(content().string(containsString("inputmode=\"numeric\"")))
+				.andExpect(content().string(containsString("data-mascara-telefone")))
+				.andExpect(content().string(containsString("/js/telefone.js")));
 	}
 
 	@Test

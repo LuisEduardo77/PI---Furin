@@ -81,6 +81,11 @@ public class ConferenciasDoAluno {
 		return telefone;
 	}
 
+	/** O telefone gravado no formato do campo, como {@code (11) 90000-0001} (DEC-47). */
+	String telefoneParaExibir(String gravado) {
+		return TelefoneDoContato.paraExibir(gravado, ddi);
+	}
+
 	/** O mesmo telefone, como ficaria gravado; vazio se não for um telefone válido. */
 	Optional<String> telefoneNormalizado(String telefone) {
 		return TelefoneDoContato.normalizar(telefone, ddi);
