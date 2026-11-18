@@ -54,10 +54,28 @@
   </li>
 </th:block>
 
+<!--/*
+  Telefone do contato com DDD (DEC-47): no máximo 15 caracteres, o tamanho de
+  (11) 90000-0000. static/js/telefone.js aplica a máscara enquanto se digita: só números,
+  até 11 dígitos, (12) 91234-5678 para celular e (12) 1234-5678 para fixo. Sem o script, o
+  maxlength limita o campo e o servidor confere do mesmo jeito.
+*/-->
+<div th:fragment="telefone" class="campo">
+  <label for="contatoTelefone">Telefone com DDD (obrigatório)</label>
+  <p id="contatoTelefone-dica" class="campo__dica">Celular: (12) 91234-5678. Fixo: (12) 1234-5678.</p>
+  <p id="contatoTelefone-erro" class="campo__erro" th:if="${#fields.hasErrors('contatoTelefone')}">
+    <span>Erro:</span> <span th:errors="*{contatoTelefone}">Informe o telefone com DDD. Exemplo: (11) 90000-0000.</span>
+  </p>
+  <input id="contatoTelefone" type="tel" maxlength="15" inputmode="numeric" required autocomplete="off"
+         data-mascara-telefone th:field="*{contatoTelefone}"
+         th:attr="aria-invalid=${#fields.hasErrors('contatoTelefone')} ? 'true',
+                  aria-describedby=${#fields.hasErrors('contatoTelefone')} ? 'contatoTelefone-erro contatoTelefone-dica' : 'contatoTelefone-dica'">
+</div>
+
 <!--/* Nome, telefone e e-mail do contato principal */-->
 <th:block th:fragment="contato">
   <div th:replace="~{alunos/campos :: texto('contatoNome', 'Nome do responsável (obrigatório)', 'text', 150, null)}"></div>
-  <div th:replace="~{alunos/campos :: texto('contatoTelefone', 'Telefone com DDD (obrigatório)', 'tel', 25, 'Exemplo: (11) 90000-0000.')}"></div>
+  <div th:replace="~{alunos/campos :: telefone}"></div>
   <div th:replace="~{alunos/campos :: texto('contatoEmail', 'E-mail (obrigatório)', 'email', 254, 'Exemplo: nome@example.com.')}"></div>
 </th:block>
 

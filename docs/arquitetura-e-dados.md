@@ -232,6 +232,7 @@ atualizada.
 | `furin.sessao.aviso-antes` | 60 s (mínimo de A11: 20 s) | A11 §5.16.2; DEC-28 (E2) |
 | `furin.notificacao.max-tentativas` | 3 | PEND-13 → DEC-28 (F1) |
 | `furin.termo.versao-atual` | `v1-2026` | RF05; DEC-26 |
+| `furin.termos.versao-atual` | `v1-2026` (Termo de uso e Política de privacidade do sistema; trocar a versão pede o aceite de novo) | RF01 (fluxo A4); DEC-47 [PROP: nome] |
 | `furin.contato.ddi` | 55 | RF04 (telefone com DDI e DDD) [PROP: nome] |
 | `furin.arquivos.diretorio` | caminho fora do projeto e fora de `static/` | DEC-08 |
 | `furin.arquivos.foto.tipos`, `furin.arquivos.foto.tamanho-max` | JPEG, PNG; 2 MB | PEND-05 → DEC-28 (D1) |
@@ -265,6 +266,7 @@ inválido (Bean Validation). Qualquer valor pode ser trocado pelo ambiente, por 
 | `GET/POST /login`, `POST /logout` | público / autenticado | RF01–RF03 |
 | `GET/POST /senha/definir` | FUNCIONARIO | RF01, RN14 |
 | `GET/POST /senha/alterar` | FUNCIONARIO | RF01 (fluxo A3) |
+| `GET/POST /termos/aceite` | FUNCIONARIO | RF01 (fluxo A4, aceite dos termos; DEC-47) [PROP] |
 | `POST /sessao/renovar` | FUNCIONARIO | RF01 (fluxo A2, "Continuar conectado"; T-16) [PROP] |
 | `GET /portaria` | FUNCIONARIO | RF09–RF16, RF22, RF23 |
 | `POST /portaria/leituras` | FUNCIONARIO | RF09, RF13–RF15 |
@@ -445,6 +447,9 @@ CREATE TABLE usuario (
   CONSTRAINT ck_usuario_bools  CHECK (ativo IN (0,1) AND troca_senha_obrigatoria IN (0,1)),
   CONSTRAINT ck_usuario_temp   CHECK (senha_temporaria_expira_em IS NULL OR troca_senha_obrigatoria = 1)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- DEC-47 (migração V5__aceite_dos_termos.sql, 17/11/2026): a tabela usuario ganhou
+-- termos_versao_aceita VARCHAR(30) NULL e termos_aceitos_em DATETIME(6) NULL, as duas nulas
+-- ou as duas preenchidas (ck_usuario_termos). Este DDL de referência fica como foi validado.
 
 CREATE TABLE turma (
   id_turma    BIGINT UNSIGNED   NOT NULL AUTO_INCREMENT,
@@ -739,6 +744,14 @@ RNF02 é gerada por script separado, só para o teste, e não entra na carga pad
   os testes trocam por um relógio ajustável (`BloqueioDeLoginTests`). Os contadores de
   logins que nunca chegam ao bloqueio só somem num login com sucesso ou num reinício;
   num protótipo local isso não pesa.
+- **Aceite dos termos (DEC-47, 17/11/2026):** RF01, fluxo A4. `LoginComSucessoAuditado`
+  pergunta a `AceiteDosTermos` se a conta aceitou `furin.termos.versao-atual` e, se não,
+  marca a sessão; o filtro `AceiteDosTermosObrigatorio`, registrado depois do da troca de
+  senha, leva toda rota a `/termos/aceite`, menos o `POST /logout`, o "Continuar conectado"
+  e os arquivos estáticos, e cede a vez à troca de senha pendente. `TermosController` grava
+  a versão e o instante (`usuario.termos_versao_aceita`, `termos_aceitos_em`) e registra
+  `TERMOS_ACEITOS` com `versao`. Os textos ficam em `templates/termos/textos.html`, usados
+  na tela do aceite e nas janelas da tela de login (`static/js/termos.js`).
 - **Senha (T-15, 02/11/2026):** RF01, fluxos A1 e A3. `ContasDosFuncionarios` devolve uma
   `ContaAutenticada`, que sabe se a troca está pendente. A senha temporária vencida
   (`senha_temporaria_expira_em` no passado) vira "credencial expirada", que o Spring

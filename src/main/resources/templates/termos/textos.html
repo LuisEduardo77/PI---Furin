@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<!--/*
+  Termo de uso e Política de privacidade do Furin Access (DEC-47). Os mesmos textos aparecem
+  nas janelas da tela de login e na tela do aceite (termos/aceite.html).
+
+  [PROP] Rascunho escrito com apoio de IA a partir da documentação do projeto (escopo,
+  regras de negócio, RNF03, RNF05, DEC-08, DEC-32, DEC-36), para o grupo revisar. Não é
+  parecer jurídico. Só dados fictícios: nenhum nome real de escola ou pessoa.
+
+  Mudou o texto? Troque furin.termos.versao-atual no application.yml: todos os
+  funcionários aceitam a nova versão no próximo login.
+*/-->
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <!-- Só para abrir o arquivo direto no navegador: os fragmentos entram em páginas que já têm título -->
+  <title>Termos | Furin Access</title>
+</head>
+<body>
+
+<section th:fragment="termoDeUso(versao)" class="termos__texto" aria-labelledby="titulo-termo-de-uso">
+  <h2 id="titulo-termo-de-uso">Termo de uso</h2>
+  <p class="campo__dica" th:text="|Versão ${versao}|">Versão v1-2026</p>
+
+  <h3>1. O que é o Furin Access</h3>
+  <p>
+    O Furin Access é o sistema da escola que registra a entrada e a saída dos alunos pela
+    carteirinha com QR Code, mostra quantos alunos estão presentes e guarda o histórico das
+    movimentações. Os responsáveis recebem um aviso por e-mail a cada entrada e saída.
+  </p>
+
+  <h3>2. Quem pode usar</h3>
+  <p>
+    Só funcionários da escola, cada um com a própria conta. A conta é pessoal: não empreste
+    o login nem conte a senha a ninguém. Todas as ações ficam registradas com o nome de quem
+    as fez.
+  </p>
+
+  <h3>3. O que você se compromete a fazer</h3>
+  <ul>
+    <li>Usar o sistema só para as atividades da escola: portaria, cadastro de alunos,
+      presença e consultas.</li>
+    <li>Cadastrar apenas os dados pedidos nas telas, conferir o termo de consentimento
+      assinado pelo responsável antes de cadastrar um aluno e manter os dados corretos.</li>
+    <li>Não copiar, imprimir ou repassar dados de alunos e responsáveis fora das
+      necessidades da escola. O relatório impresso é de uso restrito.</li>
+    <li>Usar o registro manual só quando a leitura da carteirinha não for possível, sempre
+      com o motivo verdadeiro.</li>
+    <li>Sair do sistema ao terminar e avisar a direção se perceber um acesso indevido ou se
+      a sua senha puder ter sido vista por outra pessoa.</li>
+  </ul>
+
+  <h3>4. Regras do sistema</h3>
+  <ul>
+    <li>Depois de 5 tentativas de login sem sucesso, o acesso fica bloqueado por alguns
+      minutos.</li>
+    <li>A sessão termina depois de um tempo sem uso.</li>
+    <li>O sistema decide sozinho se uma leitura é entrada ou saída. Uma movimentação
+      registrada não é apagada: correções ficam registradas junto com o original.</li>
+  </ul>
+
+  <h3>5. Descumprimento</h3>
+  <p>
+    O uso em desacordo com este termo pode levar à desativação da conta e às medidas
+    previstas pela escola e pela legislação.
+  </p>
+</section>
+
+<section th:fragment="politicaDePrivacidade(versao)" class="termos__texto" aria-labelledby="titulo-politica-de-privacidade">
+  <h2 id="titulo-politica-de-privacidade">Política de privacidade</h2>
+  <p class="campo__dica" th:text="|Versão ${versao}|">Versão v1-2026</p>
+
+  <h3>1. Quais dados o sistema trata</h3>
+  <ul>
+    <li><strong>Funcionários:</strong> nome, login, senha (guardada só como código
+      embaralhado, o <em>hash</em>, nunca em texto) e o registro das ações feitas no sistema.</li>
+    <li><strong>Alunos:</strong> nome, matrícula, turma, foto de identificação, código da
+      carteirinha e os horários de entrada e saída.</li>
+    <li><strong>Responsáveis:</strong> nome, telefone, e-mail e o termo de consentimento
+      assinado.</li>
+  </ul>
+  <p>O sistema não pede CPF, endereço, data de nascimento nem biometria.</p>
+
+  <h3>2. Para que os dados são usados</h3>
+  <ul>
+    <li>Identificar o aluno na portaria e registrar a entrada e a saída.</li>
+    <li>Mostrar quantos alunos estão presentes, para apoiar a organização da escola.</li>
+    <li>Manter o histórico das movimentações para consulta da escola.</li>
+    <li>Avisar o responsável por e-mail a cada entrada e saída, se ele quiser receber.</li>
+    <li>Registrar quem fez cada ação, para a segurança das informações.</li>
+  </ul>
+
+  <h3>3. Base legal e consentimento</h3>
+  <p>
+    Os dados de alunos, que são crianças e adolescentes, só são tratados com o consentimento
+    do responsável, conferido pela escola no cadastro, e no melhor interesse do aluno, como
+    prevê a Lei Geral de Proteção de Dados (Lei nº 13.709/2018) e o Estatuto da Criança e do
+    Adolescente. O responsável pode revogar o consentimento a qualquer momento junto à
+    escola, e o aluno deixa de usar a carteirinha.
+  </p>
+
+  <h3>4. Quem tem acesso</h3>
+  <p>
+    Só os funcionários da escola com conta ativa. Os dados não são vendidos nem compartilhados
+    com terceiros para outros fins. O e-mail enviado ao responsável tem só o primeiro nome do
+    aluno, se foi entrada ou saída, a data, a hora e se o registro foi pela carteirinha ou
+    manual. No protótipo, esse e-mail é simulado: nenhuma mensagem sai do computador.
+  </p>
+
+  <h3>5. Como os dados são protegidos</h3>
+  <ul>
+    <li>Toda tela exige login com uma conta ativa de funcionário.</li>
+    <li>Fotos e termos ficam numa área privada, entregues só a funcionários conectados.</li>
+    <li>O registro de ações não guarda senhas nem documentos, e os e-mails aparecem
+      mascarados.</li>
+  </ul>
+
+  <h3>6. Por quanto tempo</h3>
+  <p>
+    Os registros ficam guardados por até 5 anos. Um aluno ou uma conta desativada não é
+    apagado: o histórico é preservado, como exige a rotina da escola.
+  </p>
+
+  <h3>7. Direitos dos titulares</h3>
+  <p>
+    O responsável pelo aluno e o funcionário podem pedir à direção da escola para consultar,
+    corrigir ou atualizar os próprios dados, saber com quem foram compartilhados e deixar de
+    receber o aviso por e-mail.
+  </p>
+</section>
+
+</body>
+</html>

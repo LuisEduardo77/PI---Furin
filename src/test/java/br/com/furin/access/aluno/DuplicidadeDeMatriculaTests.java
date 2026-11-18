@@ -108,8 +108,8 @@ class DuplicidadeDeMatriculaTests {
 	@BeforeEach
 	void preparar() {
 		apagarACena();
-		jdbc.update("INSERT INTO usuario (nome, login, senha_hash, perfil, ativo, troca_senha_obrigatoria, "
-				+ "senha_temporaria_expira_em, criado_em) VALUES ('Funcionário Teste', ?, '{noop}nao-usada', ?, 1, 0, "
+		jdbc.update("INSERT INTO usuario (termos_versao_aceita, termos_aceitos_em, nome, login, senha_hash, perfil, ativo, troca_senha_obrigatoria, "
+				+ "senha_temporaria_expira_em, criado_em) VALUES ('v1-2026', UTC_TIMESTAMP(6), 'Funcionário Teste', ?, '{noop}nao-usada', ?, 1, 0, "
 				+ "NULL, UTC_TIMESTAMP(6))", FUNCIONARIO, SegurancaConfig.PERFIL_FUNCIONARIO);
 		jdbc.update("INSERT INTO turma (nome, ano_letivo, turno, ativa) VALUES (?, 2026, 'MANHA', 1)", TURMA);
 		idTurma = jdbc.queryForObject("SELECT id_turma FROM turma WHERE nome = ?", Long.class, TURMA);

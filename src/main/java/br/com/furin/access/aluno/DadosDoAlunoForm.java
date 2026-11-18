@@ -39,7 +39,11 @@ public abstract class DadosDoAlunoForm implements Serializable {
 	@Size(max = 150, message = "O nome do responsável pode ter até 150 caracteres.")
 	private String contatoNome;
 
+	/** DEC-47: no máximo o tamanho de {@code (11) 90000-0000}, o formato da máscara do campo. */
+	static final int TAMANHO_MAXIMO_TELEFONE = 15;
+
 	@NotBlank(message = "Informe o telefone com DDD. Exemplo: (11) 90000-0000.")
+	@Size(max = TAMANHO_MAXIMO_TELEFONE, message = "Informe o telefone com DDD. Exemplo: (11) 90000-0000.")
 	private String contatoTelefone;
 
 	@NotBlank(message = EMAIL_INVALIDO)

@@ -23,6 +23,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import br.com.furin.access.auditoria.AcessoNegadoAuditado;
 import br.com.furin.access.auditoria.Auditoria;
+import br.com.furin.access.autenticacao.AceiteDosTermos;
 import br.com.furin.access.autenticacao.ContasDosFuncionarios;
 import br.com.furin.access.autenticacao.TemposDaSessao;
 import br.com.furin.access.autenticacao.TemposDaSessaoNaTela;
@@ -55,6 +56,10 @@ class LayoutBaseTests {
 	/** Simulada: {@code contaDesativada} responde {@code false} (T-17). */
 	@MockitoBean
 	private ContasDosFuncionarios contas;
+
+	/** Simulado: a fatia não tem banco; o login de verdade não é usado aqui (DEC-47). */
+	@MockitoBean
+	private AceiteDosTermos aceiteDosTermos;
 
 	@BeforeEach
 	void configurarNavegador() {

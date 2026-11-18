@@ -240,8 +240,8 @@ class SessaoTests {
 
 	private void conta(String login, boolean trocaObrigatoria) {
 		LocalDateTime agora = LocalDateTime.now(ZoneOffset.UTC);
-		jdbc.update("INSERT INTO usuario (nome, login, senha_hash, perfil, ativo, troca_senha_obrigatoria, "
-				+ "senha_temporaria_expira_em, criado_em) VALUES (?, ?, ?, ?, 1, ?, ?, ?)",
+		jdbc.update("INSERT INTO usuario (termos_versao_aceita, termos_aceitos_em, nome, login, senha_hash, perfil, ativo, troca_senha_obrigatoria, "
+				+ "senha_temporaria_expira_em, criado_em) VALUES ('v1-2026', UTC_TIMESTAMP(6), ?, ?, ?, ?, 1, ?, ?, ?)",
 				"Conta Teste", login, encoder.encode(SENHA), SegurancaConfig.PERFIL_FUNCIONARIO, trocaObrigatoria,
 				trocaObrigatoria ? agora.plusDays(1) : null, agora);
 	}

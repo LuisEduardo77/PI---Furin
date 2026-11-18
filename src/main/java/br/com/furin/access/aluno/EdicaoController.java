@@ -246,13 +246,15 @@ public class EdicaoController {
 		return TELA_EDITAR;
 	}
 
-	private static EdicaoForm comOsDadosAtuais(CadastroAtual atual) {
+	private EdicaoForm comOsDadosAtuais(CadastroAtual atual) {
 		EdicaoForm form = new EdicaoForm();
 		form.setNome(atual.nome());
 		form.setMatricula(atual.matricula());
 		form.setIdTurma(atual.idTurma() == null ? null : String.valueOf(atual.idTurma()));
 		form.setContatoNome(atual.contatoNome());
-		form.setContatoTelefone(atual.contatoTelefone());
+		// DEC-47: no formato da máscara, para o campo já vir dentro do tamanho máximo
+		form.setContatoTelefone(atual.contatoTelefone() == null ? null
+				: conferencias.telefoneParaExibir(atual.contatoTelefone()));
 		form.setContatoEmail(atual.contatoEmail());
 		form.setRecebeAviso(atual.idContato() == null || atual.recebeAviso());
 		return form;

@@ -3,6 +3,7 @@ package br.com.furin.access.autenticacao;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import br.com.furin.access.config.SegurancaConfig;
@@ -14,13 +15,21 @@ import br.com.furin.access.config.SegurancaConfig;
 @Controller
 public class LoginController {
 
+	private final AceiteDosTermos aceite;
+
+	public LoginController(AceiteDosTermos aceite) {
+		this.aceite = aceite;
+	}
+
 	@GetMapping("/login")
-	public String exibir(Authentication autenticacao) {
+	public String exibir(Authentication autenticacao, Model model) {
 		// Quem já entrou não precisa ver o login de novo
 		if (autenticacao != null && autenticacao.isAuthenticated()
 				&& !(autenticacao instanceof AnonymousAuthenticationToken)) {
 			return "redirect:" + SegurancaConfig.TELA_INICIAL;
 		}
+		// DEC-47: a versão aparece nas janelas "Termo de uso" e "Política de privacidade"
+		model.addAttribute("versaoDosTermos", aceite.versaoAtual());
 		return "autenticacao/login";
 	}
 

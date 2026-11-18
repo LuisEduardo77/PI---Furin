@@ -35,4 +35,21 @@ final class TelefoneDoContato {
 		return Optional.of("+" + ddi + " " + numeros.substring(0, 2) + " " + numeros.substring(2));
 	}
 
+	/**
+	 * O telefone gravado no formato da máscara do formulário (DEC-47): {@code (11) 90000-0001}
+	 * para celular e {@code (11) 3000-0001} para fixo. Assim o campo da edição já vem dentro
+	 * do tamanho máximo. Um valor que não é telefone volta como está.
+	 */
+	static String paraExibir(String gravado, String ddi) {
+		Optional<String> normalizado = normalizar(gravado, ddi);
+		if (normalizado.isEmpty()) {
+			return gravado;
+		}
+		String numeros = normalizado.get().replaceAll("\\D", "").substring(ddi.length());
+		String ddd = numeros.substring(0, 2);
+		String numero = numeros.substring(2);
+		int hifen = numero.length() - 4;
+		return "(" + ddd + ") " + numero.substring(0, hifen) + "-" + numero.substring(hifen);
+	}
+
 }

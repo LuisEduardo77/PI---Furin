@@ -25,7 +25,7 @@ só recebem o e-mail de entrada e saída: não têm conta, login nem tela.
   rota nova entra em `ROTAS_DO_FUNCIONARIO`) e T-10 (log de auditoria: use
   `auditoria.Auditoria` e `DetalhesAuditoria`, nunca um logger comum para eventos) e T-11
   (carga fictícia: migração Java `carga/V2__CargaFicticia`, só no perfil `prototipo`; a
-  próxima migração de esquema é a V5) e T-12 (login pelas contas do banco no pacote
+  próxima migração de esquema é a V6, depois da `V5__aceite_dos_termos.sql` da DEC-47) e T-12 (login pelas contas do banco no pacote
   `autenticacao`; tela inicial em `SegurancaConfig.TELA_INICIAL`; `/portaria` ainda é
   provisória) e T-13 (erros do login: `LoginComFalhaAuditado` com `LOGIN_FALHA`,
   `CamposDoLoginObrigatorios` e `RetornoAoLogin`) e T-14 (bloqueio em
@@ -103,7 +103,7 @@ pacotes. Teste que
 Em caso de conflito, vale a primeira fonte da lista:
 
 1. Decisões registradas em [`docs/rastreabilidade.md`](docs/rastreabilidade.md) §2
-   (ATU-01 a ATU-07, DEC-01 a DEC-46). Uma decisão marcada como "substituída" não vale
+   (ATU-01 a ATU-07, DEC-01 a DEC-47). Uma decisão marcada como "substituída" não vale
    mais; vale a que a substituiu.
 2. Os requisitos: [`requirements/rf/`](requirements/rf/) (RF01 a RF26) e
    [`requirements/rnf/`](requirements/rnf/) (RNF01 a RNF08).

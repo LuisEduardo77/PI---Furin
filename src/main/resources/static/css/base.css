@@ -330,6 +330,39 @@ button:disabled {
   background-color: rgba(23, 43, 58, 0.6);
 }
 
+/* DEC-47: janelas do Termo de uso e da Política de privacidade na tela de login. O texto
+   rola dentro da janela, que cabe em 320 px e com zoom de 200% (RNF01) */
+.janela-termos {
+  width: calc(100% - 2rem);
+  max-width: 45rem;
+  max-height: calc(100vh - 2rem);
+  padding: 1rem 1.5rem;
+  overflow-y: auto;
+  color: var(--cor-texto);
+  background-color: var(--cor-fundo);
+  border: 2px solid var(--cor-primaria);
+  border-radius: 0.25rem;
+}
+
+.janela-termos::backdrop {
+  background-color: rgba(23, 43, 58, 0.6);
+}
+
+.termos__texto h2 {
+  margin-top: 0;
+}
+
+.termos__botoes .botao {
+  margin: 0 0.5rem 0.5rem 0;
+}
+
+/* DEC-47: tela do aceite. Os dois textos em sequência, separados por uma linha */
+.termos__aceite .termos__texto + .termos__texto {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--cor-borda);
+}
+
 /* Tabelas: rolam dentro do próprio contêiner em telas estreitas (RNF01, CA-RNF01-02) */
 .tabela-rolavel {
   max-width: 100%;

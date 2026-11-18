@@ -41,6 +41,7 @@ public record FurinProperties(
 		@NotNull @Valid Sessao sessao,
 		@NotNull @Valid Notificacao notificacao,
 		@NotNull @Valid Termo termo,
+		@NotNull @Valid Termos termos,
 		@NotNull @Valid Contato contato,
 		@NotNull @Valid Arquivos arquivos,
 		@NotNull @Valid Retencao retencao) {
@@ -125,6 +126,14 @@ public record FurinProperties(
 
 	/** RF05; DEC-26. O tamanho segue consentimento.versao_termo (VARCHAR(30)). */
 	public record Termo(@NotBlank @Size(max = 30) String versaoAtual) {
+	}
+
+	/**
+	 * DEC-47: versão do Termo de uso e da Política de privacidade do sistema, que cada
+	 * funcionário aceita no primeiro acesso. Trocar a versão pede o aceite de novo a todos.
+	 * O tamanho segue usuario.termos_versao_aceita (VARCHAR(30)). [PROP: nome]
+	 */
+	public record Termos(@NotBlank @Size(max = 30) String versaoAtual) {
 	}
 
 	/** RF04: o telefone do contato é gravado com DDI e DDD. [PROP: nome] */

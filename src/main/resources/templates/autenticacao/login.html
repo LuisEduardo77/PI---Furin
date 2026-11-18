@@ -88,6 +88,33 @@
 
     <button type="submit" class="botao">Entrar</button>
   </form>
+
+  <!--
+    DEC-47: os dois botões abrem uma janela (dialog modal) nesta mesma tela, com o texto.
+    static/js/termos.js abre e fecha (CSP: sem script embutido). Ao abrir, o foco vai para o
+    título da janela; "Fechar" e a tecla Esc fecham, e o foco volta ao botão que abriu.
+  -->
+  <section class="termos__botoes" aria-labelledby="titulo-termos">
+    <h2 id="titulo-termos">Termos do sistema</h2>
+    <p>
+      <button type="button" class="botao botao--secundario" data-abrir-janela="janela-termo-de-uso"
+              aria-haspopup="dialog">Termo de uso</button>
+      <button type="button" class="botao botao--secundario" data-abrir-janela="janela-politica-de-privacidade"
+              aria-haspopup="dialog">Política de privacidade</button>
+    </p>
+  </section>
+
+  <dialog id="janela-termo-de-uso" class="janela-termos" aria-labelledby="titulo-termo-de-uso">
+    <section th:replace="~{termos/textos :: termoDeUso(${versaoDosTermos})}"></section>
+    <button type="button" class="botao" data-fechar-janela>Fechar</button>
+  </dialog>
+
+  <dialog id="janela-politica-de-privacidade" class="janela-termos" aria-labelledby="titulo-politica-de-privacidade">
+    <section th:replace="~{termos/textos :: politicaDePrivacidade(${versaoDosTermos})}"></section>
+    <button type="button" class="botao" data-fechar-janela>Fechar</button>
+  </dialog>
+
+  <script th:src="@{/js/termos.js}" defer></script>
 </th:block>
 </body>
 </html>

@@ -27,8 +27,8 @@ public final class CenaDaPortaria {
 
 	public long funcionario(String login, Instant agora) {
 		// O hash não importa aqui: os testes entram com o usuário de teste do Spring Security
-		return inserir("INSERT INTO usuario (nome, login, senha_hash, perfil, ativo, troca_senha_obrigatoria, "
-				+ "senha_temporaria_expira_em, criado_em) VALUES (?, ?, '{noop}nao-usada', ?, 1, 0, NULL, ?)",
+		return inserir("INSERT INTO usuario (termos_versao_aceita, termos_aceitos_em, nome, login, senha_hash, perfil, ativo, troca_senha_obrigatoria, "
+				+ "senha_temporaria_expira_em, criado_em) VALUES ('v1-2026', UTC_TIMESTAMP(6), ?, ?, '{noop}nao-usada', ?, 1, 0, NULL, ?)",
 				"Funcionário Teste", login, SegurancaConfig.PERFIL_FUNCIONARIO, utc(agora));
 	}
 
