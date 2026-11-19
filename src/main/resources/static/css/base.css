@@ -498,15 +498,32 @@ output.monitor {
 
 /* Filtros do histórico (T-35; RF18): lado a lado quando cabe, um embaixo do outro em 320 px.
    A ordem do código é a ordem de foco (A11 §5.1.4) */
+/*
+ * Os campos dividem as mesmas linhas (rótulo, dica, erro e caixa) por subgrid: as caixas ficam
+ * alinhadas mesmo quando só alguns campos têm dica ou erro. Com 320 px, um campo por linha
+ */
 .filtros__campos {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(12rem, 100%), 1fr));
+  column-gap: 1.5rem;
 }
 
 .filtros__campos .campo {
-  flex: 1 1 12rem;
+  display: grid;
+  grid-row: span 4;
+  grid-template-rows: subgrid;
+  row-gap: 0;
   min-width: 0;
+}
+
+.filtros__campos .campo label { grid-row: 1; }
+.filtros__campos .campo .campo__dica { grid-row: 2; }
+.filtros__campos .campo .campo__erro { grid-row: 3; }
+
+.filtros__campos .campo input,
+.filtros__campos .campo select {
+  grid-row: 4;
+  align-self: end;
 }
 
 /* Versão para impressão do histórico (T-36; RF20) */
