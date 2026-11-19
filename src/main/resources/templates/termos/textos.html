@@ -7,8 +7,8 @@
   regras de negócio, RNF03, RNF05, DEC-08, DEC-32, DEC-36), para o grupo revisar. Não é
   parecer jurídico. Só dados fictícios: nenhum nome real de escola ou pessoa.
 
-  Mudou o texto? Troque furin.termos.versao-atual no application.yml: todos os
-  funcionários aceitam a nova versão no próximo login.
+  Mudou o texto? Troque furin.termos.versao-atual no application.yml (todos os
+  funcionários aceitam a nova versão no próximo login) e a data "Criado em" dos dois textos.
 */-->
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -19,7 +19,7 @@
 
 <section th:fragment="termoDeUso(versao)" class="termos__texto" aria-labelledby="titulo-termo-de-uso">
   <h2 id="titulo-termo-de-uso">Termo de uso</h2>
-  <p class="campo__dica" th:text="|Versão ${versao}|">Versão v1-2026</p>
+  <p class="campo__dica"><span th:text="|Versão ${versao}|">Versão v1-2026</span>. Criado em 10/11/2026.</p>
 
   <h3>1. O que é o Furin Access</h3>
   <p>
@@ -67,7 +67,7 @@
 
 <section th:fragment="politicaDePrivacidade(versao)" class="termos__texto" aria-labelledby="titulo-politica-de-privacidade">
   <h2 id="titulo-politica-de-privacidade">Política de privacidade</h2>
-  <p class="campo__dica" th:text="|Versão ${versao}|">Versão v1-2026</p>
+  <p class="campo__dica"><span th:text="|Versão ${versao}|">Versão v1-2026</span>. Criado em 10/11/2026.</p>
 
   <h3>1. Quais dados o sistema trata</h3>
   <ul>
